@@ -137,9 +137,6 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
   /** @var \Drupal\geocoder\DumperPluginManager $dumper_manager */
   $dumper_manager = \Drupal::service('plugin.manager.geocoder.dumper');
 
-  $geocoder_config = \Drupal::configFactory()->get('geocoder.settings');
-  $geocoder_plugins_options = (array) $geocoder_config->get('plugins_options');
-
   // Reorder the list of fields to be Geocoded | Reverse Geocoded.
   $order_geocoder_fields = $preprocessor_manager->getOrderedGeocodeFields($entity);
 
@@ -209,12 +206,12 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
         switch ($geocoder['method']) {
           case 'source':
             $failure_status_message = t("Unable to geocode '@text'.", ['@text' => isset($value['value']) ? $value['value'] : '']);
-            $address_collection = isset($value['value']) ? \Drupal::service('geocoder')->geocode($value['value'], $geocoder['plugins'], $geocoder_plugins_options) : NULL;
+            $address_collection = isset($value['value']) ? \Drupal::service('geocoder')->geocode($value['value'], $geocoder['plugins']) : NULL;
             break;
 
           case 'destination':
             $failure_status_message = t("Unable to reverse geocode the <em>@field_name</em> value.", ['@field_name' => $field_name]);
-            $address_collection = isset($value['lat']) && isset($value['lon']) ? \Drupal::service('geocoder')->reverse($value['lat'], $value['lon'], $geocoder['plugins'], $geocoder_plugins_options) : NULL;
+            $address_collection = isset($value['lat']) && isset($value['lon']) ? \Drupal::service('geocoder')->reverse($value['lat'], $value['lon'], $geocoder['plugins']) : NULL;
             break;
 
           default:

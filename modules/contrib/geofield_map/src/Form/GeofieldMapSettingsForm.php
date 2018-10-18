@@ -66,7 +66,12 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           'attributes' => ['target' => 'blank'],
         ])),
       ]),
-      '#description' => $this->t('Geofield Map requires a valid Google API key for his main features based on Google & Google Maps APIs.'),
+      '#description' => $this->t('A unique Gmap Api Key is required for both Google Mapping and Geocoding operations, all performed client-side by js.<br>@gmap_api_restrictions_link.', [
+        '@gmap_api_restrictions_link' => $this->link->generate(t('It might/should be restricted using the Website Domain / HTTP referrers method'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key#key-restrictions', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
       '#placeholder' => $this->t('Input a valid Gmap API Key'),
     ];
 

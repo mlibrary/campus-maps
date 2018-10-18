@@ -23,6 +23,8 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\geofield_map\Services\GoogleMapsService;
 use Drupal\Core\Render\Markup;
 use Drupal\geofield_map\Services\MarkerIconService;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -235,10 +237,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $default_settings = self::defaultSettings();
     $settings = $this->getSettings();
 
-    // Define a specific default_icon_image_mode that consider icon_image_path
-    // eventually set previously to its select introduction.
-    $default_icon_image_mode = !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? 'icon_image_path' : $default_settings['map_marker_and_infowindow']['icon_image_mode'];
-
     $elements = $this->generateGMapSettingsForm($form, $form_state, $settings, $default_settings);
 
     $elements['#attached'] = [
@@ -247,6 +245,21 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ],
     ];
 
+    // Define a specific default_icon_image_mode that consider icon_image_path
+    // eventually set previously to its select introduction.
+    $init_icon_image_mode = !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? 'icon_image_path' : $default_settings['map_marker_and_infowindow']['icon_image_mode'];
+    $default_icon_image_mode = !empty($settings['map_marker_and_infowindow']['icon_image_mode']) ? $settings['map_marker_and_infowindow']['icon_image_mode'] : $init_icon_image_mode;
+
+    $geofield_id = $this->fieldDefinition->getName();
+    $form_state->setTemporaryValue('geofield_id', $geofield_id);
+
+    // Get the eventual ajax user input of the icon_image_mode field.
+    $user_input = $form_state->getUserInput();
+    $user_input_icon_image_mode = isset($user_input['fields']) && isset($user_input['fields'][$geofield_id]['settings_edit_form']) && isset($user_input['fields'][$geofield_id]['settings_edit_form']['settings']['map_marker_and_infowindow']['icon_image_mode']) ?
+      $user_input['fields'][$geofield_id]['settings_edit_form']['settings']['map_marker_and_infowindow']['icon_image_mode'] : NULL;
+
+    $selected_icon_image_mode = isset($user_input_icon_image_mode) ? $user_input_icon_image_mode : $default_icon_image_mode;
+
     $elements['map_marker_and_infowindow']['icon_image_mode'] = [
       '#title' => $this->t('Custom Icon definition mode'),
       '#type' => 'select',
@@ -254,18 +267,16 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'icon_file' => 'Icon File',
         'icon_image_path' => 'Icon Image Path',
       ],
-      '#default_value' => !empty($settings['map_marker_and_infowindow']['icon_image_mode']) ? $settings['map_marker_and_infowindow']['icon_image_mode'] : $default_icon_image_mode,
+      '#default_value' => $selected_icon_image_mode,
       '#description' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => Markup::create('choose method between:<br><b>Icon Image Path:</b> Point the image url (absolute or relative to Drupal root folder)<br><b>Icon Image File:</b> Upload an Icon Image into Drupal application</li>'),
       ],
       '#weight' => $elements['map_marker_and_infowindow']['icon_image_path']['#weight'] - 2,
-    ];
-
-    $elements['map_marker_and_infowindow']['icon_image_path']['#states'] = [
-      'visible' => [
-        'select[name="fields[field_geofield][settings_edit_form][settings][map_marker_and_infowindow][icon_image_mode]"]' => ['value' => 'icon_image_path'],
+      '#ajax' => [
+        'callback' => [static::class, 'iconImageModeUpdate'],
+        'effect' => 'fade',
       ],
     ];
 
@@ -288,15 +299,39 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#options' => $this->markerIcon->getImageStyleOptions(),
         '#default_value' => isset($settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style']) ? $settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] : 'geofield_map_default_icon_style',
       ],
-      '#states' => [
-        'visible' => [
-          'select[name="fields[field_geofield][settings_edit_form][settings][map_marker_and_infowindow][icon_image_mode]"]' => ['value' => 'icon_file'],
-        ],
-      ],
       '#weight' => $elements['map_marker_and_infowindow']['icon_image_mode']['#weight'] + 1,
     ];
 
+    if ($selected_icon_image_mode != 'icon_file') {
+      $elements['map_marker_and_infowindow']['icon_file_wrapper']['#attributes']['class'] = ['hidden'];
+    }
+
+    if ($selected_icon_image_mode != 'icon_image_path') {
+      $elements['map_marker_and_infowindow']['icon_image_path']['#attributes']['class'] = ['hidden'];
+    }
+
     return $elements + parent::settingsForm($form, $form_state);
+  }
+
+  /**
+   * Ajax callback triggered Icon Image Option Selection.
+   *
+   * @param array $form
+   *   The build form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   Ajax response with updated form element.
+   */
+  public static function iconImageModeUpdate(array $form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+    $geofield_id = $form_state->getTemporaryValue('geofield_id');
+    $response->addCommand(new ReplaceCommand(
+      '#map-marker-and-infowindow-wrapper',
+      $form['fields'][$geofield_id]['plugin']['settings_edit_form']['settings']['map_marker_and_infowindow']
+    ));
+    return $response;
   }
 
   /**

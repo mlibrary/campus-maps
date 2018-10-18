@@ -298,6 +298,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $elements['map_google_places'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Google Places'),
+      '#description' => $this->t('<b>Note:</b> This option uses the Google Maps Geocoder for Geocoding operations (<u>a valid Gmap Api Key set is needed</u>).'),
     ];
     $elements['map_google_places']['places_control'] = [
       '#type' => 'checkbox',
@@ -329,6 +330,11 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         ],
       ],
     ];
+
+    if (empty($gmap_api_key)) {
+      $elements['map_google_places']['places_control']['#disabled'] = TRUE;
+      $elements['map_google_places']['places_control']['#default_value'] = FALSE;
+    }
 
     $elements['map_library'] = [
       '#type' => 'select',
@@ -567,7 +573,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     ];
 
     $map_google_places = [
-      '#markup' => $this->t('Google Places Autocomplete Service: @state', ['@state' => $this->getSetting('map_google_places')['places_control'] ? $this->t('enabled') : $this->t('disabled')]),
+      '#markup' => $this->t('Google Places Autocomplete Service: @state', ['@state' => $this->getSetting('map_google_places')['places_control'] && !empty($gmap_api_key) ? $this->t('enabled') : $this->t('disabled')]),
     ];
 
     $map_type_selector = [

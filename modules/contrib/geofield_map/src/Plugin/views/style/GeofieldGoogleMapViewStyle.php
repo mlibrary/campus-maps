@@ -23,6 +23,8 @@ use Drupal\geofield_map\Services\GoogleMapsService;
 use Drupal\geofield_map\MapThemerPluginManager;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\views\Plugin\views\PluginBase;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -430,11 +432,16 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       '#title' => $this->t('Map Theming'),
       '#default_value' => $selected_map_themer,
       '#options' => $map_themers_options,
+      '#ajax' => [
+        'callback' => [static::class, 'mapThemingOptionsUpdate'],
+        'effect' => 'fade',
+      ],
     ];
 
     foreach ($this->mapThemerManager->getMapThemersList() as $plugin_id => $map_themer) {
       try {
         $this->mapThemerPlugin = $this->mapThemerManager->createInstance($plugin_id);
+
         $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId] = [
           '#type' => 'container',
           'id' => [
@@ -446,12 +453,10 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
             '#type' => 'value',
             '#value' => $this->mapThemerPlugin->getDescription(),
           ],
-          '#states' => [
-            'visible' => [
-              'select[name="style_options[map_marker_and_infowindow][theming][plugin_id]"]' => ['value' => $plugin_id],
-            ],
-          ],
         ];
+        if ($plugin_id != $selected_map_themer) {
+          $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId]['#attributes']['class'] = ['hidden'];
+        }
       }
       catch (PluginException $e) {
         $form['map_marker_and_infowindow']['theming']['plugin_id']['#default_value'] = $map_themers_options['none'];
@@ -464,12 +469,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
         '#type' => 'table',
         '#caption' => $this->t('Available Map Themers & Descriptions:'),
       ],
-      '#states' => [
-        'visible' => [
-          'select[name="style_options[map_marker_and_infowindow][theming][plugin_id]"]' => ['value' => 'none'],
-        ],
-      ],
     ];
+
     foreach ($map_themers_definitions as $k => $map_themer) {
       $form['map_marker_and_infowindow']['theming']['plugins_descriptions']['table'][$k] = [
         'label' => [
@@ -481,12 +482,37 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       ];
     }
 
-    $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [
-      'visible' => [
-        'select[name="style_options[map_marker_and_infowindow][theming][plugin_id]"]' => ['value' => 'none'],
-      ],
-    ];
+    // Hide fall-backs in case the user choose a map themer.
+    if ('none' != $selected_map_themer) {
+      // Hide the Map Themers Plugins Descriptions.
+      $form['map_marker_and_infowindow']['theming']['plugins_descriptions']['#attributes']['class'] = ['hidden'];
 
+      // Hide the icon_image_path element, with prefix/suffix (as hidden would
+      // hide just the textfield and not label/title and description wrappers).
+      $form['map_marker_and_infowindow']['icon_image_path']['#prefix'] = '<div id="icon-image-path" class="hidden">';
+      $form['map_marker_and_infowindow']['icon_image_path']['#suffix'] = '</div>';
+    }
+
+  }
+
+  /**
+   * Ajax callback triggered Map Theming Option Selection.
+   *
+   * @param array $form
+   *   The build form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   Ajax response with updated form element.
+   */
+  public static function mapThemingOptionsUpdate(array $form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand(
+      '#map-marker-and-infowindow-wrapper',
+      $form['options']['style_options']['map_marker_and_infowindow']
+    ));
+    return $response;
   }
 
   /**

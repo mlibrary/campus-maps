@@ -244,11 +244,11 @@ class LeafletService {
    */
   public function preProcessMapSettings(array &$map_settings) {
     // Generate correct Absolute iconUrl & shadowUrl, if not external.
-    if (!empty($map_settings['icon']['iconUrl']) && !UrlHelper::isExternal($map_settings['icon']['iconUrl'])) {
+    if (!empty($map_settings['icon']['iconUrl']) && !UrlHelper::isExternal($map_settings['icon']['iconUrl']) && strpos($map_settings['icon']['iconUrl'], '{{') === FALSE) {
       $map_settings['icon']['iconUrl'] = Url::fromUri('base:' . $map_settings['icon']['iconUrl'], ['absolute' => TRUE])
         ->toString();
     }
-    if (!empty($map_settings['icon']['shadowUrl']) && !UrlHelper::isExternal($map_settings['icon']['shadowUrl'])) {
+    if (!empty($map_settings['icon']['shadowUrl']) && !UrlHelper::isExternal($map_settings['icon']['shadowUrl']) && strpos($map_settings['icon']['shadowUrl'], '{{') === FALSE) {
       $map_settings['icon']['shadowUrl'] = Url::fromUri('base:' . $map_settings['icon']['shadowUrl'], ['absolute' => TRUE])
         ->toString();
     }

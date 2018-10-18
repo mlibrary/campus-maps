@@ -15,6 +15,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\geofield_map\Services\MarkerIconService;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -150,6 +152,22 @@ class ListFieldThemer extends MapThemerBase {
       }
     }
 
+    // Define a default taxonomy_field.
+    $default_list_field = !empty($default_element['list_field']) ? $default_element['list_field'] : array_shift(array_keys($list_fields));
+
+    // Get the eventual ajax user input of the specific list field.
+    $user_input = $form_state->getUserInput();
+    $user_input_list_field = isset($user_input['style_options']) && isset($user_input['style_options']['map_marker_and_infowindow']['theming']['geofieldmap_list_fields']['values']['list_field']) ?
+      $user_input['style_options']['map_marker_and_infowindow']['theming']['geofieldmap_list_fields']['values']['list_field'] : NULL;
+
+    $selected_list_field = isset($user_input_list_field) ? $user_input_list_field : $default_list_field;
+
+    $element = [
+      '#type' => 'fieldset',
+      '#prefix' => '<div id="list-themer-wrapper">',
+      '#suffix' => '</div>',
+    ];
+
     if (!count($list_fields) > 0) {
       $element['list_field'] = [
         '#type' => 'html_tag',
@@ -166,7 +184,11 @@ class ListFieldThemer extends MapThemerBase {
         '#title' => $this->t('List Type Field'),
         '#description' => $this->t('Chose the List type field to base the Map Theming upon.'),
         '#options' => array_combine(array_keys($list_fields), array_keys($list_fields)),
-        '#default_value' => !empty($default_element['list_field']) ? $default_element['list_field'] : array_shift(array_keys($list_fields)),
+        '#default_value' => $selected_list_field,
+        '#ajax' => [
+          'callback' => [static::class, 'listFieldOptionsUpdate'],
+          'effect' => 'fade',
+        ],
       ];
 
       $element['list_field']['fields'] = [];
@@ -218,20 +240,15 @@ class ListFieldThemer extends MapThemerBase {
             ],
             '#caption' => $this->renderer->renderPlain($caption),
           ],
-          '#states' => [
-            'visible' => [
-              'select[name="style_options[map_marker_and_infowindow][theming][geofieldmap_list_fields][values][list_field]"]' => ['value' => $k],
-            ],
-          ],
         ];
 
         // Add a Default Value to be used as possible fallback Value/Marker.
         $field['options']['__default_value__'] = '- Default Value - ';
 
         $i = 0;
-        foreach ($field['options'] as $key => $value) {
-          $fid = (integer) !empty($default_element['fields'][$k]['options'][$key]['icon_file']['fids']) ? $default_element['fields'][$k]['options'][$key]['icon_file']['fids'] : NULL;
-          $element['fields'][$k]['options'][$key] = [
+        foreach ($field['options'] as $id => $value) {
+          $fid = (integer) !empty($default_element['fields'][$k]['options'][$id]['icon_file']['fids']) ? $default_element['fields'][$k]['options'][$id]['icon_file']['fids'] : NULL;
+          $element['fields'][$k]['options'][$id] = [
             'label' => [
               '#type' => 'value',
               '#value' => $value,
@@ -242,13 +259,13 @@ class ListFieldThemer extends MapThemerBase {
             'weight' => [
               '#type' => 'weight',
               '#title_display' => 'invisible',
-              '#default_value' => isset($default_element['fields'][$k]['options'][$key]['weight']) ? $default_element['fields'][$k]['options'][$key]['weight'] : $i,
+              '#default_value' => isset($default_element['fields'][$k]['options'][$id]['weight']) ? $default_element['fields'][$k]['options'][$id]['weight'] : $i,
               '#delta' => 20,
               '#attributes' => ['class' => ['options-order-weight']],
             ],
             'label_alias' => [
               '#type' => 'textfield',
-              '#default_value' => isset($default_element['fields'][$k]['options'][$key]['label_alias']) ? $default_element['fields'][$k]['options'][$key]['label_alias'] : '',
+              '#default_value' => isset($default_element['fields'][$k]['options'][$id]['label_alias']) ? $default_element['fields'][$k]['options'][$id]['label_alias'] : '',
               '#size' => 30,
               '#maxlength' => 128,
             ],
@@ -258,15 +275,19 @@ class ListFieldThemer extends MapThemerBase {
               '#title' => t('Image style'),
               '#title_display' => 'invisible',
               '#options' => $this->markerIcon->getImageStyleOptions(),
-              '#default_value' => isset($default_element['fields'][$k]['options'][$key]['image_style']) ? $default_element['fields'][$k]['options'][$key]['image_style'] : 'geofield_map_default_icon_style',
+              '#default_value' => isset($default_element['fields'][$k]['options'][$id]['image_style']) ? $default_element['fields'][$k]['options'][$id]['image_style'] : 'geofield_map_default_icon_style',
             ],
             'legend_exclude' => [
               '#type' => 'checkbox',
-              '#default_value' => isset($default_element['fields'][$k]['options'][$key]['legend_exclude']) ? $default_element['fields'][$k]['options'][$key]['legend_exclude'] : '0',
+              '#default_value' => isset($default_element['fields'][$k]['options'][$id]['legend_exclude']) ? $default_element['fields'][$k]['options'][$id]['legend_exclude'] : '0',
             ],
             '#attributes' => ['class' => ['draggable']],
           ];
           $i++;
+        }
+
+        if ($k != $selected_list_field) {
+          $element['fields'][$k]['#attributes']['class'] = ['hidden'];
         }
 
       }
@@ -351,6 +372,26 @@ class ListFieldThemer extends MapThemerBase {
     }
 
     return $legend;
+  }
+
+  /**
+   * Ajax callback triggered Taxonomy Field Options Selection.
+   *
+   * @param array $form
+   *   The build form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   Ajax response with updated form element.
+   */
+  public static function listFieldOptionsUpdate(array $form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand(
+      '#list-themer-wrapper',
+      $form['options']['style_options']['map_marker_and_infowindow']['theming']['geofieldmap_list_fields']['values']
+    ));
+    return $response;
   }
 
 }

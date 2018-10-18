@@ -107,7 +107,7 @@
         var scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language);
 
         // If a Google API key is set, use it.
-        if (typeof self.map_data[mapid]['gmap_api_key'] !== 'undefined' && self.map_data[mapid]['gmap_api_key'] !== null) {
+        if (self.map_data[mapid]['gmap_api_key']) {
           scriptPath += '&key=' + self.map_data[mapid]['gmap_api_key'];
         }
 
@@ -472,8 +472,8 @@
       // Define a map self property, so other code can interact with it.
       self.map_data[params.mapid].map = map;
 
-      // Add the Google Places Options, if requested/enabled.
-      if (params['gmap_places']) {
+      // Add the Google Places Options, if requested/enabled, and supported.
+      if (typeof google !== 'undefined' && (params.gmap_api_key && params.gmap_api_key.length > 0) && params['gmap_places']) {
         self.map_data[params.mapid].gmap_places = params['gmap_places'];
         // Extend defaults placesAutocompleteServiceOptions.
         self.map_data[params.mapid].gmap_places_options = params['gmap_places_options'].length > 0 ? $.extend({}, {placeIdOnly: true}, JSON.parse(params['gmap_places_options'])) : {placeIdOnly: true};

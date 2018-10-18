@@ -2,8 +2,8 @@
 
 namespace Drupal\leaflet;
 
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url as CoreUrl;
 use Drupal\views\Plugin\views\ViewsPluginInterface;
 
 /**
@@ -232,16 +232,69 @@ trait LeafletSettingsElementsTrait {
       '#type' => 'textfield',
       '#maxlength' => 999,
       '#default_value' => isset($icon_options['iconUrl']) ? $icon_options['iconUrl'] : NULL,
-      '#element_validate' => [[$this, 'validateUrl']],
     ];
 
     $element['shadowUrl'] = [
       '#title' => $this->t('Icon Shadow URL'),
+      '#description' => $this->t('Can be an absolute or relative URL.'),
       '#type' => 'textfield',
       '#maxlength' => 999,
       '#default_value' => isset($icon_options['shadowUrl']) ? $icon_options['shadowUrl'] : NULL,
-      '#element_validate' => [[$this, 'validateUrl']],
     ];
+
+    if (method_exists($this, 'getProvider') && $this->getProvider() == 'leaflet_views') {
+
+      $icon_url_description = $this->t('Can be an absolute or relative URL. You may include <a href="@url" target="_blank">Twig</a>. You may enter data from this view as per the "Replacement patterns" below.<br><b>Note: </b> Using Tokens it is possible to dynamically define the Marker Icon output, with the composition of Marker Icon paths including entity properties or fields values.', [
+        '@url' => CoreUrl::fromUri('http://twig.sensiolabs.org/documentation')
+          ->toString(),
+      ]);
+
+      $element['iconUrl']['#description'] = $icon_url_description;
+      $element['iconUrl']['#type'] = "textarea";
+
+      $element['shadowUrl']['#description'] = $icon_url_description;
+      $element['shadowUrl']['#type'] = "textarea";
+
+
+      // Setup the tokens for views fields.
+      // Code is snatched from Drupal\views\Plugin\views\field\FieldPluginBase.
+      $options = [];
+      $optgroup_fields = (string) t('Fields');
+      if (isset($this->displayHandler)) {
+        foreach ($this->displayHandler->getHandlers('field') as $id => $field) {
+          /* @var \Drupal\views\Plugin\views\field\EntityField $field */
+          $options[$optgroup_fields]["{{ $id }}"] = substr(strrchr($field->label(), ":"), 2);
+        }
+      }
+
+      // Default text.
+      $output = [];
+      // We have some options, so make a list.
+      if (!empty($options)) {
+        $output[] = [
+          '#markup' => '<p>' . $this->t("The following replacement tokens are available. Fields may be marked as <em>Exclude from display</em> if you prefer.") . '</p>',
+        ];
+        foreach (array_keys($options) as $type) {
+          if (!empty($options[$type])) {
+            $items = array();
+            foreach ($options[$type] as $key => $value) {
+              $items[] = $key;
+            }
+            $item_list = array(
+              '#theme' => 'item_list',
+              '#items' => $items,
+            );
+            $output[] = $item_list;
+          }
+        }
+      }
+
+      $element['help'] = array(
+        '#type' => 'details',
+        '#title' => $this->t('Replacement patterns'),
+        '#value' => $output,
+      );
+    }
 
     $element['iconSize'] = [
       '#title' => $this->t('Icon Size'),
@@ -380,20 +433,6 @@ trait LeafletSettingsElementsTrait {
     $max_zoom = $element['#value'];
     if ($max_zoom && $max_zoom <= $min_zoom) {
       $form_state->setError($element, t('The Max Zoom level should be above the Minimum Zoom level.'));
-    }
-  }
-
-  /**
-   * Validate Url method.
-   *
-   * @param array $element
-   *   The element to validate.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The state of the form.
-   */
-  public function validateUrl(array $element, FormStateInterface $form_state) {
-    if (!empty($element['#value']) && !UrlHelper::isValid($element['#value'])) {
-      $form_state->setError($element, $this->t("Icon Url is not valid."));
     }
   }
 

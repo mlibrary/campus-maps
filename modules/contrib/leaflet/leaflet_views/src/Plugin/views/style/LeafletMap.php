@@ -303,12 +303,6 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
       $form_state->setError($form['height'], $this->t('Map height needs to be a positive number.'));
     }
     $icon_options = isset($style_options['icon']) ? $style_options['icon'] : [];
-    if (!empty($icon_options['iconUrl']) && !UrlHelper::isValid($icon_options['iconUrl'])) {
-      $form_state->setError($form['icon']['iconUrl'], $this->t('Icon URL is invalid.'));
-    }
-    if (!empty($icon_options['shadowUrl']) && !UrlHelper::isValid($icon_options['shadowUrl'])) {
-      $form_state->setError($form['icon']['shadowUrl'], $this->t('Shadow URL is invalid.'));
-    }
     if (!empty($icon_options['iconSize']['x']) && (!is_numeric($icon_options['iconSize']['x']) || $icon_options['iconSize']['x'] <= 0)) {
       $form_state->setError($form['icon']['iconSize']['x'], $this->t('Icon width needs to be a positive number.'));
     }
@@ -368,8 +362,14 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
 
           // Attach iconUrl properties to each point.
           if (!empty($this->options['icon']) && !empty($this->options['icon']['iconUrl'])) {
+            $tokens = [];
+            foreach ($this->rendered_fields[$id] as $field_name => $field_value) {
+              $tokens[$field_name] = $field_value;
+            }
             foreach ($points as &$point) {
               $point['icon'] = $this->options['icon'];
+              $point['icon']['iconUrl'] = $this->viewsTokenReplace($this->options['icon']['iconUrl'], $tokens);
+              $point['icon']['shadowUrl'] = $this->viewsTokenReplace($this->options['icon']['shadowUrl'], $tokens);
             }
           }
 

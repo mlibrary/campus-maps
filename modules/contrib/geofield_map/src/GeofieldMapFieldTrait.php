@@ -648,6 +648,8 @@ trait GeofieldMapFieldTrait {
     $elements['map_marker_and_infowindow'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Map Marker and Infowindow'),
+      '#prefix' => '<div id="map-marker-and-infowindow-wrapper">',
+      '#suffix' => '</div>',
     ];
     $elements['map_marker_and_infowindow']['icon_image_path'] = [
       '#type' => 'textfield',

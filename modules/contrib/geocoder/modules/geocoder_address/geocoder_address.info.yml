@@ -3,11 +3,11 @@ name: Geocoder Address
 description: 'Provides Geocoder integration with Address module.'
 # core: 8.x
 dependencies:
-  - address
-  - geocoder_field
+  - address:address
+  - geocoder:geocoder_field
 
-# Information added by Drupal.org packaging script on 2018-08-10
-version: '8.x-2.0-beta5'
+# Information added by Drupal.org packaging script on 2018-10-05
+version: '8.x-2.0-beta6'
 core: '8.x'
 project: 'geocoder'
-datestamp: 1533910985
+datestamp: 1538747290

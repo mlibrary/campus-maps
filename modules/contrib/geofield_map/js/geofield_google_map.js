@@ -100,10 +100,10 @@
         // Google maps isn't loaded so lazy load google maps.
 
         // Default script path.
-        var scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language);
+        var scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&language=' + self.googleMapsLanguage(html_language);
 
         // If a Google API key is set, use it.
-        if (typeof gmap_api_key !== 'undefined' && gmap_api_key !== null) {
+        if (gmap_api_key) {
           scriptPath += '&key=' + gmap_api_key;
         }
 

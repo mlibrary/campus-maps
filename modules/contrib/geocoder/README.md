@@ -50,9 +50,9 @@ This is a complete rewrite of the Geocoder module, based on the
 The geocoder submodules are needed to set-up and implement Geocode and Reverse
 Geocode functionalities on Entity fields from the Drupal backend:
 * The **geocoder_field** module adds the ability to setup Geocode operations
-  among string/text fields on entity insert/edit and as field Geo formatters,
-  using all the available Geocoder Provider Plugins and Output Geo Formats (via
-  Dumpers).
+  on entity insert & edit operations among specific fields types so as field 
+  Geo formatters, using all the available Geocoder Provider Plugins and Output 
+  Geo Formats (via Dumpers).
 * The **geocoder_geofield** module provides integration with Geofield
   (module/field type) and the ability to both use it as target of Geocode or
   source of Reverse Geocode with the other fields;
@@ -63,7 +63,28 @@ Geocode functionalities on Entity fields from the Drupal backend:
 From the Geocoder configuration page it is possible to setup custom plugins 
 options.
 
-### Note: Using Geocoder operations behind Proxy 
+Throughout geocoder submodules **the following fields types are supported** 
+
+###### for Geocode operations:
+
+ * "text",
+ * "text_long",
+ * "text_with_summary",
+ * "string",
+ * "string_long",
+ * "computed_string" (with "computed_field" module enabled);
+ * "computed_string_long" (with "computed_field" module enabled);
+ * "address" (with "address" module and "geocoder_address" sub-module enabled);
+ * "address_country" (with "address" module and "geocoder_address" sub-module enabled);
+ 
+###### for Reverse Geocode operations:
+ 
+ * "geofield" (with "geofield" module and "geocoder_geofield" sub-module enabled);
+
+**Note:** Geocoder Field sub-module provides hooks to alter (change and extend) the list of Geocoding and Reverse Geocoding fields types
+(@see geocoder_field.api)
+
+####Using Geocoder operations behind Proxy 
 
 GeocoderHttpAdapter is based on the Drupal 8 Guzzle implementation, 
 that is using settings array namespaced under $settings['http_client_config'].
@@ -90,14 +111,22 @@ $settings['http_client_config']['proxy'];
 ```php
 $plugins = array('geonames', 'googlemaps', 'bingmaps');
 $address = '1600 Amphitheatre Parkway Mountain View, CA 94043';
-$options = array(
-  'geonames' => array(), // array of options
-  'googlemaps' => array(), // array of options
-  'bingmaps' => array(), // array of options
-);
+
+// Array of (ovverriding) options (@see Note* below)
+$options = [
+  'freegeoip' => [], // array of options
+  'geonames' => [], // array of options
+  'googlemaps' => [], // array of options
+  'bingmaps' => [], // array of options
+];
 
 $addressCollection = \Drupal::service('geocoder')->geocode($address, $plugins, $options);
+
+Note*: The last $options array parameter is optional, and merges/overrides the default plugins options set in the module configurations, that will be used normally as defaults.
+
 ```
+
+####Note
 
 ## Reverse geocode coordinates
 
@@ -105,14 +134,19 @@ $addressCollection = \Drupal::service('geocoder')->geocode($address, $plugins, $
 $plugins = array('freegeoip', 'geonames', 'googlemaps', 'bingmaps');
 $lat = '37.422782';
 $lon = '-122.085099';
-$options = array(
-  'freegeoip' => array(), // array of options
-  'geonames' => array(), // array of options
-  'googlemaps' => array(), // array of options
-  'bingmaps' => array(), // array of options
-);
+
+// Array of (ovverriding) options (@see Note* below)
+$options = [
+  'freegeoip' => [], // array of options
+  'geonames' => [], // array of options
+  'googlemaps' => [], // array of options
+  'bingmaps' => [], // array of options
+];
 
 $addressCollection = \Drupal::service('geocoder')->reverse($lat, $lon, $plugins, $options);
+
+Note*: The last $options array parameter is optional, and merges/overrides the default plugins options set in the module configurations, that will be used normally as defaults.
+
 ```
 
 ## Return format
@@ -126,13 +160,8 @@ You can transform those objects into arrays. Example:
 ```php
 $plugins = array('geonames', 'googlemaps', 'bingmaps');
 $address = '1600 Amphitheatre Parkway Mountain View, CA 94043';
-$options = array(
-  'geonames' => array(), // array of options
-  'googlemaps' => array(), // array of options
-  'bingmaps' => array(), // array of options
-);
 
-$addressCollection = \Drupal::service('geocoder')->geocode($address, $plugins, $options);
+$addressCollection = \Drupal::service('geocoder')->geocode($address, $plugins);
 $address_array = $addressCollection->first()->toArray();
 
 // You can play a bit more with the API

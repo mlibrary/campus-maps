@@ -118,6 +118,11 @@ class ComposerStaticInitDrupal8
         array (
             'League\\Container\\' => 17,
         ),
+        'J' => 
+        array (
+            'JakubOnderka\\PhpConsoleHighlighter\\' => 35,
+            'JakubOnderka\\PhpConsoleColor\\' => 29,
+        ),
         'I' => 
         array (
             'Ivory\\HttpAdapter\\' => 18,
@@ -377,6 +382,14 @@ class ComposerStaticInitDrupal8
         array (
             0 => __DIR__ . '/..' . '/league/container/src',
         ),
+        'JakubOnderka\\PhpConsoleHighlighter\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/jakub-onderka/php-console-highlighter/src',
+        ),
+        'JakubOnderka\\PhpConsoleColor\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/jakub-onderka/php-console-color/src',
+        ),
         'Ivory\\HttpAdapter\\' => 
         array (
             0 => __DIR__ . '/..' . '/egeloen/http-adapter/src',
@@ -559,17 +572,6 @@ class ComposerStaticInitDrupal8
             'Prophecy\\' => 
             array (
                 0 => __DIR__ . '/..' . '/phpspec/prophecy/src',
-            ),
-        ),
-        'J' => 
-        array (
-            'JakubOnderka\\PhpConsoleHighlighter' => 
-            array (
-                0 => __DIR__ . '/..' . '/jakub-onderka/php-console-highlighter/src',
-            ),
-            'JakubOnderka\\PhpConsoleColor' => 
-            array (
-                0 => __DIR__ . '/..' . '/jakub-onderka/php-console-color/src',
             ),
         ),
         'G' => 
