@@ -1,0 +1,647 @@
+diff --git a/core/misc/ajax.es6.js b/core/misc/ajax.es6.js
+index 6248e46..8191127 100644
+--- a/core/misc/ajax.es6.js
++++ b/core/misc/ajax.es6.js
+@@ -1009,38 +1009,69 @@
+      *   A optional jQuery selector string.
+      * @param {object} [response.settings]
+      *   An optional array of settings that will be used.
+-     * @param {number} [status]
+-     *   The XMLHttpRequest status.
+      */
+-    insert(ajax, response, status) {
++    insert(ajax, response) {
+       // Get information from the response. If it is not there, default to
+       // our presets.
+       const $wrapper = response.selector ? $(response.selector) : $(ajax.wrapper);
+       const method = response.method || ajax.method;
+       const effect = ajax.getEffect(response);
+-      let settings;
++
++      // Apply any settings from the returned JSON if available.
++      const settings = response.settings || ajax.settings || drupalSettings;
+ 
+       // We don't know what response.data contains: it might be a string of text
+       // without HTML, so don't rely on jQuery correctly interpreting
+       // $(response.data) as new HTML rather than a CSS selector. Also, if
+       // response.data contains top-level text nodes, they get lost with either
+       // $(response.data) or $('<div></div>').replaceWith(response.data).
+-      const $new_content_wrapped = $('<div></div>').html(response.data);
+-      let $new_content = $new_content_wrapped.contents();
+-
+-      // For legacy reasons, the effects processing code assumes that
+-      // $new_content consists of a single top-level element. Also, it has not
+-      // been sufficiently tested whether attachBehaviors() can be successfully
+-      // called with a context object that includes top-level text nodes.
+-      // However, to give developers full control of the HTML appearing in the
+-      // page, and to enable Ajax content to be inserted in places where <div>
+-      // elements are not allowed (e.g., within <table>, <tr>, and <span>
+-      // parents), we check if the new content satisfies the requirement
+-      // of a single top-level element, and only use the container <div> created
+-      // above when it doesn't. For more information, please see
+-      // https://www.drupal.org/node/736066.
+-      if ($new_content.length !== 1 || $new_content.get(0).nodeType !== 1) {
+-        $new_content = $new_content_wrapped;
++      // attachBehaviors() can, for the same reason, not be called with a
++      // context object that includes top-level text nodes. Therefore text nodes
++      // will be wrapped with a <span> element. This also gives themers the
++      // possibility to style the response.
++      let $newContent;
++      // We use the trimmed data to be able to detect cases when the response
++      // has only top-level elements or comment nodes with extra whitespace
++      // around. In that case whitespaces are removed and the response
++      // should not be wrapped.
++      // For example:
++      //   '  <div>content</div> ' is equivalent to '<div>content</div>' and
++      // no extra wrapper will be added.
++      const trimmedData = response.data.trim();
++      // List of DOM nodes contained in the response for processing.
++      let responseDataNodes;
++
++      // When 'data' is empty or is only whitespace, manually create the node
++      // array because parseHTML would return null.
++      if (trimmedData === '') {
++        responseDataNodes = [document.createTextNode(response.data)];
++      }
++      else {
++        responseDataNodes = $.parseHTML(trimmedData, true);
++      }
++      // Check every node for it's type to decide if wrapping is necessary.
++      const onlyElementNodes = responseDataNodes.every(
++        element => element.nodeType === Node.ELEMENT_NODE || element.nodeType === Node.COMMENT_NODE,
++      );
++
++      // When there are only element and/or comment nodes in the response, no
++      // extra wrapping necessary.
++      if (onlyElementNodes) {
++        $newContent = $(trimmedData);
++      }
++      // When there are other types of top-level nodes, the response need to be
++      // wrapped.
++      else {
++        // If response.data contains only one TEXT_ELEMENT if the target element
++        // is not styled as a block, response.data will be wrapped with SPAN.
++        if (responseDataNodes.length === 1 || ($wrapper.css('display') !== 'block')) {
++          $newContent = $('<span></span>');
++        }
++        else {
++          $newContent = $('<div></div>');
++        }
++        // Use response.data to keep whitespace as-is.
++        $newContent.html(response.data);
+       }
+ 
+       // If removing content from the wrapper, detach behaviors first.
+@@ -1050,36 +1081,42 @@
+         case 'replaceAll':
+         case 'empty':
+         case 'remove':
+-          settings = response.settings || ajax.settings || drupalSettings;
+           Drupal.detachBehaviors($wrapper.get(0), settings);
++          break;
++        default:
++          break;
+       }
+ 
+       // Add the new content to the page.
+-      $wrapper[method]($new_content);
++      $wrapper[method]($newContent);
+ 
+       // Immediately hide the new content if we're using any effects.
+       if (effect.showEffect !== 'show') {
+-        $new_content.hide();
++        $newContent.hide();
+       }
+ 
+       // Determine which effect to use and what content will receive the
+       // effect, then show the new content.
+-      if ($new_content.find('.ajax-new-content').length > 0) {
+-        $new_content.find('.ajax-new-content').hide();
+-        $new_content.show();
+-        $new_content.find('.ajax-new-content')[effect.showEffect](effect.showSpeed);
++      const $ajaxNewContent = $newContent.find('.ajax-new-content');
++      if ($ajaxNewContent.length) {
++        $ajaxNewContent.hide();
++        $newContent.show();
++        $ajaxNewContent[effect.showEffect](effect.showSpeed);
+       }
+       else if (effect.showEffect !== 'show') {
+-        $new_content[effect.showEffect](effect.showSpeed);
++        $newContent[effect.showEffect](effect.showSpeed);
+       }
+ 
+       // Attach all JavaScript behaviors to the new content, if it was
+       // successfully added to the page, this if statement allows
+       // `#ajax['wrapper']` to be optional.
+-      if ($new_content.parents('html').length > 0) {
+-        // Apply any settings from the returned JSON if available.
+-        settings = response.settings || ajax.settings || drupalSettings;
+-        Drupal.attachBehaviors($new_content.get(0), settings);
++      if ($newContent.parents('html').length) {
++        // Attach behaviors to all element nodes.
++        $newContent.each((index, element) => {
++          if (element.nodeType === Node.ELEMENT_NODE) {
++            Drupal.attachBehaviors(element, settings);
++          }
++        });
+       }
+     },
+ 
+diff --git a/core/misc/ajax.js b/core/misc/ajax.js
+index 364b470..a9bb72c 100644
+--- a/core/misc/ajax.js
++++ b/core/misc/ajax.js
+@@ -474,46 +474,74 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
+ 
+   Drupal.AjaxCommands = function () {};
+   Drupal.AjaxCommands.prototype = {
+-    insert: function insert(ajax, response, status) {
++    insert: function insert(ajax, response) {
+       var $wrapper = response.selector ? $(response.selector) : $(ajax.wrapper);
+       var method = response.method || ajax.method;
+       var effect = ajax.getEffect(response);
+-      var settings = void 0;
++      var settings = response.settings || ajax.settings || drupalSettings;
++
++      var $newContent = void 0;
++
++      var trimmedData = response.data.trim();
++
++      var responseDataNodes = void 0;
++
++      if (trimmedData === '') {
++        responseDataNodes = [document.createTextNode(response.data)];
++      } else {
++        responseDataNodes = $.parseHTML(trimmedData, true);
++      }
+ 
+-      var $new_content_wrapped = $('<div></div>').html(response.data);
+-      var $new_content = $new_content_wrapped.contents();
++      var onlyElementNodes = responseDataNodes.every(function (element) {
++        return element.nodeType === Node.ELEMENT_NODE || element.nodeType === Node.COMMENT_NODE;
++      });
++
++      if (onlyElementNodes) {
++        $newContent = $(trimmedData);
++      } else {
++        if (responseDataNodes.length === 1 || $wrapper.css('display') !== 'block') {
++          $newContent = $('<span></span>');
++        } else {
++          $newContent = $('<div></div>');
++        }
+ 
+-      if ($new_content.length !== 1 || $new_content.get(0).nodeType !== 1) {
+-        $new_content = $new_content_wrapped;
++        $newContent.html(response.data);
+       }
+ 
++
+       switch (method) {
+         case 'html':
+         case 'replaceWith':
+         case 'replaceAll':
+         case 'empty':
+         case 'remove':
+-          settings = response.settings || ajax.settings || drupalSettings;
+           Drupal.detachBehaviors($wrapper.get(0), settings);
++          break;
++        default:
++          break;
+       }
+ 
+-      $wrapper[method]($new_content);
++      $wrapper[method]($newContent);
+ 
+       if (effect.showEffect !== 'show') {
+-        $new_content.hide();
++        $newContent.hide();
+       }
+ 
+-      if ($new_content.find('.ajax-new-content').length > 0) {
+-        $new_content.find('.ajax-new-content').hide();
+-        $new_content.show();
+-        $new_content.find('.ajax-new-content')[effect.showEffect](effect.showSpeed);
++      var $ajaxNewContent = $newContent.find('.ajax-new-content');
++      if ($ajaxNewContent.length) {
++        $ajaxNewContent.hide();
++        $newContent.show();
++        $ajaxNewContent[effect.showEffect](effect.showSpeed);
+       } else if (effect.showEffect !== 'show') {
+-        $new_content[effect.showEffect](effect.showSpeed);
++        $newContent[effect.showEffect](effect.showSpeed);
+       }
+ 
+-      if ($new_content.parents('html').length > 0) {
+-        settings = response.settings || ajax.settings || drupalSettings;
+-        Drupal.attachBehaviors($new_content.get(0), settings);
++      if ($newContent.parents('html').length) {
++        $newContent.each(function (index, element) {
++          if (element.nodeType === Node.ELEMENT_NODE) {
++            Drupal.attachBehaviors(element, settings);
++          }
++        });
+       }
+     },
+     remove: function remove(ajax, response, status) {
+@@ -588,4 +616,4 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
+       }
+     }
+   };
+-})(jQuery, window, Drupal, drupalSettings);
+\ No newline at end of file
++})(jQuery, window, Drupal, drupalSettings);
+diff --git a/core/modules/system/tests/modules/ajax_test/ajax_test.libraries.yml b/core/modules/system/tests/modules/ajax_test/ajax_test.libraries.yml
+index f1c7306..9b9ef32 100644
+--- a/core/modules/system/tests/modules/ajax_test/ajax_test.libraries.yml
++++ b/core/modules/system/tests/modules/ajax_test/ajax_test.libraries.yml
+@@ -21,3 +21,9 @@ order-header-js-command:
+   header: true
+   js:
+     header.js: {}
++
++ajax_insert:
++  js:
++    js/insert-ajax.js: {}
++  dependencies:
++    - core/drupal.ajax
+diff --git a/core/modules/system/tests/modules/ajax_test/ajax_test.routing.yml b/core/modules/system/tests/modules/ajax_test/ajax_test.routing.yml
+index e8d06c0..63e5651 100644
+--- a/core/modules/system/tests/modules/ajax_test/ajax_test.routing.yml
++++ b/core/modules/system/tests/modules/ajax_test/ajax_test.routing.yml
+@@ -55,3 +55,18 @@ ajax_test.render_error:
+     _controller: '\Drupal\ajax_test\Controller\AjaxTestController::renderError'
+   requirements:
+     _access: 'TRUE'
++
++ajax_test.ajax_render_types:
++  path: '/ajax-test/dialog-contents-types/{type}'
++  defaults:
++    _title: 'AJAX Dialog contents routing'
++    _controller: '\Drupal\ajax_test\Controller\AjaxTestController::renderTypes'
++  requirements:
++    _access: 'TRUE'
++
++ajax_test.insert_links:
++  path: '/ajax-test/insert'
++  defaults:
++    _controller: '\Drupal\ajax_test\Controller\AjaxTestController::insertLinks'
++  requirements:
++    _access: 'TRUE'
+diff --git a/core/modules/system/tests/modules/ajax_test/js/insert-ajax.es6.js b/core/modules/system/tests/modules/ajax_test/js/insert-ajax.es6.js
+new file mode 100644
+index 0000000..5a3a49d
+--- /dev/null
++++ b/modules/system/tests/modules/ajax_test/js/insert-ajax.es6.js
+@@ -0,0 +1,41 @@
++/**
++ * @file
++ * Drupal behavior to attach click event handlers to ajax-insert and
++ * ajax-insert-inline links for testing ajax requests.
++ */
++
++(function ($, window, Drupal) {
++  'use strict';
++
++  Drupal.behaviors.insertTest = {
++    attach(context) {
++      $('.ajax-insert').once('ajax-insert').on('click', (event) => {
++        event.preventDefault();
++        const ajaxSettings = {
++          url: event.currentTarget.getAttribute('href'),
++          wrapper: 'ajax-target',
++          base: false,
++          element: false,
++          method: event.currentTarget.getAttribute('data-method'),
++        };
++        const myAjaxObject = Drupal.ajax(ajaxSettings);
++        myAjaxObject.execute();
++      });
++
++      $('.ajax-insert-inline').once('ajax-insert').on('click', (event) => {
++        event.preventDefault();
++        const ajaxSettings = {
++          url: event.currentTarget.getAttribute('href'),
++          wrapper: 'ajax-target-inline',
++          base: false,
++          element: false,
++          method: event.currentTarget.getAttribute('data-method'),
++        };
++        const myAjaxObject = Drupal.ajax(ajaxSettings);
++        myAjaxObject.execute();
++      });
++
++      $(context).addClass('processed');
++    },
++  };
++})(jQuery, window, Drupal);
+diff --git a/core/modules/system/tests/modules/ajax_test/js/insert-ajax.js b/core/modules/system/tests/modules/ajax_test/js/insert-ajax.js
+new file mode 100644
+index 0000000..64e39be
+--- /dev/null
++++ b/modules/system/tests/modules/ajax_test/js/insert-ajax.js
+@@ -0,0 +1,42 @@
++/**
++* DO NOT EDIT THIS FILE.
++* See the following change record for more information,
++* https://www.drupal.org/node/2815083
++* @preserve
++**/
++
++(function ($, window, Drupal) {
++  'use strict';
++
++  Drupal.behaviors.insertTest = {
++    attach: function attach(context) {
++      $('.ajax-insert').once('ajax-insert').on('click', function (event) {
++        event.preventDefault();
++        var ajaxSettings = {
++          url: event.currentTarget.getAttribute('href'),
++          wrapper: 'ajax-target',
++          base: false,
++          element: false,
++          method: event.currentTarget.getAttribute('data-method')
++        };
++        var myAjaxObject = Drupal.ajax(ajaxSettings);
++        myAjaxObject.execute();
++      });
++
++      $('.ajax-insert-inline').once('ajax-insert').on('click', function (event) {
++        event.preventDefault();
++        var ajaxSettings = {
++          url: event.currentTarget.getAttribute('href'),
++          wrapper: 'ajax-target-inline',
++          base: false,
++          element: false,
++          method: event.currentTarget.getAttribute('data-method')
++        };
++        var myAjaxObject = Drupal.ajax(ajaxSettings);
++        myAjaxObject.execute();
++      });
++
++      $(context).addClass('processed');
++    }
++  };
++})(jQuery, window, Drupal);
+diff --git a/core/modules/system/tests/modules/ajax_test/src/Controller/AjaxTestController.php b/core/modules/system/tests/modules/ajax_test/src/Controller/AjaxTestController.php
+index 5ba65e8..971d615 100644
+--- a/core/modules/system/tests/modules/ajax_test/src/Controller/AjaxTestController.php
++++ b/core/modules/system/tests/modules/ajax_test/src/Controller/AjaxTestController.php
+@@ -42,6 +42,61 @@ class AjaxTestController {
+     return $content;
+   }
+ 
++  /**
++   * Example content for testing whether response should be wrapped in div.
++   *
++   * @param string $type
++   *   Type of response.
++   *
++   * @return array
++   *   Renderable array of AJAX response contents.
++   */
++  public function renderTypes($type) {
++    $content = [
++      '#title' => '<em>AJAX Dialog & contents</em>',
++      'content' => [
++        '#type' => 'inline_template',
++        '#template' => $this->getRenderTypes()[$type],
++      ],
++    ];
++
++    return $content;
++  }
++
++  /**
++   * Returns a render array of links that directly Drupal.ajax().
++   */
++  public function insertLinks() {
++    $methods = [
++      'html',
++      'replaceWith',
++    ];
++
++    $build['links'] = [
++      'ajax_target' => [
++        '#markup' => '<div id="ajax-target" data-drupal-ajax-target="">Target</div><span id="ajax-target-inline" data-drupal-ajax-target="">Target inline</span>',
++      ],
++      'links' => [
++        '#theme' => 'links',
++        '#attached' => ['library' => ['ajax_test/ajax_insert']],
++      ],
++    ];
++    foreach ($methods as $method) {
++      foreach (array_keys($this->getRenderTypes()) as $type) {
++        $class = $type == 'inline' ? 'ajax-insert-inline' : 'ajax-insert';
++        $build['links']['links']['#links']["$method-$type"] = [
++          'title' => "Link $method $type",
++          'url' => Url::fromRoute('ajax_test.ajax_render_types', ['type' => $type]),
++          'attributes' => [
++            'class' => [$class],
++            'data-method' => $method,
++          ],
++        ];
++      }
++    }
++    return $build;
++  }
++
+   /**
+    * Returns a render array that will be rendered by AjaxRenderer.
+    *
+@@ -222,4 +277,25 @@ class AjaxTestController {
+     return $response;
+   }
+ 
++  /**
++   * Render types.
++   *
++   * @return array
++   *   Render types.
++   */
++  protected function getRenderTypes() {
++    return [
++      'pre-wrapped' => '<div class="pre-wrapped">pre-wrapped<script> var test;</script></div>',
++      'pre-wrapped-whitespace' => ' <div class="pre-wrapped-whitespace">pre-wrapped-whitespace</div>' . "\r\n",
++      'not-wrapped' => 'not-wrapped',
++      'comment-not-wrapped' => '<!-- COMMENT --><div class="comment-not-wrapped">comment-not-wrapped</div>',
++      'mixed' => ' foo <!-- COMMENT -->  foo bar<div class="a class"><p>some string</p></div> additional not wrapped strings, <!-- ANOTHER COMMENT --> <p>final string</p>',
++      'top-level-only' => '<div>element #1</div><div>element #2</div>',
++      'top-level-only-pre-whitespace' => ' <div>element #1</div><div>element #2</div> ',
++      'top-level-only-middle-whitespace' => '<div>element #1</div> <div>element #2</div>',
++      'inline' => 'inline <div>BLOCK LEVEL<script> var test;</script></div>',
++      'empty' => '',
++    ];
++  }
++
+ }
+diff --git a/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxFormPageCacheTest.php b/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxFormPageCacheTest.php
+index 3d174b0..1671840 100644
+--- a/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxFormPageCacheTest.php
++++ b/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxFormPageCacheTest.php
+@@ -55,8 +55,8 @@ class AjaxFormPageCacheTest extends JavascriptTestBase {
+ 
+     // Wait for the DOM to update. The HtmlCommand will update
+     // #ajax_selected_color to reflect the color change.
+-    $green_div = $this->assertSession()->waitForElement('css', "#ajax_selected_color div:contains('green')");
+-    $this->assertNotNull($green_div, 'DOM update: The selected color DIV is green.');
++    $green_span = $this->assertSession()->waitForElement('css', "#ajax_selected_color span:contains('green')");
++    $this->assertNotNull($green_span, 'DOM update: The selected color SPAN is green.');
+ 
+     // Confirm the operation of the UpdateBuildIdCommand.
+     $build_id_first_ajax = $this->getFormBuildId();
+@@ -67,8 +67,8 @@ class AjaxFormPageCacheTest extends JavascriptTestBase {
+     $session->getPage()->selectFieldOption('select', 'red');
+ 
+     // Wait for the DOM to update.
+-    $red_div = $this->assertSession()->waitForElement('css', "#ajax_selected_color div:contains('red')");
+-    $this->assertNotNull($red_div, 'DOM update: The selected color DIV is red.');
++    $red_span = $this->assertSession()->waitForElement('css', "#ajax_selected_color span:contains('red')");
++    $this->assertNotNull($red_span, 'DOM update: The selected color SPAN is red.');
+ 
+     // Confirm the operation of the UpdateBuildIdCommand.
+     $build_id_second_ajax = $this->getFormBuildId();
+@@ -86,8 +86,9 @@ class AjaxFormPageCacheTest extends JavascriptTestBase {
+     $session->getPage()->selectFieldOption('select', 'green');
+ 
+     // Wait for the DOM to update.
+-    $green_div2 = $this->assertSession()->waitForElement('css', "#ajax_selected_color div:contains('green')");
+-    $this->assertNotNull($green_div2, 'DOM update: After reload - the selected color DIV is green.');
++    $green_span2 = $this->assertSession()->waitForElement('css', "#ajax_selected_color span:contains('green')");
++    $this->assertNotNull($green_span2, 'DOM update: After reload - the selected color SPAN is green.');
++
+ 
+     $build_id_from_cache_first_ajax = $this->getFormBuildId();
+     $this->assertNotEquals($build_id_from_cache_initial, $build_id_from_cache_first_ajax, 'Build id is changed in the simpletest-DOM on first AJAX submission');
+@@ -98,8 +99,8 @@ class AjaxFormPageCacheTest extends JavascriptTestBase {
+     $session->getPage()->selectFieldOption('select', 'red');
+ 
+     // Wait for the DOM to update.
+-    $red_div2 = $this->assertSession()->waitForElement('css', "#ajax_selected_color div:contains('red')");
+-    $this->assertNotNull($red_div2, 'DOM update: After reload - the selected color DIV is red.');
++    $red_span2 = $this->assertSession()->waitForElement('css', "#ajax_selected_color span:contains('red')");
++    $this->assertNotNull($red_span2, 'DOM update: After reload - the selected color SPAN is red.');
+ 
+     $build_id_from_cache_second_ajax = $this->getFormBuildId();
+     $this->assertNotEquals($build_id_from_cache_first_ajax, $build_id_from_cache_second_ajax, 'Build id changes on subsequent AJAX submissions');
+diff --git a/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxTest.php b/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxTest.php
+index e059405..8baa3f6 100644
+--- a/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxTest.php
++++ b/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxTest.php
+@@ -16,6 +16,19 @@ class AjaxTest extends JavascriptTestBase {
+    */
+   public static $modules = ['ajax_test'];
+ 
++  /**
++   * Wrap HTML with an AJAX target element.
++   *
++   * @param string $html
++   *   The HTML to wrap.
++   *
++   * @return string
++   *   The HTML wrapped in the an AJAX target element.
++   */
++  protected function wrapAjaxTarget($html) {
++    return 'data-drupal-ajax-target="">' . $html . '</';
++  }
++
+   public function testAjaxWithAdminRoute() {
+     \Drupal::service('theme_installer')->install(['stable', 'seven']);
+     $theme_config = \Drupal::configFactory()->getEditable('system.theme');
+@@ -82,4 +95,97 @@ class AjaxTest extends JavascriptTestBase {
+     $this->assertNotContains($fake_library, $libraries);
+   }
+ 
++  /**
++   * Tests that various AJAX responses with DOM elements are correctly inserted.
++   *
++   * After inserting DOM elements, Drupal JavaScript behaviors should be
++   * reattached and all top-level elements of type Node.ELEMENT_NODE need to be
++   * part of the context.
++   */
++  public function testInsert() {
++    $assert = $this->assertSession();
++    $test_cases = [
++      // Test that no additional wrapper is added when inserting already wrapped
++      // response data and all top-level node elements (context) are processed
++      // correctly.
++      [
++        'render_type' => 'pre-wrapped',
++        'expected' => '<div class="pre-wrapped processed">pre-wrapped<script> var test;</script></div>',
++      ],
++      // Test that no additional empty leading div is added when the return
++      // value had a leading space and all top-level node elements (context) are
++      // processed correctly.
++      [
++        'render_type' => 'pre-wrapped-whitespace',
++        'expected' => '<div class="pre-wrapped-whitespace processed">pre-wrapped-whitespace</div>',
++      ],
++      // Test that not wrapped response data (text node) is inserted wrapped and
++      // all top-level node elements (context) are processed correctly.
++      [
++        'render_type' => 'not-wrapped',
++        'expected' => '<span class="processed">not-wrapped</span>',
++      ],
++      // Test that top-level comments (which are not lead by text nodes) are
++      // inserted without wrapper.
++      [
++        'render_type' => 'comment-not-wrapped',
++        'expected' => '<!-- COMMENT --><div class="comment-not-wrapped processed">comment-not-wrapped</div>',
++      ],
++      // Test that wrappend and not-wrapped response data is inserted correctly
++      // and all top-level node elements (context) are processed correctly.
++      [
++        'method' => 'html',
++        'render_type' => 'mixed',
++        'expected' => '<div class="processed"> foo <!-- COMMENT -->  foo bar<div class="a class"><p>some string</p></div> additional not wrapped strings, <!-- ANOTHER COMMENT --> <p>final string</p></div>',
++      ],
++      // Test that when the response has only top-level node elements, they
++      // are processed properly without extra wrapping.
++      [
++        'method' => 'html',
++        'render_type' => 'top-level-only',
++        'expected' => '<div class="processed">element #1</div><div class="processed">element #2</div>',
++      ],
++      // Test that whitespaces at start or end don't wrap the response when
++      // there are multiple top-level nodes.
++      [
++        'method' => 'html',
++        'render_type' => 'top-level-only-pre-whitespace',
++        'expected' => '<div class="processed">element #1</div><div class="processed">element #2</div>',
++      ],
++      // Test that when there are whitespaces between top-level nodes, the
++      // response is wrapped.
++      [
++        'method' => 'html',
++        'render_type' => 'top-level-only-middle-whitespace',
++        'expected' => '<div class="processed"><div>element #1</div> <div>element #2</div></div>',
++      ],
++      // Test that inline response data.
++      [
++        'render_type' => 'inline',
++        'expected' => '<span class="processed">inline <div>BLOCK LEVEL<script> var test;</script></div></span>',
++      ],
++      // Test that empty response data.
++      [
++        'render_type' => 'empty',
++        'expected' => '<span class="processed"></span>',
++      ],
++    ];
++
++    $this->drupalGet('ajax-test/insert');
++    foreach ($test_cases as $test_case) {
++      $this->clickLink("Link html {$test_case['render_type']}");
++      $assert->assertWaitOnAjaxRequest();
++      // Extra span added by a second prepend command on the ajax requests.
++      $assert->responseContains($this->wrapAjaxTarget($test_case['expected']));
++    }
++
++    foreach ($test_cases as $test_case) {
++      $this->drupalGet('ajax-test/insert');
++      $this->clickLink("Link replaceWith {$test_case['render_type']}");
++      $assert->assertWaitOnAjaxRequest();
++      $assert->responseContains($test_case['expected']);
++      $assert->responseNotContains($this->wrapAjaxTarget($test_case['expected']));
++    }
++  }
++
+ }

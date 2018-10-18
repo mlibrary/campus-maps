@@ -1,0 +1,304 @@
+diff --git a/css/ajax-toggle.css b/css/ajax-toggle.css
+new file mode 100644
+index 0000000..17074eb
+--- /dev/null
++++ b/css/ajax-toggle.css
+@@ -0,0 +1,6 @@
++[class^="use-ajax-toggle-"]{
++  display:block;
++}
++[class^="ajax-toggle-"]{
++  display:none;
++}
+diff --git a/js/toggle-command.js b/js/toggle-command.js
+new file mode 100644
+index 0000000..a333f32
+--- /dev/null
++++ b/js/toggle-command.js
+@@ -0,0 +1,17 @@
++(function ($, Drupal) {
++
++  'use strict';
++
++  /**
++   * Command to toggle page elements.
++   *
++   * @param {Drupal.Ajax} [ajax]
++   * @param {object} response
++   * @param {string} response.selector
++   * @param {object} [response.settings]
++   * @param {number} [status]
++   */
++  Drupal.AjaxCommands.prototype.toggle = function(ajax, response, status){
++    $(response.selector).toggle();
++  }
++})(jQuery, Drupal);
+diff --git a/smart_trim.libraries.yml b/smart_trim.libraries.yml
+new file mode 100644
+index 0000000..d6efadf
+--- /dev/null
++++ b/smart_trim.libraries.yml
+@@ -0,0 +1,11 @@
++toggle:
++  version: 1.x
++  css:
++    component:
++      css/ajax-toggle.css: {}
++  js:
++    js/toggle-command.js: {}
++  dependencies:
++    - core/jquery
++    - core/drupal
++    - core/drupal.ajax
+diff --git a/smart_trim.routing.yml b/smart_trim.routing.yml
+new file mode 100644
+index 0000000..d55614b
+--- /dev/null
++++ b/smart_trim.routing.yml
+@@ -0,0 +1,11 @@
++ajax_toggle_entity.event:
++  path: '/smart_trim/{entity_type}/{entity_id}/method/{method}/event/{event_id}/{fieldname}'
++  defaults:
++    _controller: '\Drupal\smart_trim\Controller\AjaxController::toggle'
++  options:
++    parameters:
++      fieldname: ^[a-zA-Z0-9_]+
++  requirements:
++    _custom_access: '\Drupal\smart_trim\Controller\AjaxController::access'
++    method: 'nojs|ajax'
++    entity_id: \d+
+diff --git a/src/Ajax/ToggleCommand.php b/src/Ajax/ToggleCommand.php
+new file mode 100644
+index 0000000..e7d82e9
+--- /dev/null
++++ b/src/Ajax/ToggleCommand.php
+@@ -0,0 +1,38 @@
++<?php
++
++namespace Drupal\smart_trim\Ajax;
++
++use Drupal\Core\Ajax\CommandInterface;
++
++/**
++ * AJAX command to refresh an smart_trim field widget.
++ */
++class ToggleCommand implements CommandInterface {
++  /**
++   * A CSS selector string.
++   *
++   * @var string
++   */
++  protected $selector;
++
++  /**
++   * Constructs an ToggleCommand object.
++   *
++   * @param string $selector
++   *   A CSS selector.
++   */
++  public function __construct($selector) {
++    $this->selector = $selector;
++  }
++  /**
++   * Implements Drupal\Core\Ajax\CommandInterface:render().
++   */
++  public function render() {
++    return array(
++      // 'command' element passes name of JavaScript function to execute.
++      'command' => 'toggle',
++      'method' => NULL,
++      'selector' => $this->selector,
++    );
++  }
++}
+diff --git a/src/Controller/AjaxController.php b/src/Controller/AjaxController.php
+new file mode 100644
+index 0000000..97c94ce
+--- /dev/null
++++ b/src/Controller/AjaxController.php
+@@ -0,0 +1,47 @@
++<?php
++
++namespace Drupal\smart_trim\Controller;
++
++use Drupal\Core\Routing\RouteMatch;
++use Drupal\Core\Session\AccountInterface;
++use Drupal\smart_trim\Ajax\ToggleCommand;
++use Drupal\Core\Ajax\AjaxResponse;
++
++/**
++ * Class AjaxController
++ *
++ * @package Drupal\smart_trim\Controller
++ */
++class AjaxController {
++
++  /**
++   * @param string $fieldname
++   *
++   * @return \Drupal\Core\Ajax\AjaxResponse
++   */
++  public function toggle($fieldname = '') {
++    $response = new AjaxResponse();
++    $response->addCommand(new ToggleCommand('.use-ajax-toggle-' . $fieldname));
++    $response->addCommand(new ToggleCommand('.ajax-toggle-' . $fieldname));
++
++    return $response;
++  }
++
++  /**
++   * Custom access check for the smart_trim event.
++   *
++   * @param \Drupal\Core\Routing\RouteMatch $match
++   *   The route of the smart_trim event.
++   * @param \Drupal\Core\Session\AccountInterface $account
++   *   Run access checks for this account.
++   *
++   * @return \Drupal\Core\Access\AccessResultInterface Returns allowed if we have a permission to view the entity.
++   * Returns allowed if we have a permission to view the entity.
++   */
++  public function access(RouteMatch $match, AccountInterface $account) {
++    $storage = \Drupal::entityTypeManager()->getStorage($match->getParameter('entity_type'));
++    $entity = $storage->load($match->getParameter('entity_id'));
++    return $entity->access('view', $account, TRUE);
++  }
++
++}
+diff --git a/src/Plugin/Field/FieldFormatter/SmartTrimFormatter.php b/src/Plugin/Field/FieldFormatter/SmartTrimFormatter.php
+index 5a07724..747a399 100644
+--- a/src/Plugin/Field/FieldFormatter/SmartTrimFormatter.php
++++ b/src/Plugin/Field/FieldFormatter/SmartTrimFormatter.php
+@@ -48,6 +48,8 @@ class SmartTrimFormatter extends FormatterBase {
+       'more_link' => 0,
+       'more_class' => 'more-link',
+       'more_text' => 'More',
++      'use_ajax' => 0,
++      'less_text' => 'Less',
+       'summary_handler' => 'full',
+       'trim_options' => array(),
+     ) + parent::defaultSettings();
+@@ -125,6 +127,24 @@ class SmartTrimFormatter extends FormatterBase {
+       ),
+     );
+ 
++    $element['use_ajax'] = [
++      '#title' => t('Use Ajax?'),
++      '#type' => 'select',
++      '#options' => [
++        0 => t("No"),
++        1 => t("Yes"),
++      ],
++      '#default_value' => $this->getSetting('use_ajax'),
++      '#description' => t('If using Ajax, you will likely want to display the more link and not use summary'),
++    ];
++
++    $element['less_text'] = [
++      '#title' => t('Less link text'),
++      '#type' => 'textfield',
++      '#size' => 20,
++      '#default_value' => $this->getSetting('less_text'),
++      '#description' => t('If using Ajax, enter the text for the link.'),
++    ];
+     $element['more_class'] = array(
+       '#title' => $this->t('More link class'),
+       '#type' => 'textfield',
+@@ -182,6 +202,9 @@ class SmartTrimFormatter extends FormatterBase {
+     if ($this->getSetting('more_link')) {
+       $trim_string .= ", " . $this->t("with more link");
+     }
++    if ($this->getSetting('use_ajax')) {
++      $trim_string .= ", " . t("with ajax link");
++    }
+     $summary[] = $trim_string;
+ 
+     return $summary;
+@@ -196,6 +219,7 @@ class SmartTrimFormatter extends FormatterBase {
+     $setting_trim_options = $this->getSetting('trim_options');
+     $settings_summary_handler = $this->getSetting('summary_handler');
+     $entity = $items->getEntity();
++    $field_name = $items->getName();
+ 
+     foreach ($items as $delta => $item) {
+       if ($settings_summary_handler != 'ignore' && !empty($item->summary)) {
+@@ -208,6 +232,7 @@ class SmartTrimFormatter extends FormatterBase {
+         $output = $item->value;
+       }
+ 
++      $input = $output;
+       // Process additional options (currently only HTML on/off).
+       if (!empty($setting_trim_options)) {
+         if (!empty($setting_trim_options['text'])) {
+@@ -254,7 +279,7 @@ class SmartTrimFormatter extends FormatterBase {
+         $uri = $entity->hasLinkTemplate('canonical') ? $entity->toUrl() : NULL;
+ 
+         // But wait! Don't add a more link if the field ends in <!--break-->.
+-        if ($uri && $this->getSetting('more_link') && strpos(strrev($output), strrev('<!--break-->')) !== 0) {
++        if ($uri && $this->getSetting('more_link') && strpos(strrev($output), strrev('<!--break-->')) !== 0 && !$this->getSetting('use_ajax')) {
+           $more = $this->t($this->getSetting('more_text'));
+           $class = $this->getSetting('more_class');
+ 
+@@ -270,9 +295,62 @@ class SmartTrimFormatter extends FormatterBase {
+           $link = render($project_link);
+         }
+       }
+-      $output .= $link;
+-      $element[$delta] = array('#markup' => $output);
++      //if we are using ajax, add the js and apply to the element.
++      if ($this->getSetting('use_ajax') && $output != $input) {
++        $more = $this->getSetting('more_text');
++        $less = $this->getSetting('less_text');
++
++        // Build route parameters.
++        $parameters = [
++          'entity_type' => $entity->getEntityTypeId(),
++          'entity_id' => $entity->id(),
++          'event_id' => $delta,
++          'fieldname' => $field_name,
++          // Set method to 'nojs' (will be replaced with 'ajax' during requests).
++          'method' => 'nojs',
++        ];
++        $parameters[$entity->getEntityTypeId()] = $entity->id();
++
++        // Build link options.
++        $m_options = [
++          'attributes' => [
++            // Add 'use-ajax' as class to link to utilize Ajax API.
++            'class' => ['use-ajax', 'smart-trim-event-link'],
++            'data-event-id' => $delta,
++            'fieldname' => $field_name,
++            'title' => $more,
++          ],
++        ];
++        $l_options = [
++          'attributes' => [
++            // Add 'use-ajax' as class to link to utilize Ajax API.
++            'class' => ['use-ajax', 'smart-trim-event-link'],
++            'data-event-id' => $delta,
++            'fieldname' => $field_name,
++            'title' => $less,
++          ],
++        ];
++
++        $more_link = Link::createFromRoute($more, 'ajax_toggle_entity.event', $parameters, $m_options);
++        $more_link = $more_link->toRenderable();
++        $more_link = render($more_link);
++
++        $less_link = Link::createFromRoute($less, 'ajax_toggle_entity.event', $parameters, $l_options);
++        $less_link = $less_link->toRenderable();
++        $less_link = render($less_link);
++
++        $element[$delta]['#attached']['library'] = [
++          'smart_trim/toggle',
++        ];
++        $output = "<div class='use-ajax-toggle-" . $field_name . "'>" . $output . $more_link . "</div><div class='ajax-toggle-" . $field_name . "'>" . $input . $less_link . "</div>";
++        $element[$delta]['#attached']['library'] = ['smart_trim/toggle'];
++      }
++      else {
++        $output .= $link;
++      }
++      $element[$delta]['#markup'] = $output;
+     }
++
+     return $element;
+   }
+ 

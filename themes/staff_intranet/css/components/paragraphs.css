@@ -1,0 +1,14 @@
+/**
+ * @file
+ * Styles for paragraphs in staff_intranet.
+ */
+
+.paragraph .field {
+  display: inline-block;
+  margin: 0 .1em;
+}
+
+.paragraph .field--name-field-room-function-percentage {
+  float: right;
+  margin-right: 50px;
+}

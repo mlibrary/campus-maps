@@ -1,0 +1,5 @@
+# Schema for the configuration files of the staff_intranet theme.
+
+staff_intranet.settings:
+  type: theme_settings
+  label: 'staff_intranet settings'

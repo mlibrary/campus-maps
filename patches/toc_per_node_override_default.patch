@@ -1,0 +1,69 @@
+diff --git a/modules/toc_js_per_node/toc_js_per_node.module b/modules/toc_js_per_node/toc_js_per_node.module
+index 0db05de..55d19dc 100755
+--- a/modules/toc_js_per_node/toc_js_per_node.module
++++ b/modules/toc_js_per_node/toc_js_per_node.module
+@@ -68,6 +68,18 @@ function toc_js_per_node_form_node_type_form_alter(&$form, FormStateInterface $f
+     '#weight' => 100,
+   ];
+ 
++    $form['toc_js']['override_default'] = [
++    '#type' => 'checkbox',
++    '#title' => t('Enable / disable the table of content default value'),
++    '#default_value' => $type->getThirdPartySetting('toc_js_per_node', 'override_default', 0),
++    '#states' => [
++      'visible' => [
++        ':input[name="override"]' => ['checked' => TRUE],
++      ],
++    ],
++    '#weight' => 100,
++  ];
++
+   $form['#entity_builders'][] = 'toc_js_per_node_form_node_type_form_builder';
+ }
+ 
+@@ -76,6 +88,7 @@ function toc_js_per_node_form_node_type_form_alter(&$form, FormStateInterface $f
+  */
+ function toc_js_per_node_form_node_type_form_builder($entity_type, NodeTypeInterface $type, &$form, FormStateInterface $form_state) {
+   $type->setThirdPartySetting('toc_js_per_node', 'override', $form_state->getValue('override'));
++  $type->setThirdPartySetting('toc_js_per_node', 'override_default', $form_state->getValue('override_default'));
+ }
+ 
+ /**
+@@ -110,10 +123,16 @@ function toc_js_per_node_form_node_form_alter(&$form, FormStateInterface &$form_
+   /** @var \Drupal\node\NodeTypeInterface $node_type */
+   $node_type = $node->type->entity;
+   $toc_override = $node_type->getThirdPartySetting('toc_js_per_node', 'override', 0);
++  $toc_override_default = $node_type->getThirdPartySetting('toc_js_per_node', 'override_default', 0);
+ 
+   // Default value for displaying the Toc from the node type.
+   $toc_active = $node_type->getThirdPartySetting('toc_js', 'toc_js_active', 0);
+ 
++  // Use default override value if new or not set
++  if (null == $node->id() || $node->toc_js_active->value == NULL) {
++    $node->toc_js_active->value = $toc_override_default;
++  }
++
+   if ($toc_override && $toc_active) {
+ 
+     // If a value has been set on the node, get it as the default value.
+diff --git a/toc_js.module b/toc_js.module
+index 0eccd2b..fa9b792 100755
+--- a/toc_js.module
++++ b/toc_js.module
+@@ -102,10 +102,15 @@ function toc_js_node_view(array &$build, EntityInterface $entity, EntityViewDisp
+     /** @var \Drupal\node\NodeTypeInterface $node_type */
+     $node_type = $entity->type->entity;
+     $toc_override = $node_type->getThirdPartySetting('toc_js_per_node', 'override', 0);
++    $toc_override_default = $node_type->getThirdPartySetting('toc_js_per_node', 'override_default', 0);
+ 
+     // Support toc_js per node feature.
+     if ($entity->hasField('toc_js_active') && $toc_override) {
+-      if ($entity->toc_js_active->value !== NULL && empty($entity->toc_js_active->value)) {
++      // Use default override value if not set
++      if ($entity->toc_js_active->value == NULL) {
++        $entity->toc_js_active->value = $toc_override_default;
++      }
++      if (empty($entity->toc_js_active->value)) {
+         return;
+       }
+     }

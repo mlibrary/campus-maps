@@ -1,0 +1,8 @@
+/**
+ * @file
+ * Toolbar module overrides for staff_intranet.
+ */
+
+.toolbar a {
+  border-bottom: none;
+}

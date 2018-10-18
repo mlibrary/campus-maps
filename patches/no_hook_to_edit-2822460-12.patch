@@ -1,0 +1,42 @@
+diff --git a/core/lib/Drupal/Core/Field/WidgetBase.php b/core/lib/Drupal/Core/Field/WidgetBase.php
+index b1579f2..4a70d20 100644
+--- a/core/lib/Drupal/Core/Field/WidgetBase.php
++++ b/core/lib/Drupal/Core/Field/WidgetBase.php
+@@ -241,6 +241,16 @@ protected function formMultipleElements(FieldItemListInterface $items, array &$f
+           ],
+         ];
+       }
++
++      // Allow modules to alter the field widget multi-form element.
++      $context = [
++        'form' => $form,
++        'widget' => $this,
++        'items' => $items,
++        'delta' => $delta,
++        'default' => $this->isDefaultValueWidget($form_state),
++      ];
++      \Drupal::moduleHandler()->alter(['field_widget_form', 'field_widget_' . $this->getPluginId() . '_form'], $elements, $form_state, $context);
+     }
+ 
+     return $elements;
+diff --git a/core/modules/file/src/Plugin/Field/FieldWidget/FileWidget.php b/core/modules/file/src/Plugin/Field/FieldWidget/FileWidget.php
+index 587a396..b3a1a5f 100644
+--- a/core/modules/file/src/Plugin/Field/FieldWidget/FileWidget.php
++++ b/core/modules/file/src/Plugin/Field/FieldWidget/FileWidget.php
+@@ -198,6 +198,16 @@ protected function formMultipleElements(FieldItemListInterface $items, array &$f
+       ];
+     }
+ 
++    // Allow modules to alter the field widget multi-form element.
++    $context = [
++      'form' => $form,
++      'widget' => $this,
++      'items' => $items,
++      'delta' => $delta,
++      'default' => $this->isDefaultValueWidget($form_state),
++    ];
++    \Drupal::moduleHandler()->alter(['field_widget_form', 'field_widget_' . $this->getPluginId() . '_form'], $elements, $form_state, $context);
++
+     return $elements;
+   }
+ 

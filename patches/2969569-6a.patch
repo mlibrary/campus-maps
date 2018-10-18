@@ -1,0 +1,18 @@
+diff --git a/modules/contrib/workflow/src/Routing/RouteSubscriber.php b/modules/contrib/workflow/src/Routing/RouteSubscriber.php
+index 66e5b25..009960a 100644
+--- a/modules/contrib/workflow/src/Routing/RouteSubscriber.php
++++ b/modules/contrib/workflow/src/Routing/RouteSubscriber.php
+@@ -47,11 +47,11 @@ protected function alterRoutes(RouteCollection $collection) {
+        */
+ 
+       // Only 1 field. Workflow is redirect to workflow/{field_name}.
+-      if (count($fields) < 2) {
++      //if (count($fields) < 2) {
+         $path = "/$entityTypeId/{{$entityTypeId}}/workflow";
+         $route = $this->getEntityLoadRoute($entityTypeId, $path);
+         $collection->add("entity.$entityTypeId.workflow_history", $route);
+-      }
++      //}
+ 
+       // Generate one route for each workflow field.
+       foreach ($fields as $field_name => $field) {

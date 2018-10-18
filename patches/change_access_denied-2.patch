@@ -1,0 +1,30 @@
+diff --git a/core/modules/system/src/Controller/Http4xxController.php b/core/modules/system/src/Controller/Http4xxController.php
+index ee8a977..972a1c3 100644
+--- a/core/modules/system/src/Controller/Http4xxController.php
++++ b/core/modules/system/src/Controller/Http4xxController.php
+@@ -40,8 +40,11 @@ class Http4xxController extends ControllerBase {
+    *   A render array containing the message to display for 403 pages.
+    */
+   public function on403() {
++    $dest = \Drupal::destination()->getAsArray()['destination'];
++    $login_path = '/user/login?destination='.$dest;
+     return [
+-      '#markup' => $this->t('You are not authorized to access this page.'),
++      '#markup' => $this->t('<p><strong>Library staff and student employees:</strong> <a href="'.$login_path.'">Log In</a> to access the intranet.</p>
++ <p>If you need assistance please contact <a maitto="design-discovery@umich.edu">design-discovery@umich.edu</a>.</p>'),
+     ];
+   }
+ 
+diff --git a/core/modules/system/system.routing.yml b/core/modules/system/system.routing.yml
+index 9cfe2ca..a278ff8 100644
+--- a/core/modules/system/system.routing.yml
++++ b/core/modules/system/system.routing.yml
+@@ -10,7 +10,7 @@ system.403:
+   path: '/system/403'
+   defaults:
+     _controller: '\Drupal\system\Controller\Http4xxController:on403'
+-    _title: 'Access denied'
++    _title: 'Access Restricted - U-M Library Staff Only'
+   requirements:
+     _access: 'TRUE'
+ 

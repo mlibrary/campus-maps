@@ -1,0 +1,573 @@
+/**
+ * @file
+ * Visual styles for staff_intranet's blocks.
+ */
+
+/* Block has it's own content wrapper. */
+.block .content {
+  margin-top: 10px;
+  clear:both;
+}
+#main #block-locationsadminmenu ul .menu-item {
+  display: inline;
+}
+.block-views-blockmy-content-block-1 .content, #block-block-node-body .content {
+  width:85%;
+}
+.main-content .block-views-blockmy-content-block-1 h2 {
+  width: 100%;
+}
+#block-block-node-body h2 {
+  width: 92%;
+}
+/*custom styles NOTE: THIS NEEDS CLEANUP!*/
+/* these are in case we need to readd the search views exposed form
+.featured-top #block-exposedformsearchpage-1-2 .content{
+  margin:0;
+  padding:0;
+}
+.featured-top #block-exposedformsearchpage-1-2  .form-submit{
+  background: #f0f0f0 url("/core/misc/icons/505050/loupe.svg") no-repeat scroll center center;
+  cursor: pointer;
+  direction: ltr;
+  height: 26px;
+  margin-left: 0;
+  margin-right: 0;
+  overflow: hidden;
+  padding: 0;
+  text-indent: -9999px;
+  width: 50px;
+}
+.featured-top #block-exposedformsearchpage-1-2{
+  min-height:100px;
+}
+.featured-top #block-exposedformsearchpage-1-2 #edit-keys{
+ border:0;
+}
+.featured-top #block-exposedformsearchpage-1-2 .form-item-keys .form-required::after{
+  background-image:none;
+}
+*/
+.user-basic-info .views-field{
+  margin-top:.5em;
+}
+#block-featuredtoplinks-menu {
+  display:none;
+}
+
+#main #block-fundtransfermenu ul .menu-item, #main #block-fundtransfermenu-2 ul .menu-item, #main #block-fundstransfermenu ul .menu-item, #main #block-fundstransfermenu-2 ul .menu-item{
+  display:inline;
+}
+
+.menu--featured-top-links {
+  width:20%;
+  float: right;
+}
+
+.featured-top .menu--featured-top-links .content {
+  margin-top: 0;
+}
+
+.menu--featured-top-links .menu {
+  display: inline-block;
+  vertical-align: top;
+  width: 100%;
+  margin: .25em 0;
+  padding: 0;
+  text-align: center;
+}
+
+.menu--featured-top-links ul.menu a.is-active {
+  color: #fff;
+}
+
+.menu--featured-top-links .menu-item {
+  width:90%;
+  display:inline-block;
+  background-color:#126dc1;
+  height: 30px;
+  margin: 0.45em 0 0.45em 0.25em;
+  padding: 0.05em 0;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #e4e4e4 #d2d2d2 #b4b4b4;
+  text-indent:0;
+  min-width: 100px;
+}
+
+.menu--featured-top-links .menu-item a {
+  text-shadow:none;
+  color:#fff;
+  font-size: 0.857em;
+}
+
+body .block-views-blockemergency-block-block-1{
+width:100%;
+min-height:0;
+}
+.block-menu, .region-content .block-views-blockmy-favorites-block-1 {
+  min-width:0;
+}
+.region-content .picture-list{
+  padding:0;
+  margin:0;
+}
+.region-content .block-menu h2, .region-content .block-views h2, .region-content .block-fieldblock h2 {
+  padding-top:10px;
+  color:#fff;
+}
+.region-content .block-views h2, .region-content .search-block .block-views-h2{
+  background:#00274c none repeat scroll 0 0;
+}
+.region-content .search-block article{
+  border-bottom: 1px solid #dedede;
+  padding-bottom: 15px;
+}
+
+.region-content #block-views-block-search-block-1 article{
+  border-bottom:0;
+}
+
+.region-content .search-block h2 {
+  background:none;
+  padding:0;
+}
+.region-content .block-views-exposed-filter-blocksearch-page-1, .block-views-exposed-filter-blocksearch-page-1 .content{
+  min-height:0;
+  width:100%;
+}
+.block-views-exposed-filter-blocksearch-page-1 #views-exposed-form-search-page-1 .form-actions{
+  display:inline-block;
+}
+/*yes i realize this is completely out of hand*/
+.region-content .block-views-blockcommittees-block-2 h2, .region-content .block-views-blockcommittees-block-1 h2, .region-content .block-views-blockconference-info-block-1 h2, .region-content .block-views-blockattendees-block-1 h2, .path-projects #block-staff-intranet-content h2, .path-sigs #block-staff-intranet-content h2, .region-content .block-fieldblock h2, .region-content .block-menu h2, .region-content .block-views-blockdepartment-members-block-1 h2, .path-committees #block-staff-intranet-content h2, .region-content .block-views-blockcommittees-block-teams h2, .region-content .block-views-blockcommittees-block-councils-forums h2, .region-content .block-views-blockcommittees-block-task-force h2, .region-content .block-views-blockcommittees-block-working-groups h2, .region-content #block-views-block-members-block-1 h2 {
+ background:#126dc1 none repeat scroll 0 0;
+}
+.region-content #block-block-node-body .content h2{
+  background:none;
+  color:inherit;
+  padding:0;
+  margin:0;
+}
+.path-taxonomy .block-menu h2 {
+  display:none;
+}
+.block-views h2, nav h2, .block-fieldblock h2, .block .content, nav .content {
+  padding: 0 10px 10px;
+  margin-right: 20px;
+}
+.region-content .user-basic-info .user-title {
+  background:none;
+  color:#000;
+  padding:0;
+}
+.img-circle {
+  display: inline-block;
+  width: 3em;
+  height: 3em;
+  border-radius: 50%;
+  overflow: hidden;
+  max-width: 100%;
+}
+.img-circle img {
+  max-width: 100%;
+  min-height: 100%;
+}
+
+.picture-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.picture-list li {
+  position: relative;
+  margin-bottom: 1em;
+  width: 98%;
+  float: left;
+}
+.picture-list li a {
+  position: absolute;
+  top: 1em;
+  margin-left: 0.5em;
+  border-bottom: 0;
+}
+.picture-list li a:hover {
+  text-decoration:underline;
+}
+
+/*NOTE - need a better solution for this!*/
+.block-views, .block-fieldblock {
+  width:33%;
+  float: left;
+  z-index:500;
+  min-width:350px;
+  min-height:300px;
+}
+#block-block-node-body {
+  min-height:400px;
+}
+.page-node-type-department #block-block-node-body {
+  min-height:440px;
+}
+#block-userfield-proabout, #block-userfield-personalabout{
+  min-height:600px;
+}
+.path-search .block-views {
+  min-width:280px;
+}
+.path-frontpage .block-views {
+/*i dunno why this is here... min-height:0;*/
+}
+#block-views-block-attendees-block-1, #block-views-block-department-members-block-1, #block-views-block-members-block-1{
+width:20%;
+min-width:300px;
+min-height:1000px;
+}
+
+.block-views-blockassociated-with-block-1, .block-views-blockdepartment-hierarchy-block-3,.block-views-blockdepartment-hierarchy-block-1, .block-views-blockorganizational-chart-block-1, .block-views-blockparent-department-block-1, .block-views-blockdirect-reports-block-1, .block-views-blockcreate-associated-content-block-1, .block-views-blockall-documentation-block-1, #block-views-block-conference-info-block-1, #block-committee-chair-contentfield, #block-member-selection-contentfield, #block-committee-email-contentfield{
+width:20%;
+min-width:100px;
+min-height:0px;
+}
+#block-views-block-create-associated-content-block-1-2{
+width:100%;
+}
+#block-views-block-create-associated-content-block-1-2 li{
+display:inline;
+white-space:nowrap;
+padding-left:10%;
+}
+#block-committeee-email-contentfield {
+background:none;
+}
+#block-block-node-location{
+width:20%;
+min-width:150px;
+min-height:0;
+}
+#block-views-block-my-favorites-block-1, #block-views-block-events-and-meetings-block-3{
+width:25%;
+min-width:25%;
+/*float:none;*/
+}
+.page-node-type-simplenews .block-views {
+  width:inherit;
+}
+.block-views-blockuser-basic-info-block-1 {
+  width:54%;
+  /*min-width:590px;*/
+}
+.block-views-blockuser-basic-info-block-2{
+  width:20%;
+  min-width:250px;
+  max-height:350px;
+}
+.page-node-type-conference #block-block-node-body, .page-node-type-department #block-block-node-body, .page-node-type-committee #block-block-node-body {
+  width:48%;
+}
+.page-node-type-initiative #block-block-node-body {
+  width:77%;
+  min-height: 0;
+}
+.block-views-blockpages-block-2{
+width:100%;
+}
+.region-content .block-views-blockall-documentation-block-1 h2, .region-content .block-views-blockorganizational-chart-block-1 h2, .region-content .block-views-blockis-current-user-logged-in-user-block-1 h2, #block-views-block-committees-block-3 h2 {
+  background:#e4e1df none repeat scroll 0 0;
+}
+.block-views-blockall-documentation-block-1 .content, .block-views-blockis-current-user-logged-in-user-block-1 .content, #block-views-block-committees-block-3 .content{
+  padding:0;
+  margin:0;
+}
+.region-content .block-views-blockall-documentation-block-1, .region-content .block-views-blockorganizational-chart-block-1, .region-content .block-views-blockis-current-user-logged-in-user-block-1{
+  min-height:0;
+}
+.views-field-field-user-photo-display{
+/*dont use with circle image  padding-right:1em;*/
+}
+
+.path-search #block-staff-intranet-content, .path-sigs #block-staff-intranet-content, .path-projects #block-staff-intranet-content, .path-committees #block-staff-intranet-content{
+  float:left;
+  min-height:1000px;
+  width:75%;
+}
+.path-committees #block-staff-intranet-content{
+  width:25%;
+}
+.path-search #block-staff-intranet-content {
+  width:67%;
+}
+.path-search #block-staff-intranet-content .views-row {
+   margin: 0 10px 0 7%;
+}
+.path-resources-services #block-staff-intranet-content {
+  width:50%;
+  float:left;
+}
+
+.path-resources-services .region-content .block-menu, .path-committees .block-views, .path-committees .block-fieldblock, .path-projects .block-views, .path-projects .block-fieldblock,.path-sigs .block-views, .path-sigs .block-fieldblock{
+  width:25%;
+  min-width:150px;
+  /*added for committees. need a better solution*/
+  min-height:450px;
+  float:left;
+}
+#block-views-block-my-content-block-1 h2 {
+  color: #fff;
+  margin-left: -10px;
+  margin-right: -20px;
+  padding: 10px;
+}
+.path-resources-services #block-staff-intranet-content h2, .path-search #block-staff-intranet-content h2, .path-sigs #block-staff-intranet-content h2, .path-projects #block-staff-intranet-content h2, .path-committees #block-staff-intranet-content h2{
+  color:#fff;
+  padding: 10px;
+  margin-left: -10px;
+}
+.path-resources-services #block-staff-intranet-content h2{
+  background: #126dc1 none repeat scroll 0 0;
+}
+.path-search #block-staff-intranet-content .block-views-h2{
+  padding-right:40px;
+  margin-left:20px;
+}
+
+.path-search #block-staff-intranet-content .node__title {
+  padding:0;
+}
+.region-content .block-views-blockdocumentation-block-3, .region-content .block-views-blockprojects-block-4 {
+  width:100%;
+}
+.block-views-blockuser-inactive-block-1, .block-views-blockcommittee-inactive-alert-block-1{
+  width:100%;
+  min-height:0;
+  clear:both;
+}
+.region-content .block-views-blockdocumentation-block-3 h2, .region-content .block-views-blockprojects-block-4 h2 {
+  background:none;
+  color:#000;
+}
+.path-search .block-views-blocksearch-users-block-2{
+  width:67%;
+  min-height:10px;
+}
+.path-search .block-views-blocksearch-users-block-2 h2{
+  margin-left:30px;
+  margin-right:-10px;
+}
+.path-search .people-search-field{
+width:100%;
+float:left;
+}
+.path-search .people-search-field-row{
+width:25%;
+float:left;
+text-align:center;
+}
+.path-search .user-search-image{
+float:left;
+margin-right:5px;
+}
+
+#block-contentfield-authored-on, #block-contentfield-authored-by, #block-contentfield-last-updated-by, #block-views-block-author-name-block-1, #block-views-block-author-name-block-2 {
+  color: #68696b;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 0.857em;
+  min-height: 0;
+  min-width: 0;
+  width: auto;
+}
+#block-views-block-author-name-block-1, #block-views-block-author-name-block-2, #block-contentfield-authored-by {
+  clear:both;
+  float: right;
+}
+#block-contentfield-last-updated-by .field--name-field-user-display-name::before { 
+    content: " by ";
+}
+#block-contentfield-authored-on::before, .block-contentfield-authored-by span::after { 
+    content: "\00a0";
+}
+#block-contentfield-authored-on .content, #block-contentfield-authored-by .content, .block-contentfield-authored-by span, #block-contentfield-last-updated-by .content, #block-views-block-author-name-block-1 .content, #block-views-block-author-name-block-2 .content, #block-contentfield-last-updated-by, #block-contentfield-authored-on, #block-contentfield-authored-on .field, #block-contentfield-authored-by .field, #block-contentfield-last-updated-by .field, #block-views-block-author-name-block-1 .field, #block-views-block-author-name-block-2 .field{
+  display: inline-block;
+  margin:0;
+  padding:0;
+}
+#block-authoredbyon {
+  clear:both;
+  float:right;
+}
+
+.block .menu-item ul li, .block .item-list ul li, .block ul li, #main .block ul .menu-item {
+  padding-left: 1em;
+  text-indent: -1em;
+  display: list-item;
+}
+.paragraph{
+  text-indent:0;
+}
+.block .pager__items .pager__item, .views-field .item-list ul li, .menu--main-menu ul li, .menu--account ul li, .block-core ul li, .block .contextual-links li, .block .item-list .picture-list li {
+  padding:0;
+  text-indent:0;
+}
+.block .pager__items .pager__item {
+padding: 10px 15px;
+display: inline;
+}
+#block-views-block-search-users-block-2 h2 {
+    padding-right: 0;
+}
+#block-views-block-search-users-block-2 .no-people{
+  margin-left:7%;
+}
+@media only screen and (min-width: 1011px) {
+#block-views-block-search-users-block-2 h2{
+width: 100%;
+}
+}
+@media only screen and (max-width: 1010px) {
+#block-views-block-search-users-block-2 .no-people{
+  margin-left:auto;
+}
+.path-search .block-views-blocksearch-users-block-2{
+  width:99%;
+}
+.path-search .block-views-blocksearch-users-block-2 h2{
+  margin:0;
+}
+#block-views-block-search-users-block-2 h2{
+  padding-right: 2px;
+}
+#block-block-node-body h2 {
+  width: 85%;
+}
+.region-content .block-views-blockall-documentation-block-1 h2, .region-content .block-views-blockorganizational-chart-block-1 h2, .region-content .block-views-blockis-current-user-logged-in-user-block-1 h2, #block-views-block-committees-block-3 h2 {
+  width: 100%;
+}
+  #block-userfield-proabout, #block-userfield-personalabout{
+  min-height:0;
+}
+  .path-search #block-staff-intranet-content .views-row{
+    margin-left:0;
+  }
+ .path-search #block-staff-intranet-content .block-views-h2{
+   position:relative;
+   left:-10px;
+   margin-right:-55px;
+   margin-left:0;
+   padding-right:10px;
+ }
+
+.menu--featured-top-links {
+  width:35%;
+}
+.menu--featured-top-links .menu-item {
+  width:45%;
+}
+#block-views-block-my-favorites-block-1{
+float:none;
+}
+
+/* backup. making more general
+.page-node-type-committee #block-block-node-body, .page-node-type-initiative #block-block-node-body, .page-node-type-department #block-block-node-body, .path-committees #block-staff-intranet-content, .path-committees .block-views, .path-committees .block-fieldblock, .path-projects .block-views, .path-projects .block-fieldblock, .path-sigs .block-views, .path-sigs .block-fieldblock, .path-search #block-staff-intranet-content, .block-views, .block-fieldblock, #block-block-node-body, #block-views-block-department-members-block-1, #block-views-block-members-block-1, #block-committee-chair-contentfield, #block-member-selection-contentfield, #block-committee-email-contentfield, #block-block-node-location, #block-views-block-my-favorites-block-1, #block-views-block-events-and-meetings-block-3, #block-views-block-conference-info-block-1,#block-views-block-attendees-block-1 {
+width:100%;
+height:inherit;
+min-height:10px;
+}
+*/
+.page-node-type-initiative #block-block-node-body, .path-search #block-staff-intranet-content, .path-committees #block-staff-intranet-content, .page-node-type-conference #block-block-node-body, .page-node-type-department #block-block-node-body, .page-node-type-committee #block-block-node-body, .path-resources-services .region-content .block-menu, .path-committees .block-views, .path-committees .block-fieldblock, .path-projects .block-views, .path-projects .block-fieldblock, .path-sigs .block-views, .path-sigs .block-fieldblock,.path-resources-services #block-staff-intranet-content, .block-menu, #block-block-node-body, #block-staff-intranet-content, .block-views, .block-fieldblock, #block-views-block-department-members-block-1, #block-views-block-members-block-1, #block-committee-chair-contentfield, #block-member-selection-contentfield, #block-committee-email-contentfield, #block-block-node-location, #block-views-block-my-favorites-block-1, #block-views-block-events-and-meetings-block-3, #block-views-block-conference-info-block-1,#block-views-block-attendees-block-1 {
+width:98%;
+height:inherit;
+min-height:10px;
+min-width:280px;
+padding: 0;
+margin-right: 0;
+}
+
+#block-featuredtoplinks{
+  width:98%;
+}
+#block-views-block-search-block-2{
+  order:10;
+}
+#block-views-block-search-block-2 h2{
+  margin-right:-15px;
+}
+#block-staff-intranet-content{
+  order:9;
+}
+.path-search .region-content{
+  display: block;
+  display: flex;
+  flex-flow:column;
+}
+.path-search .people-search-field-row{
+width:50%;
+}
+.picture-list li {
+width:48%;
+}
+}
+@media only screen and (max-width: 600px) {
+.picture-list li {
+width:100%;
+}
+}
+#block-thisnodeisunpublished {
+  position:relative;
+}
+#block-thisnodeisunpublished h2{
+  opacity:0.3;
+  font-size:5.5em;
+  position:absolute;
+  -ms-transform: rotate(10deg); /* IE 9 */
+  -webkit-transform: rotate(10deg); /* Chrome, Safari, Opera */
+  transform: rotate(10deg);
+  right:30px;
+  top:40px;
+  z-index:499;
+}
+
+#block-views-block-emergency-block-block-1 .messages--error{
+background-image:none;
+}
+
+a.drive {
+  background-image: url('/themes/staff_intranet/images/drive.png');
+  background-repeat: no-repeat;
+  padding-left:15px;
+}
+a.box {
+  background-image: url('/themes/staff_intranet/images/box-logo.png');
+  background-repeat: no-repeat;
+  padding-left:15px;
+}
+a.external {
+  background-image: url('/themes/staff_intranet/images/external.png');
+  background-repeat: no-repeat;
+  padding-left:15px;
+}
+.block-views-blockdescription-block-1 {
+  width: 66%;
+}
+.region-content .block-views-blockdescription-block-1 h2 {
+  background: #126dc1 none repeat scroll 0 0;
+}
+.block-views-blockdescription-block-1 .content {
+  width:80%;
+}
+.block figure {
+  margin:0;
+}
+.region-content .block-views-blockmy-favorites-block-2 li {
+  list-style-image:url('/themes/staff_intranet/images/favorites_sm.png');
+}
+.region-content .block-views-blockmy-favorites-block-2 ul {
+    padding-left: 20px;
+}
+.region-content .block-views-blockmy-favorites-block-2 .more-link, .region-content .block-views-blockmy-favorites-block-1 .more-link {
+  text-align: right;
+  margin: 5px 20px 0 0;
+}
+#block-locationsinfoblock {
+  width:80%;
+}

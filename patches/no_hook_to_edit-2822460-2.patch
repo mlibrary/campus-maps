@@ -1,0 +1,19 @@
+diff --git a/core/lib/Drupal/Core/Field/WidgetBase.php b/core/lib/Drupal/Core/Field/WidgetBase.php
+index 5f7ce3c..8e652fa 100644
+--- a/core/lib/Drupal/Core/Field/WidgetBase.php
++++ b/core/lib/Drupal/Core/Field/WidgetBase.php
+@@ -241,6 +241,14 @@ protected function formMultipleElements(FieldItemListInterface $items, array &$f
+           ],
+         ];
+       }
++      
++      // Allow modules to alter the field widget multi-form element.
++      $context = array(
++        'form' => $form,
++        'widget' => $this,
++        'items' => $items,
++      );
++      \Drupal::moduleHandler()->alter(array('field_widget_multiple_form', 'field_widget_multiple_' . $this->getPluginId() . '_form'), $elements, $form_state, $context);
+     }
+
+     return $elements;

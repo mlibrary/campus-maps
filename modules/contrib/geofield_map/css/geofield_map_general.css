@@ -1,0 +1,13 @@
+/* line 1, ../sass/geofield_map_general.scss */
+.geofield-map-message {
+  color: darkgray;
+}
+/* line 3, ../sass/geofield_map_general.scss */
+.geofield-map-message a {
+  color: gray;
+}
+
+/* line 8, ../sass/geofield_map_general.scss */
+.geofield-map-warning {
+  color: red;
+}

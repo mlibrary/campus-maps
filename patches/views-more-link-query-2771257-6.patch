@@ -1,0 +1,20 @@
+diff --git a/core/modules/views/src/Plugin/views/display/DisplayPluginBase.php b/core/modules/views/src/Plugin/views/display/DisplayPluginBase.php
+index 6b2bc32..9817dfc 100644
+--- a/core/modules/views/src/Plugin/views/display/DisplayPluginBase.php
++++ b/core/modules/views/src/Plugin/views/display/DisplayPluginBase.php
+@@ -2097,6 +2097,15 @@ public function renderMoreLink() {
+         if (!empty($this->view->exposed_raw_input)) {
+           $url_options['query'] = $this->view->exposed_raw_input;
+         }
++        // Don't overwrite options such as queries included in custom url.
++        if (!empty($url->getOptions())) {
++          $q_options = $url->getOptions();
++          $options= array();
++          foreach($q_options['query'] as $key => $value){
++            $options['query'][str_replace('amp;','',$key)] = $value;
++          }
++          $url_options = array_merge($url_options, $options);
++        }
+         $url->setOptions($url_options);
+ 
+         return [

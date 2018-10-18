@@ -1,0 +1,26 @@
+diff --git a/field_states_ui.form.inc b/field_states_ui.form.inc
+index 222e3ae..0b7fdb8 100644
+--- a/field_states_ui.form.inc
++++ b/field_states_ui.form.inc
+@@ -31,6 +31,9 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+   $states = $plugin->getThirdPartySettings('field_states_ui')['field_states'];
+ 
+   if ($multivalue) {
++    if (!empty($element['#theme']) && $element['#theme'] == 'field_multiple_value_form') {
++      return;
++    }
+     $parents = isset($element['#field_parents']) ? $element['#field_parents'] : [];
+     $element['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $parents);
+     return;
+@@ -91,7 +94,11 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+       break;
+ 
+     case 'datetime':
++      $element['value']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['#field_parents']);
++      break;
++
+     case 'decimal':
++    case 'float':
+     case 'integer':
+     case 'string':
+     case 'string_long':

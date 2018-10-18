@@ -1,0 +1,13 @@
+diff --git a/core/modules/comment/src/Entity/Comment.php b/core/modules/comment/src/Entity/Comment.php
+index 7a659f8..38def0d 100644
+--- a/core/modules/comment/src/Entity/Comment.php
++++ b/core/modules/comment/src/Entity/Comment.php
+@@ -403,7 +403,7 @@ class Comment extends ContentEntityBase implements CommentInterface {
+    * {@inheritdoc}
+    */
+   public function getAuthorName() {
+-    if ($this->get('uid')->target_id) {
++    if ($this->get('uid')->entity) {
+       return $this->get('uid')->entity->label();
+     }
+     return $this->get('name')->value ?: \Drupal::config('user.settings')->get('anonymous');

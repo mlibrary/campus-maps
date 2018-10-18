@@ -1,0 +1,30 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a view of unformatted rows.
+ *
+ * Available variables:
+ * - title: The title of this group of rows. May be empty.
+ * - rows: A list of the view's row items.
+ *   - attributes: The row's HTML attributes.
+ *   - content: The row's content.
+ * - view: The view object.
+ * - default_row_class: A flag indicating whether default classes should be
+ *   used on rows.
+ *
+ * @see template_preprocess_views_view_unformatted()
+ *
+ * @ingroup themeable
+ */
+#}
+<section mc:repeatable="toc" mc:label="toc" style="padding-bottom:16px;">
+
+<strong mc:editable="toc_section" mc:label="toc_section">{{ title }}</strong>
+<br>
+{% for row in rows %}
+<div mc:repeatable="toc_item_section" mc:label="toc_item_section">
+<span mc:editable="toc_item" mc:label="toc_item">{{ row.content }}</span>
+<br>
+</div>
+{% endfor %}
+</section>

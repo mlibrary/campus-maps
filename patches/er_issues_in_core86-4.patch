@@ -1,0 +1,75 @@
+diff --git a/modules/contrib/field_states_ui/field_states_ui.form.inc b/modules/contrib/field_states_ui/field_states_ui.form.inc
+index 222e3ae..7a11001 100644
+--- a/modules/contrib/field_states_ui/field_states_ui.form.inc
++++ b/modules/contrib/field_states_ui/field_states_ui.form.inc
+@@ -39,7 +39,9 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+   $field_definition = $context['items']->getFieldDefinition();
+   $type             = $field_definition->getType();
+   $plugin_id        = $plugin->getPluginId();
+-
++  if (isset($element[0])) {
++    $element = $element[0];
++  }
+   // Handle the type of field appropriately.
+   switch ($type) {
+ 
+@@ -54,7 +56,12 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+ 
+         case 'entity_reference_autocomplete':
+         case 'entity_reference_autocomplete_tags':
+-          $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          if (isset($element['target_id'])) {
++            $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          }
++          else {
++            $element['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['#field_parents']);
++          }
+           break;
+ 
+         default:
+@@ -73,7 +80,12 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+               ]
+             )
+           );
+-          $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          if (isset($element['target_id'])) {
++            $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          }
++          else {
++            $element['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['#field_parents']);
++          }
+           break;
+       }
+       break;
+@@ -103,7 +115,6 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+     case 'list_float':
+     case 'list_integer':
+     case 'list_string':
+-    case 'link':
+       switch ($plugin_id) {
+         case 'chosen_select':
+         case 'options_select':
+@@ -113,6 +124,13 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+       }
+       break;
+ 
++    case 'link':
++      if (empty($element['#type'])) {
++        $element['#type'] = 'url';
++      }
++      $element['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['#field_parents']);
++      break;
++
+     case 'name':
+       $element = [
+         'element' => $element,
+@@ -140,6 +158,9 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+       // This increases divitis which is already common on Drupal forms so
+       // it is better to know handle the element properly. There are elements
+       // that it does make sense to do this to (ie name) but avoid if possible.
++      if (!isset($element['#field_parents'])) {
++        $element['#field_parents'] = [];
++      }
+       $element = [
+         'element' => $element,
+         '#type'   => 'container',

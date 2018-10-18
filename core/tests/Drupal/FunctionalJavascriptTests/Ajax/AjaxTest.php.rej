@@ -1,0 +1,10 @@
+--- tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxTest.php
++++ tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxTest.php
+@@ -2,6 +2,7 @@
+ 
+ namespace Drupal\FunctionalJavascriptTests\Ajax;
+ 
++use Drupal\FunctionalJavascriptTests\DrupalSelenium2Driver;
+ use Drupal\FunctionalJavascriptTests\JavascriptTestBase;
+ 
+ /**

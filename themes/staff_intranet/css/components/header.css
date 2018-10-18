@@ -1,0 +1,291 @@
+/* ------------------ Header ------------------ */
+#header {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.header .section {
+  position: relative;
+}
+.region-header {
+  padding: 0.357em 15px 0;
+}
+.region-header .site-branding {
+  margin-top: 0.429em;
+}
+@media all and (min-width: 461px) {
+  .region-header .block {
+    float: right; /* LTR */
+    margin-top: 0.357em;
+  }
+  [dir="rtl"] .region-header .block {
+    float: left;
+  }
+  .region-header .site-branding {
+    /*removed for cpm (campus partner map) width:20%;*/
+    float: left; /* LTR */
+   /* margin-bottom: 1.857em;*/
+  }
+  [dir="rtl"] .region-header .site-branding {
+    float: right;
+  }
+}
+
+/* Region header blocks. */
+.region-header .block:not(.site-branding) {
+  font-size: .9em;
+  margin: 1.167em 0 1em;
+}
+.region-header #block-mainmenu{
+  margin-top:.6em;
+}
+
+.region-header .block > h2 {
+  /* @extend .visually-hidden */
+  position: absolute !important;
+  clip: rect(1px, 1px, 1px, 1px);
+  overflow: hidden;
+  height: 1px;
+}
+.header .block .content {
+  margin: 0;
+  padding: 0;
+}
+.region-header .block ul {
+  padding: 0;
+  display: block;
+  display:flex;
+  justify-content: space-between;
+}
+.region-header .contextual ul {
+  display:none;
+}
+
+.region-header .block li {
+  list-style: none;
+  list-style-image: none;
+  padding: 0;
+/*added*/
+    white-space: nowrap;
+    width: auto;
+}
+.region-header .branding {
+  font-size: 1em;
+}
+.region-header .form-text {
+  background: #fefefe;
+  background: rgba(255, 255, 255, 0.7);
+  border-color: #ccc;
+  border-color: rgba(255, 255, 255, 0.3);
+  margin-right: 2px; /* LTR */
+  width: 120px;
+}
+[dir="rtl"] .region-header .form-text {
+  margin-left: 2px;
+  margin-right: 0;
+}
+.region-header .form-text:hover,
+.region-header .form-text:focus,
+.region-header .form-text:active {
+  background: #fff;
+  background: rgba(255, 255, 255, 0.8);
+}
+.region-header .form-required:after {
+  background-image: url(../../images/required.svg);
+}
+/* Region header block menus. */
+.region-header .block-menu {
+  border: 1px solid;
+  border-color: #eee;
+  border-color: rgba(255, 255, 255, 0.2);
+  padding: 0;
+  width: 208px;
+}
+.region-header .block-menu li a {
+  display: block;
+  border-bottom: 1px solid;
+  border-bottom-color: #eee;
+  border-bottom-color: rgba(255, 255, 255, 0.2);
+  padding: 3px 7px;
+}
+.region-featured-top .block-menu li a {
+  display:inline-block;
+  width:100%;
+  height:100%;
+}
+.region-featured-top .block-menu li a:hover,
+.region-featured-top .block-menu li a:focus,
+.region-featured-top .block-menu li a:active,
+.region-header .block-menu li a:hover,
+.region-header .block-menu li a:focus,
+.region-header .block-menu li a:active {
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.15);
+}
+.region-header .block-menu li:last-child a {
+  border-bottom: 0;
+}
+/* User Login block in the header region. */
+.region-header #block-user-login {
+  width: auto;
+}
+.region-header #block-user-login .content {
+  margin-top: 2px;
+}
+.region-header #block-user-login .form-item {
+  float: left; /* LTR */
+  margin: 0;
+  padding: 0;
+}
+.region-header #block-user-login div.item-list,
+.region-header #block-user-login div.description {
+  font-size: 0.916em;
+  margin: 0;
+}
+.region-header #block-user-login div.item-list {
+  clear: both;
+}
+.region-header #block-user-login div.description {
+  display: inline;
+}
+.region-header #block-user-login .item-list ul {
+  padding: 0;
+  line-height: 1;
+}
+.region-header #block-user-login .item-list li {
+  list-style: none;
+  float: left; /* LTR */
+  padding: 3px 0 1px;
+}
+.region-header #block-user-login .item-list li:last-child {
+  padding-left: 0.5em; /* LTR */
+}
+[dir="rtl"] .region-header #block-user-login .item-list li:last-child {
+  padding-left: 0;
+  padding-right: 0.5em;
+}
+.region-header #block-user-login .form-actions {
+  margin: 4px 0 0;
+  padding: 0;
+  clear: both;
+}
+.region-header #block-user-login input.form-submit {
+  border: 1px solid;
+  border-color: #ccc;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: #eee;
+  background: rgba(255, 255, 255, 0.7);
+  margin: 4px 0;
+  padding: 3px 8px;
+}
+.region-header #block-user-login input.form-submit:hover,
+.region-header #block-user-login input.form-submit:focus {
+  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
+}
+/* Search block in header region. */
+.region-header #block-search-form {
+  width: 208px;
+}
+.region-header #block-search-form .form-text {
+  width: 154px;
+}
+.region-header .search-block-form {
+  float: right; /* LTR */
+}
+[dir="rtl"] .region-header .search-block-form {
+  float: left;
+}
+
+/* Language switcher block in header region. */
+.region-header .block-locale ul li {
+  display: inline;
+  padding: 0 0.5em;
+}
+[role*=banner] a {
+  border-bottom: none;
+}
+
+[dir="rtl"] .branding,
+[dir="rtl"] .site-logo,
+[dir="rtl"] .site-branding-text,
+[dir="rtl"] .region-header #block-user-login .form-item,
+[dir="rtl"] .region-header #block-user-login .item-list li {
+  float: right;
+}
+
+/*custom*/
+.header .region-header .block-views-blockuser-basic-info-block-3{
+min-height:0;
+min-width:0;
+width:auto;
+float:right;
+margin:1em 5px;
+}
+#block-staff-intranet-account-menu-menu{
+  display:none;
+}
+@media only screen and (max-width: 1010px) {
+  .region-header .block-menu.menu--main-menu, .region-header .block-menu.menu--account, .header .region-header .block-views-blockuser-basic-info-block-3 {
+  margin:0;
+}
+.featured-top .block .content{
+  margin-right:0;
+}
+.region-header .contextual ul {
+  display:none;
+}
+.block-menu.menu--account .content{
+  width:95%;
+}
+.region-header .block-menu.menu--main-menu, .region-header ul, .region-header .site-branding, .region-header .block-menu{
+  float: none;
+  width: 100%;
+}
+.region-header .block-menu.menu--account{
+  width:90%;
+}
+.region-header .block-menu.menu--account ~ div{
+  width:10%;
+  display:inline-block;
+  margin-right:0;
+}
+.header .region-header .block-views-blockuser-basic-info-block-3{
+  width:100%;
+}
+.region-header .block-menu.menu--account ~ div .block-views-blockuser-basic-info-block-3 .content{
+  float:right;
+  width:40px;
+}
+.region-header .site-branding{
+  text-align:center;
+}
+.region-header .menu--account li{
+  width:46%;
+  margin:5px 2%;
+  float:left;
+}
+.region-header .menu--main-menu li{
+  width:46%;
+  margin:5px 2%;
+  float:left;
+}
+}
+@media all and (max-width: 560px) {
+.region-header .contextual ul {
+  display:none;
+}
+  .region-header .menu--main-menu ul{
+    display:block;
+    width:100%;
+  }
+  .region-header .block ul li{
+    float:left;
+  }
+.region-header .block-menu.menu--account{
+  width:87%;
+}
+.region-header .block-menu.menu--account ~ div{
+  width:12%;
+  display:inline-block;
+  margin-right:1%;
+}
+}

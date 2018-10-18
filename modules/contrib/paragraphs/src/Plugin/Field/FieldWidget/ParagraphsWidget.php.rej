@@ -1,0 +1,11 @@
+--- src/Plugin/Field/FieldWidget/ParagraphsWidget.php
++++ src/Plugin/Field/FieldWidget/ParagraphsWidget.php
+@@ -926,7 +926,7 @@ public function formMultipleElements(FieldItemListInterface $items, array &$form
+         'text' => [
+           '#type' => 'container',
+           'value' => [
+-            '#markup' => $this->t('No @title added yet.', ['@title' => $this->getSetting('title')]),
++            '#markup' => $this->t('No @title added yet.', ['@title' => $field_title]),
+             '#prefix' => '<em>',
+             '#suffix' => '</em>',
+           ]

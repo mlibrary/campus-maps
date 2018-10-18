@@ -1,0 +1,156 @@
+diff --git a/modules/contrib/field_states_ui/field_states_ui.form.inc b/modules/contrib/field_states_ui/field_states_ui.form.inc
+index 1fa5798..61c2715 100644
+--- a/modules/contrib/field_states_ui/field_states_ui.form.inc
++++ b/modules/contrib/field_states_ui/field_states_ui.form.inc
+@@ -42,52 +42,110 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+   }
+   if ($states) {
+     if (isset($context['multiple'])) {
+-      $element['#type'] = 'container';
++      $element['#type']   = 'container';
+       $element['#states'] = $states;
+       return;
+     }
++
+     $field_definition = $context['items']->getFieldDefinition();
+-    $type = $field_definition->getType();
+-    $plugin_id = $plugin->getPluginId();
+-    if ($type === 'entity_reference') {
+-      if ($plugin_id === 'options_select' || $plugin_id === 'options_buttons') {
++    $type             = $field_definition->getType();
++    $plugin_id        = $plugin->getPluginId();
++
++    // Handle the type of field appropriately.
++    switch ($type) {
++
++      case 'entity_reference':
++        switch ($plugin_id) {
++          case 'options_select':
++          case 'options_buttons':
++          case 'entity_browser_entity_reference':
++            $element['#states'] = $states;
++            break;
++
++          case 'entity_reference_autocomplete':
++          case 'entity_reference_autocomplete_tags':
++            $element['target_id']['#states'] = $states;
++            break;
++          default:
++            // Log a notice so that user(s) can report unrecognized field plugin_id.
++            \Drupal::logger('field_states_ui')->notice(
++              t(
++                'Field type: "@type" with plugin_id "@id" was unrecognized. Please report on the @link. For quickest resolution, please include what module it comes from.',
++                [
++                  '@type' => $type,
++                  '@id'   => $plugin_id,
++                  '@link' => Link::fromTextAndUrl(
++                    t('Field States UI Issue Queue'),
++                    Url::fromUri('https://www.drupal.org/project/issues/field_states_ui')
++                  )->toString(),
++                ]
++              )
++            );
++            $element['target_id']['#states'] = $states;
++            break;
++        }
++        break;
++
++      case 'boolean':
++        switch ($plugin_id) {
++          case 'options_buttons':
++            $element['#states'] = $states;
++            break;
++
++          default:
++            $element['value']['#states'] = $states;
++            break;
++        }
++        break;
++
++      case 'datetime':
++      case 'decimal':
++      case 'integer':
++      case 'string':
++      case 'string_long':
++        $element['value']['#states'] = $states;
++        break;
++
++      case 'text_with_summary':
++      case 'text_long':
++      case 'list_string':
++      case 'link':
+         $element['#states'] = $states;
+-      }
+-      elseif ($plugin_id === 'entity_reference_autocomplete' || $plugin_id === 'entity_reference_autocomplete_tags') {
+-        $element['target_id']['#states'] = $states;
+-      }
+-    }
+-    elseif ($type === 'datetime' || $type === 'decimal' || $type === 'string_long' || $type === 'boolean' || $type === 'string') {
+-      $element['value']['#states'] = $states;
+-    }
+-    elseif ($type === 'text_with_summary') {
+-      $element['#states'] = $states;
+-    }
+-    elseif ($type === 'name') {
+-      $element = [
+-        'element' => $element,
+-        '#type' => 'container',
+-        '#states' => $states,
+-      ];
+-    }
+-    else {
+-      // Log a notice so that user(s) can report unrecognized field types.
+-      \Drupal::logger('field_states_ui')->notice(t('Field type: "@type" was unrecognized. Please report on the @link. For quickest resolution, please include what module it comes from.', [
+-        '@type' => $type,
+-        '@link' => Link::fromTextAndUrl(t('Field States UI Issue Queue'),
+-          Url::fromUri('https://www.drupal.org/project/issues/field_states_ui')
+-        )->toString(),
+-      ]));
+-
+-      // Add a container element and set states on that to ensure it works.
+-      // This increases divitis which is already common on Drupal forms so
+-      // it is better to know handle the element properly. There are elements
+-      // that it does make sense to do this to (ie name) but avoid if possible.
+-      $element = [
+-        'element' => $element,
+-        '#type' => 'container',
+-        '#states' => $states,
+-      ];
++        break;
++
++      case 'name':
++        $element = [
++          'element' => $element,
++          '#type'   => 'container',
++          '#states' => $states,
++        ];
++        break;
++
++      default:
++        // Log a notice so that user(s) can report unrecognized field types.
++        \Drupal::logger('field_states_ui')->notice(
++          t(
++            'Field type: "@type" was unrecognized. Please report on the @link. For quickest resolution, please include what module it comes from.',
++            [
++              '@type' => $type,
++              '@link' => Link::fromTextAndUrl(
++                t('Field States UI Issue Queue'),
++                Url::fromUri('https://www.drupal.org/project/issues/field_states_ui')
++              )->toString(),
++            ]
++          )
++        );
++
++        // Add a container element and set states on that to ensure it works.
++        // This increases divitis which is already common on Drupal forms so
++        // it is better to know handle the element properly. There are elements
++        // that it does make sense to do this to (ie name) but avoid if possible.
++        $element = [
++          'element' => $element,
++          '#type'   => 'container',
++          '#states' => $states,
++        ];
++        break;
+     }
+   }
+ }

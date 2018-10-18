@@ -1,0 +1,111 @@
+.region-content .block-views.block-views-blockdepartments-hierarchy-block-3{
+  text-align: left;
+  width: 50%;
+}
+.region-content .block-menu h2 {
+  background:#126dc1 none repeat scroll 0 0;
+  color:#fff;
+}
+#block-staff-intranet-page-title, .region-content .menu--tools, .block-local-tasks-block {
+  display:none;
+}
+.region-content .block-views-blockmy-favorites-block-1{
+  min-height:100px;
+}
+#block-whatshappeningatthelibrary h2, .region-content .block-views-blockmy-favorites-block-1 h2, .region-content .block-views-blockevents-and-meetings-block-3 h2, #block-documentation-2 h2, #block-whatshappeningatthelibrary h2, .block-views h2{
+  padding: 10px;
+  background:#126dc1 none repeat scroll 0 0;
+  margin-right:10px;
+  color:#fff;
+}
+nav .content, .block-views .content{
+  padding: 10px;
+}
+.block-views-blockemergency-block-block-1 .content {
+  padding:0 10px 10px;
+}
+.block-views-blockemergency-block-block-1 h2 {
+  padding: 0 10px 10px;
+  margin-right: 20px;
+}
+.featured-top {
+  padding: 0;
+}
+.region-content .block-views-blockmy-favorites-block-1 li {
+  list-style-image:url('/themes/staff_intranet/images/favorites_sm.png');
+}
+.region-content .block-views-blockmy-favorites-block-1 ul {
+  padding-left:20px;
+}
+#block-views-block-my-favorites-block-1, #block-views-block-events-and-meetings-block-3{
+width:100%;
+}
+@media only screen and (min-width: 1011px) {
+#block-getthingsdone-menu {
+  width: 92%;
+}
+#block-whatshappeningatthelibrary, #block-views-block-my-favorites-block-1, #block-views-block-events-and-meetings-block-3{
+width:24.5%;
+margin-right:0;
+}
+.block-views h2, nav h2, .block-fieldblock h2, .block .content, nav .content{
+  margin-right:10px;
+}
+#block-whatshappeningatthelibrary{
+  display:inline-block;
+}
+.region-content .block-menu, .region-content .block-views, .region-content #block-documentation-2 {
+  display:inline-block;
+  width: 24.5%;
+  vertical-align:top;
+}
+.layout-main{
+  text-align:center;
+}
+.block-views {
+  float:none;
+}
+h2 {
+  text-align:left;
+}
+#block-getthingsdone {
+  width:49%;
+}
+#block-getthingsdone ul {
+  column-count:2;
+  -moz-column-count:2;
+  -webkit-column-count: 2;
+}
+/*
+<!--[if lte IE 9]>
+this would go in custom ie
+#block-getthingsdone li {
+  width: 50%;
+  float:left;
+}
+*/
+.menu--communication {
+  clear: both;
+}
+.reuse-recycle {
+  background-image: url('/themes/staff_intranet/images/green_leaf.png');
+  background-repeat: no-repeat;
+  padding-left:15px;
+}
+}
+@media only screen and (max-width: 1010px) {
+.block-views h2, nav h2, .block-fieldblock h2 {
+  padding: 0 10px 10px;
+  margin-right: 0px;
+}
+.region-content .block-menu h2 {
+  margin-right:0px;
+}
+#block-whatshappeningatthelibrary h2, .region-content .block-views-blockmy-favorites-block-1 h2, #block-documentation-2 h2{
+  margin-right:10px;
+}
+}
+
+.block-views-blockemergency-block-block-1 h2 {
+  background-color:transparent;
+}

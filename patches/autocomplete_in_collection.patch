@@ -1,0 +1,25 @@
+diff --git a/modules/contrib/field_states_ui/src/FieldStateBase.php b/modules/contrib/field_states_ui/src/FieldStateBase.php
+index 1ad4178..a18a3fc 100644
+--- a/modules/contrib/field_states_ui/src/FieldStateBase.php
++++ b/modules/contrib/field_states_ui/src/FieldStateBase.php
+@@ -61,8 +61,18 @@ public function applyState(array &$states, FormStateInterface $form_state, array
+ 
+     // If dealing with a field on an Inline Entity Form or a Field Collection
+     // have to include the field parents in the selector.
+-    if (!empty($element['#field_parents'])) {
+-      $target = array_shift($element['#field_parents']) . '[' . implode('][', $element['#field_parents']) . '][' . $this->configuration['target'] . ']';
++    // Fields with autocomplete have parents below target_id in element array.
++    $autocomplete_with_parents = FALSE;
++    if (isset($element['target_id']['#field_parents'])) {
++      $autocomplete_with_parents = TRUE;
++    }
++    if (!empty($element['#field_parents']) || $autocomplete_with_parents) {
++      if ($autocomplete_with_parents) {
++        $target = array_shift($element['target_id']['#field_parents']) . '[' . implode('][', $element['target_id']['#field_parents']) . '][' . $this->configuration['target'] . ']';
++      }
++      else {
++        $target = array_shift($element['#field_parents']) . '[' . implode('][', $element['#field_parents']) . '][' . $this->configuration['target'] . ']';
++      }
+     }
+     else {
+       $target = $this->configuration['target'];

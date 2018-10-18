@@ -1,0 +1,177 @@
+<?php
+
+/**
+ * @file
+ * Contains the geofield_map.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Drupal\Core\Render\Element;
+use Drupal\image\Entity\ImageStyle;
+
+/**
+ * Implements hook_help().
+ */
+function geofield_map_help($route_name, RouteMatchInterface $route_match) {
+  $output = '';
+  switch ($route_name) {
+    case 'help.page.geofield_map':
+      $output .= '<h3>' . t('Geofield Map About') . '</h3>';
+      $output .= '<p>' . t('Map Widget, Formatter and Views integration for Geofields.') . '</p>';
+      $output .= '<p>' . t('For more info: @readme', [
+          '@readme' => Link::fromTextAndUrl(t('Readme.md'), Url::fromUri('base:/' . drupal_get_path('module', 'geofield_map') . '/README.md', ['attributes' => ['target' => '_blank']]))->toString(),
+        ]) . '</p>';
+
+  }
+  return $output;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function geofield_map_theme($existing, $type, $theme, $path) {
+  return [
+    'geofield_map_widget' => [
+      'variables' => [
+        'mapid' => NULL,
+        'width' => '100%',
+        'height' => '450px',
+      ],
+    ],
+    'geofield_google_map' => [
+      'variables' => [
+        'mapid' => NULL,
+        'width' => '100%',
+        'height' => '450px',
+      ],
+    ],
+  ];
+}
+
+/**
+ * Load all Geofield Google Map client files and return markup for a map.
+ *
+ * @param array $js_settings
+ *   The map rendering data.
+ *
+ * @return array
+ *   The returned render array.
+ */
+function geofield_map_googlemap_render(array $js_settings) {
+
+  $render_array = [
+    '#theme' => 'geofield_google_map',
+    '#mapid' => $js_settings['mapid'],
+    '#height' => $js_settings['map_settings']['map_dimensions']['height'],
+    '#width' => $js_settings['map_settings']['map_dimensions']['width'],
+    '#attached' => [
+      'library' => [
+        'geofield_map/geojson',
+        'geofield_map/geofield_gmap',
+      ],
+      'drupalSettings' => [
+        'geofield_google_map' => [$js_settings['mapid'] => $js_settings],
+      ],
+    ],
+    '#cache' => [
+      'contexts' => ['url.path', 'url.query_args'],
+    ],
+  ];
+
+  // Add the Marker Cluster library, if asked.
+  if ($js_settings['map_settings']['map_markercluster']['markercluster_control']) {
+    $render_array['#attached']['library'][] = 'geofield_map/marker_cluster';
+  }
+
+  // Add the OverlappingMarkerSpiderfier library, if asked.
+  if (!isset($js_settings['map_settings']['map_oms']['map_oms_control']) || $js_settings['map_settings']['map_oms']['map_oms_control']) {
+    $render_array['#attached']['library'][] = 'geofield_map/overlappingmarkerspiderfier';
+  }
+
+  return $render_array;
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ * Drupal 8, add an image field from a BuildForm with preview
+ * https://stackoverflow.com/questions/34100546/drupal-8-add-an-image-field-from-a-buildform-with-preview/43936256#43936256
+ */
+function geofield_map_preprocess_image_widget(&$variables) {
+  $element = $variables['element'];
+
+  // Only act when it is geofield_map_marker_icon_upload case.
+  // @see: MarkerIconService->getIconFileManagedElement().
+  if (!empty($element['#geofield_map_marker_icon_upload'])) {
+
+    $variables['attributes'] = [
+      'class' => [
+        'image-widget',
+        'js-form-managed-file',
+        'form-managed-file',
+        'clearfix',
+      ],
+    ];
+
+    if (!empty($element['fids']['#value'])) {
+      $file = reset($element['#files']);
+      /* @var \Drupal\Core\Image\Image $image */
+      $image = \Drupal::service('image.factory')->get($file->getFileUri());
+      if ($image->isValid()) {
+        $file_width = $image->getWidth();
+        $file_height = $image->getHeight();
+
+        $element['file_' . $file->id()]['filename']['#suffix'] = ' <span class="file-size">(' . format_size($file->getSize()) . ')</span> ';
+        $file_variables = [
+          'style_name' => $element['#preview_image_style'],
+          'uri' => $file->getFileUri(),
+        ];
+        $style = ImageStyle::load($element['#preview_image_style']);
+        $image_preview_width = 34;
+        $image_preview_height = $image_preview_width * $file_width / $file_height;
+        if (!$style) {
+          // Inform the site builders why their image didn't work.
+          \Drupal::logger('image')->warning('Image style (@style) missing for @image. Please add the missing style under /admin/config/media/image-styles.', [
+            '@style' => $file_variables['style_name'],
+            '@image' => $file_variables['uri'],
+          ]);
+          $element['preview'] = [
+            '#weight' => -10,
+            '#theme' => 'image',
+            '#width' => $image_preview_width,
+            '#height' => $image_preview_height,
+            '#uri' => $file_variables['uri'],
+          ];
+        }
+        else {
+          $element['preview'] = [
+            '#weight' => -10,
+            '#theme' => 'image_style',
+            '#width' => $image_preview_width,
+            '#height' => $image_preview_height,
+            '#style_name' => $file_variables['style_name'],
+            '#uri' => $file_variables['uri'],
+          ];
+        }
+
+        // Store the dimensions in the form so the file doesn't have to be
+        // accessed again. This is important for remote files.
+        $element['width'] = [
+          '#type' => 'hidden',
+          '#value' => $image_preview_width,
+        ];
+        $element['height'] = [
+          '#type' => 'hidden',
+          '#value' => $image_preview_height,
+        ];
+      }
+    }
+    $variables['data'] = [];
+    foreach (Element::children($element) as $child) {
+      $variables['data'][$child] = $element[$child];
+    }
+  }
+
+}

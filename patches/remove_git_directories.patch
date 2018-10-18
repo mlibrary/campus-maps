@@ -1,0 +1,14 @@
+diff --git a/vendor/consolidation/robo/scripts/composer/ScriptHandler.php b/vendor/consolidation/robo/scripts/composer/ScriptHandler.php
+index ddf1111..ac742f6 100644
+--- a/vendor/consolidation/robo/scripts/composer/ScriptHandler.php
++++ b/vendor/consolidation/robo/scripts/composer/ScriptHandler.php
+@@ -55,4 +55,9 @@ protected static function fixDependenciesFor55()
+         // Don't continue with the initial 'composer install' command
+         exit($status);
+     }
++
++    public static function removeGitDirectories() {
++      $root = static::getDrupalRoot(getcwd());
++      exec('find ' . $root . ' -name \'.git\' | xargs rm -rf');
++    }
+ }

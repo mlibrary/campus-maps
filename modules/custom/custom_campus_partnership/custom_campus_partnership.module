@@ -1,0 +1,214 @@
+<?php
+use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\Entity\Node;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\paragraphs\Entity\Paragraph;
+
+function _custom_campus_partnership_create_node($title, $bundle, $body = '', $fields = []) {
+  $node = Node::create([
+    'type' => $bundle,
+    'title' => $title,
+    'langcode' => 'en',
+    'uid' => 1,
+    'status' => 1,
+  ]);
+  foreach ($fields as $f_name => $f_value) {
+    $node->get($f_name)->setValue($f_value);
+  }
+  $node->save();
+  
+  return $node;
+}
+
+function _custom_campus_partnership_create_term($name, $vid, $description = '', $fields = []) {
+  $term = Term::create([
+    'name' => $name,
+    'description' => $description,
+    'vid' => $vid,
+  ]);
+  foreach ($fields as $f_name => $f_value) {
+    $term->get($f_name)->setValue($f_value);
+  }
+  $term->save();
+  
+  return $term;
+}
+
+/*TODO - when getTitle and getName are abstracted to label, combine lookups.*/
+function _custom_campus_partnership_lookup_node($name, $bundle) {
+  $node_existing = \Drupal::entityTypeManager()
+    ->getStorage('node')
+    ->loadByProperties(['title' => $name, 'type' => $bundle]);
+  $node = NULL;
+  if (count($node_existing) > 0) {
+    drupal_set_message(t('@name already exists. The item will be set to the existing @bundle.', ['@bundle' => $bundle, '@name' => $name]),'warning');
+    $node = array_values($node_existing)[0];
+  }
+  if (count($node_existing) > 1) {
+    // TODO - send an email to admin because we have duplicates
+  }
+  
+  return $node;
+}
+
+function _custom_campus_partnership_lookup_term($name, $vid) {
+  $term_existing = taxonomy_term_load_multiple_by_name($name, $vid);
+  $term = NULL;
+  if (count($term_existing) > 0) {
+    drupal_set_message(t('The @vid term @name already exists. The item will be set to the existing unit.', ['@vid' => $vid, '@name' => $name]),'warning');
+    $term = array_values($term_existing)[0];
+  }
+  if (count($term_existing) > 1) {
+    // TODO - send an email to admin because we have duplicates
+  }
+  
+  return $term;
+}
+
+function _custom_campus_partnership_set_or_append_id($field_name, $id, $entity) {
+  $current_ids = $entity->get($field_name)->getValue();
+  if (empty($current_ids)) {
+    $entity->get($field_name)->setValue([['target_id' => $id]]);
+  }
+  else {
+    $existing_ids = [];
+    foreach ($current_ids as $current_id) {
+      $existing_ids[] = $current_id['target_id'];
+    }
+    if (!in_array($id, $existing_ids)) {
+      $entity->get($field_name)->appendItem(['target_id' => $id]);
+    }
+  }
+  
+  return $entity;
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function custom_campus_partnership_node_presave(NodeInterface $node) {
+  if ($node->bundle() == 'cp_title') {
+    // Get unit ids to associate with authors.
+    $unit_ids = [];
+    $e_units = $node->get('field_existing_unit_s_')->getValue();
+    foreach($e_units as $unit) {
+      $unit_ids[] = $unit['target_id'];
+      $unit_node = Node::load($unit['target_id']);
+      $g_term = _custom_campus_partnership_lookup_term($unit_node->getTitle(), 'geodata');
+      if (!$g_term) {
+        $g_term = _custom_campus_partnership_create_term($unit_node->getTitle(), 'geodata', '', ['field_unit_address' => $unit_node->get('field_unit_address')->getValue()]);
+      }
+      $unit_node = _custom_campus_partnership_set_or_append_id('field_associated_geodata', $g_term->id(), $unit_node);
+      $node = _custom_campus_partnership_set_or_append_id('field_associated_geodata', $g_term->id(), $node);
+      $unit_node->save();
+    }
+    // Create new units.
+    $units = $node->get('field_new_unit_s_')->getValue();
+    foreach($units as $unit) {
+      $unit = $unit['subform'];
+      $unit_name = $unit['field_unit_address'][0]['address']['organization'];
+      $unit_node = _custom_campus_partnership_lookup_node($unit_name, 'cp_unit');
+      if (!$unit_node) {
+        $unit_node = _custom_campus_partnership_create_node($unit_name, 'cp_unit', '', ['field_unit_address' => $unit['field_unit_address'][0]['address'], 'field_unit_url' => $unit['field_unit_url']]);
+      }
+      $node = _custom_campus_partnership_set_or_append_id('field_existing_unit_s_', $unit_node->id(), $node);
+
+      $g_term = _custom_campus_partnership_lookup_term($unit_node->getTitle(), 'geodata');
+      if (!$g_term) {
+        $g_term = _custom_campus_partnership_create_term($unit_node->getTitle(), 'geodata', '', ['field_unit_address' => $unit_node->get('field_unit_address')->getValue()]);
+      }
+      
+      $unit_node = _custom_campus_partnership_set_or_append_id('field_associated_geodata', $g_term->id(), $unit_node);
+      $unit_node->save();
+      $node = _custom_campus_partnership_set_or_append_id('field_associated_geodata', $g_term->id(), $node);
+      $unit_ids[] = $unit_node->id();
+    }
+    $node->get('field_new_unit_s_')->setValue([]);
+
+    // Get authors to associate with unit ids.
+    if (!empty($unit_ids)) {
+      $e_authors = $node->get('field_existing_author_s_')->getValue();
+      foreach($e_authors as $author_id) {
+        $author_paragraph = Paragraph::load($author_id['target_id']);
+        foreach ($author_paragraph->get('field_cp_author')->getValue() as $author_id) {
+          $author_node = Node::load($author_id['target_id']);
+          foreach ($unit_ids as $key => $unit_id) {
+            $unit_node = Node::load($unit_id);
+            $g_term = _custom_campus_partnership_lookup_term($unit_node->getTitle(), 'geodata');
+            if (!$g_term) {
+              $g_term = _custom_campus_partnership_create_term($unit_node->getTitle(), 'geodata', '', ['field_unit_address' => $unit_node->get('field_unit_address')->getValue()]);
+            }
+            $author_node = _custom_campus_partnership_set_or_append_id('field_associated_geodata', $g_term->id(), $author_node);
+          }
+          $author_node->save();
+        }
+      }
+    }
+    // Create new authors.
+    $authors = $node->get('field_new_author_s_')->getValue();
+    foreach($authors as $key => $author) {
+      $author = $author['subform'];
+      $author_name = $author['field_author_first_name'][0]['value'];
+      if (!empty($author['field_author_middle_name']) && isset($author['field_author_middle_name'][0]['value'])) {
+        $author_name = $author_name.' '.$author['field_author_middle_name'][0]['value'];
+      }
+      $author_name = $author_name.' '.$author['field_author_last_name'][0]['value'];
+      if (!empty($author['field_author_title']) && isset($author['field_author_title'][0]['value'])) {
+        //needed for labels
+        $paragraph = Paragraph::load($node->get('field_new_author_s_')->getValue()[$key]['target_id']);
+        $p_labels = options_allowed_values($paragraph->getFieldDefinition('field_author_title')->getFieldStorageDefinition(), $paragraph);
+        $author_name = $author_name.', '.$p_labels[$author['field_author_title'][0]['value']];
+      }
+      $author_node = _custom_campus_partnership_lookup_node($author_name, 'cp_author');
+      if (!$author_node) {
+        $author_node = _custom_campus_partnership_create_node($author_name, 'cp_author', '', [
+          'field_author_first_name' => $author['field_author_first_name'], 
+          'field_author_last_name' => $author['field_author_last_name'], 
+          'field_author_middle_name' => $author['field_author_middle_name'], 
+          'field_author_title' => $author['field_author_title']
+        ]);
+      }
+      // Associate authors with units for geocoding purposes.
+      if (!empty($unit_ids)) {
+        foreach ($unit_ids as $key => $unit_id) {
+          $unit_node = Node::load($unit_id);
+          $g_term = _custom_campus_partnership_lookup_term($unit_node->getTitle(), 'geodata');
+          if (!$g_term) {
+            $g_term = _custom_campus_partnership_create_term($unit_node->getTitle(), 'geodata', '', ['field_unit_address' => $unit_term->get('field_unit_address')->getValue()]);
+          }
+          $author_node = _custom_campus_partnership_set_or_append_id('field_associated_geodata', $g_term->id(), $author_node);
+        }
+        $author_node->save();
+      }
+      $author_existing = Paragraph::load($node->get('field_existing_author_s_')->getValue()[$key]['target_id']);
+      if ($author_existing && empty($author_existing->get('field_cp_author')->getValue())) {
+        $author_existing->get('field_cp_author')->setValue([['target_id' => $author_node->id()]]);
+        $author_existing->get('field_author_role')->setValue($author['field_author_role']);
+        $author_existing->save();
+      }
+      else {
+        $author_existing = Paragraph::create([
+          'type' => 'existing_author_s_',
+        ]);
+        $author_existing->get('field_cp_author')->setValue([['target_id' => $author_node->id()]]);
+        $author_existing->get('field_author_role')->setValue($author['field_author_role']);
+        $author_existing->save();
+        $node->get('field_existing_author_s_')->appendItem(['target_id' => $author_existing->id(), 'target_revision_id' => $author_existing->getRevisionId()]);
+      }
+      $node->get('field_new_author_s_')->setValue([]);
+    }
+  }
+}
+
+// change the title of the "Company" field to "Sponsoring Unit Name"
+function custom_campus_partnership_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if (in_array($form_id, array('node_campus_partnership_item_edit_form', 'node_campus_partnership_item_form'))) {
+    $form['field_new_unit_s_']['widget'][0]['subform']['field_unit_address']['widget'][0]['address']['#after_build'][] = 'custom_campus_partnership_address_label';
+  }
+}
+function custom_campus_partnership_address_label($element, $form_state) {
+  $element['organization']['#title'] = t('Sponsoring Unit Name');
+  return $element;
+}

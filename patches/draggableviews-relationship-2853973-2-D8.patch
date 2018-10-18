@@ -1,0 +1,13 @@
+diff --git a/modules/contrib/draggableviews/src/Plugin/views/field/DraggableViewsField.php b/modules/contrib/draggableviews/src/Plugin/views/field/DraggableViewsField.php
+index bfade16..93c4420 100755
+--- a/modules/contrib/draggableviews/src/Plugin/views/field/DraggableViewsField.php
++++ b/modules/contrib/draggableviews/src/Plugin/views/field/DraggableViewsField.php
+@@ -62,7 +62,7 @@ class DraggableViewsField extends BulkForm {
+       // Item to keep id of the entity.
+       $form[$this->options['id']][$row_index]['id'] = array(
+         '#type' => 'hidden',
+-        '#value' => $row->{$this->definition['entity field']},
++        '#value' => $this->getEntity($row)->id(),
+         '#attributes' => array('class' => 'draggableviews-id'),
+       );
+ 

@@ -1,0 +1,193 @@
+commit 9f320e410966ef5af81fdd6f5f3b5c48d2d451c5
+Author: Albert Bertram <bertrama@umich.edu>
+Date:   Wed Nov 16 17:55:05 2016 -0500
+
+    Restoring the primary_primary driver.
+
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Connection.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Connection.php
+new file mode 100644
+index 0000000..9d03053
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Connection.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Connection as MysqlConnection;
++
++class Connection extends MysqlConnection {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Delete.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Delete.php
+new file mode 100644
+index 0000000..56a27d2
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Delete.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Delete as MysqlDelete;
++
++class Delete extends MysqlDelete {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Insert.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Insert.php
+new file mode 100644
+index 0000000..61fb530
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Insert.php
+@@ -0,0 +1,31 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Insert as MysqlInsert;
++
++class Insert extends MysqlInsert {
++  public function __toString() {
++    // Create a sanitized comment string to prepend to the query.
++    $comments = $this->connection->makeComment($this->comments);
++
++    // Default fields are always placed first for consistency.
++    $insert_fields = array_merge($this->defaultFields, $this->insertFields);
++
++    // If we're selecting from a SelectQuery, finish building the query and
++    // pass it back, as any remaining options are irrelevant.
++    if (!empty($this->fromQuery)) {
++      $insert_fields_string = $insert_fields ? ' (' . implode(', ', $insert_fields) . ') ' : ' ';
++      return $comments . 'REPLACE INTO {' . $this->table . '}' . $insert_fields_string . $this->fromQuery;
++    }
++
++    $query = $comments . 'REPLACE INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') VALUES ';
++
++    $values = $this->getInsertPlaceholderFragment($this->insertValues, $this->defaultFields);
++    $query .= implode(', ', $values);
++
++    return $query;
++  }
++
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Install/Tasks.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Install/Tasks.php
+new file mode 100644
+index 0000000..9b5dded
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Install/Tasks.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary\Install;
++
++use Drupal\Core\Database\Driver\mysql\Install\Tasks as MysqlTasks;
++
++class Tasks extends MysqlTasks {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Merge.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Merge.php
+new file mode 100644
+index 0000000..9c30ab5
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Merge.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Merge as MysqlMerge;
++
++class Merge extends MysqlMerge {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Schema.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Schema.php
+new file mode 100644
+index 0000000..5509758
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Schema.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Schema as MysqlSchema;
++
++class Schema extends MysqlSchema {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Select.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Select.php
+new file mode 100644
+index 0000000..547849a
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Select.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Select as MysqlSelect;
++
++class Select extends MysqlSelect {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Transaction.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Transaction.php
+new file mode 100644
+index 0000000..3e8f606
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Transaction.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Transaction as MysqlTransaction;
++
++class Transaction extends MysqlTransaction {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Truncate.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Truncate.php
+new file mode 100644
+index 0000000..afab635
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Truncate.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Truncate as MysqlTruncate;
++
++class Truncate extends MysqlTruncate {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Update.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Update.php
+new file mode 100644
+index 0000000..702e348
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Update.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Update as MysqlUpdate;
++
++class Update extends MysqlUpdate {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Upsert.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Upsert.php
+new file mode 100644
+index 0000000..9ac2fa5
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Upsert.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Upsert as MysqlUpsert;
++
++class Upsert extends MysqlUpsert {
++}
++

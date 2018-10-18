@@ -1,0 +1,50 @@
+diff --git a/modules/contrib/publishing_dropbutton/src/NodePublishingDropbutton.php b/modules/contrib/publishing_dropbutton/src/NodePublishingDropbutton.php
+index ee79c8a..0c79713 100755
+--- a/modules/contrib/publishing_dropbutton/src/NodePublishingDropbutton.php
++++ b/modules/contrib/publishing_dropbutton/src/NodePublishingDropbutton.php
+@@ -20,7 +20,7 @@ public static function updateActions(&$element, FormStateInterface $form_state,
+     //   modules to integrate with "the Save operation" of this form. Modules
+     //   need a way to plug themselves into 1) the ::submit() step, and
+     //   2) the ::save() step, both decoupled from the pressed form button.
+-    if ($element['submit']['#access'] && \Drupal::currentUser()->hasPermission('administer nodes')) {
++    if ($element['submit']['#access']) {
+       // isNew | prev status » default   & publish label             & unpublish label
+       // 1     | 1           » publish   & Save and publish          & Save as unpublished
+       // 1     | 0           » unpublish & Save and publish          & Save as unpublished
+@@ -31,7 +31,6 @@ public static function updateActions(&$element, FormStateInterface $form_state,
+       $element['publish'] = $element['submit'];
+       // If the "Publish" button is clicked, we want to update the status to "published".
+       $element['publish']['#published_status'] = TRUE;
+-      $element['publish']['#dropbutton'] = 'save';
+       if ($node->isNew()) {
+         $element['publish']['#value'] = t('Save and publish');
+       }
+@@ -44,7 +43,6 @@ public static function updateActions(&$element, FormStateInterface $form_state,
+       $element['unpublish'] = $element['submit'];
+       // If the "Unpublish" button is clicked, we want to update the status to "unpublished".
+       $element['unpublish']['#published_status'] = FALSE;
+-      $element['unpublish']['#dropbutton'] = 'save';
+       if ($node->isNew()) {
+         $element['unpublish']['#value'] = t('Save as unpublished');
+       }
+@@ -62,7 +60,19 @@ public static function updateActions(&$element, FormStateInterface $form_state,
+         unset($element['publish']['#button_type']);
+         $element['unpublish']['#weight'] = -10;
+       }
+-
++      if ($node->bundle() == 'e_card' || $node->bundle() == 'all_staff_message') {
++        $element['publish']['#value'] = t('Save and Send');
++        $element['unpublish']['#value'] = t('Save for Later');
++      }
++      if ($node->bundle() == 'newsletter_item' &&  !\Drupal::currentUser()->hasPermission('administer nodes')) {
++        $element['unpublish']['#value'] = t('Save');
++        unset($element['publish']);
++      }
++      if ($node->bundle() == 'funds_transfer_request' || $node->bundle() == 'online_exhibit') {
++        $element['publish']['#value'] = t('Save');
++        unset($element['unpublish']);
++      }
++      unset($element['preview']);
+       // Remove the "Save" button.
+       $element['submit']['#access'] = FALSE;
+     }

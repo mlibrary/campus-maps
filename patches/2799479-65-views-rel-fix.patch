@@ -1,0 +1,823 @@
+diff --git a/entity_reference_revisions.views.inc b/entity_reference_revisions.views.inc
+index 9d351b3..28e0db5 100644
+--- a/entity_reference_revisions.views.inc
++++ b/entity_reference_revisions.views.inc
+@@ -5,68 +5,216 @@
+  * Provides views data for the entity_reference_revisions module.
+  */
+ 
++use Drupal\Core\Entity\FieldableEntityInterface;
++use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
+ use Drupal\field\FieldStorageConfigInterface;
+ 
+ /**
++ * Implements hook_views_data().
++ *
++ * Adds relationships for entity_reference_revisions base fields.
++ *
++ * @todo remove this when https://www.drupal.org/node/2337515 is in.
++ */
++function entity_reference_revisions_views_data() {
++  $entity_type_manager = \Drupal::entityTypeManager();
++  $entity_field_manager = \Drupal::service('entity_field.manager');
++
++  // Get all entity_reference_revisions base fields.
++  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
++  $entity_types = [];
++  $sql_entity_types = [];
++  $fields_all = [];
++  // Ensure origin and target entity types are SQL.
++  foreach ($entity_type_manager->getDefinitions() as $entity_type) {
++    if ($entity_type->hasHandlerClass('views_data') && $entity_type_manager->getStorage($entity_type->id()) instanceof SqlEntityStorageInterface) {
++      $sql_entity_types[$entity_type->id()] = $entity_type->id();
++      // Only fieldable entities have base fields.
++      if ($entity_type->entityClassImplements(FieldableEntityInterface::CLASS)) {
++        $entity_types[$entity_type->id()] = $entity_type;
++        /** @var \Drupal\Core\Field\FieldDefinitionInterface $base_field */
++        foreach ($entity_field_manager->getBaseFieldDefinitions($entity_type->id()) as $base_field) {
++          if ($base_field->getType() == 'entity_reference_revisions') {
++            $fields_all[$entity_type->id()][] = $base_field;
++          }
++        }
++      }
++    }
++  }
++
++  $data = [];
++  foreach ($fields_all as $entity_type_id => $fields) {
++    /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
++    $table_mapping = $entity_type_manager->getStorage($entity_type_id)->getTableMapping();
++
++    $entity_type = $entity_types[$entity_type_id];
++    $base_table = $entity_type->getDataTable() ?: $entity_type->getBaseTable();
++
++    /** @var \Drupal\Core\Field\BaseFieldDefinition[] $fields */
++    foreach ($fields as $field) {
++      // Add a relationship to the target entity type.
++      $target_entity_type_id = $field->getSettings()['target_type'];
++      $target_entity_type = $entity_type_manager->getDefinition($target_entity_type_id);
++      $entity_type_id = $field->getTargetEntityTypeId();
++      $entity_type = $entity_type_manager->getDefinition($entity_type_id);
++      $field_name = $field->getName();
++      // Unlimited (-1) or > 1 store field data in a dedicated table.
++      $table = $field->getCardinality() == 1 ? $base_table : $entity_type->getBaseTable() . '__' . $field_name;
++      $target_table = $target_entity_type->getDataTable() ?: $target_entity_type->getBaseTable();
++
++      foreach (['id' => 'id', 'revision' => 'revision_id'] as $key => $column) {
++        if ($key == 'id' || !$target_entity_type->isRevisionable()) {
++          $target_base_table = $target_entity_type->getDataTable() ?: $target_entity_type->getBaseTable();
++        }
++        else {
++          $target_base_table = $target_entity_type->getRevisionDataTable() ?: $target_entity_type->getRevisionTable();
++        }
++
++        // Provide a relationship for the entity type with the entity reference
++        // revisions field.
++        $args = [
++          '@label' => $target_entity_type->getLabel(),
++          '@field_name' => $field_name,
++        ];
++        $relationship_field = $field->getCardinality() == 1 ? $field_name . '__target_' . $column : $field_name . '_target_' . $column;
++        $data[$table][$field_name . '_target_' . $column]['relationship'] = [
++          'title' => $key == 'id' ? t('@label referenced from @field_name', $args) : t('@label revision referenced from @field_name', $args),
++          'label' => $key == 'id' ? t('@field_name: @label', $args) : t('@field_name: @label revision', $args),
++          'group' => $entity_type->getLabel(),
++          'help' => t('Base field, appears in all bundles'),
++          'id' => 'standard',
++          'base' => $target_base_table,
++          'entity type' => $target_entity_type_id,
++          'base field' => $target_entity_type->getKey($key),
++          'relationship field' => $relationship_field,
++        ];
++
++        if ($key == 'id' || !$entity_type->isRevisionable()) {
++          $base_table = $entity_type->getDataTable() ?: $entity_type->getBaseTable();
++        }
++        else {
++          $base_table = $entity_type->getRevisionDataTable() ?: $entity_type->getRevisionTable();
++        }
++
++        // Provide a reverse relationship for the entity type that is referenced
++        // by the entity reference revisions field.
++        $args['@entity'] = $entity_type->getLabel();
++        $args['@label'] = $target_entity_type->getLowercaseLabel();
++        $pseudo_field_name = 'reverse__' . $entity_type_id . '__' . $field_name . '_target_' . $column;
++        if ($field->getCardinality() == 1) {
++          $field_data = [
++            'id' => 'standard',
++            'base field' => $field_name . '__target_' . $column,
++            'field' => $target_entity_type->getKey('id'),
++          ];
++        }
++        else {
++          $field_data = [
++            'id' => $key == 'id' ? 'entity_reverse' : 'entity_reference_revisions',
++            'entity_type' => $entity_type_id,
++            'base field' => $entity_type->getKey('id'),
++            'field_name' => $field_name,
++            'field table' => $key == 'id' ? $table_mapping->getDedicatedDataTableName($field) : $table_mapping->getDedicatedRevisionTableName($field),
++            'field field' => $field_name . '_target_' . $column,
++            'join_extra' => [
++              [
++                'field' => 'deleted',
++                'value' => 0,
++                'numeric' => TRUE,
++              ],
++            ],
++          ];
++        }
++        $data[$target_table][$pseudo_field_name]['relationship'] = [
++          'title' => $key == 'id' ? t('@entity using @field_name', $args) : t('@entity revision using @field_name', $args),
++          'label' => $key == 'id' ? t('@field_name', ['@field_name' => $field_name]) : t('@field_name revision', ['@field_name' => $field_name]),
++          'group' => $target_entity_type->getLabel(),
++          'help' => $key == 'id' ? t('Relate each @entity with a @field_name set to the @label.', $args) : t('Relate each @entity revision with a @field_name set to the @label.', $args),
++          'base' => $base_table,
++        ] + $field_data;
++      }
++    }
++  }
++
++  return $data;
++}
++
++/**
+  * Implements hook_field_views_data().
+  */
+ function entity_reference_revisions_field_views_data(FieldStorageConfigInterface $field_storage) {
+   $data = views_field_default_views_data($field_storage);
+   $entity_manager = \Drupal::entityTypeManager();
++
++  // Add a relationship to the target entity type.
++  $target_entity_type_id = $field_storage->getSetting('target_type');
++  $target_entity_type = $entity_manager->getDefinition($target_entity_type_id);
++  $entity_type_id = $field_storage->getTargetEntityTypeId();
++  $entity_type = $entity_manager->getDefinition($entity_type_id);
++  $field_name = $field_storage->getName();
++  /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
++  $table_mapping = $entity_manager->getStorage($entity_type_id)->getTableMapping();
++
+   foreach ($data as $table_name => $table_data) {
+-    // Add a relationship to the target entity type.
+-    $target_entity_type_id = $field_storage->getSetting('target_type');
+-    $target_entity_type = $entity_manager->getDefinition($target_entity_type_id);
+-    $entity_type_id = $field_storage->getTargetEntityTypeId();
+-    $entity_type = $entity_manager->getDefinition($entity_type_id);
+-    $target_base_table = $target_entity_type->getDataTable() ?: $target_entity_type->getBaseTable();
+-    $field_name = $field_storage->getName();
+-
+-    // Provide a relationship for the entity type with the entity reference
+-    // revisions field.
+-    $args = array(
+-      '@label' => $target_entity_type->getLabel(),
+-      '@field_name' => $field_name,
+-    );
+-    $data[$table_name][$field_name]['relationship'] = array(
+-      'title' => t('@label referenced from @field_name', $args),
+-      'label' => t('@field_name: @label', $args),
+-      'group' => $entity_type->getLabel(),
+-      'help' =>  t('Appears in: @bundles.', array('@bundles' => implode(', ', $field_storage->getBundles()))),
+-      'id' => 'standard',
+-      'base' => $target_base_table,
+-      'entity type' => $target_entity_type_id,
+-      'base field' => $target_entity_type->getKey('revision'),
+-      'relationship field' => $field_name . '_target_revision_id',
+-    );
+-
+-    // Provide a reverse relationship for the entity type that is referenced by
+-    // the field.
+-    $args['@entity'] = $entity_type->getLabel();
+-    $args['@label'] = $target_entity_type->getLowercaseLabel();
+-    $pseudo_field_name = 'reverse__' . $entity_type_id . '__' . $field_name;
+-    /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
+-    $table_mapping = $entity_manager->getStorage($entity_type_id)->getTableMapping();
+-    $data[$target_base_table][$pseudo_field_name]['relationship'] = array(
+-      'title' => t('@entity using @field_name', $args),
+-      'label' => t('@field_name', array('@field_name' => $field_name)),
+-      'group' => $target_entity_type->getLabel(),
+-      'help' => t('Relate each @entity with a @field_name set to the @label.', $args),
+-      'id' => 'entity_reverse',
+-      'base' => $entity_type->getDataTable() ?: $entity_type->getBaseTable(),
+-      'entity_type' => $entity_type_id,
+-      'base field' => $entity_type->getKey('revision'),
+-      'field_name' => $field_name,
+-      'field table' => $table_mapping->getDedicatedDataTableName($field_storage),
+-      'field field' => $field_name . '_target_revision_id',
+-      'join_extra' => array(
+-        array(
+-          'field' => 'deleted',
+-          'value' => 0,
+-          'numeric' => TRUE,
+-        ),
+-      ),
+-    );
++    foreach (['id' => 'id', 'revision' => 'revision_id'] as $key => $column) {
++      if ($key == 'id' || !$target_entity_type->isRevisionable()) {
++        $target_base_table = $target_entity_type->getDataTable() ?: $target_entity_type->getBaseTable();
++      }
++      else {
++        $target_base_table = $target_entity_type->getRevisionDataTable() ?: $target_entity_type->getRevisionTable();
++      }
++
++      // Provide a relationship for the entity type with the entity reference
++      // revisions field.
++      $args = [
++        '@label' => $target_entity_type->getLabel(),
++        '@field_name' => $field_name,
++      ];
++      $data[$table_name][$field_name . '_target_' . $column]['relationship'] = [
++        'title' => $key == 'id' ? t('@label referenced from @field_name', $args) : t('@label revision referenced from @field_name', $args),
++        'label' => $key == 'id' ? t('@field_name: @label', $args) : t('@field_name: @label revision', $args),
++        'group' => $entity_type->getLabel(),
++        'help' => t('Appears in: @bundles.', ['@bundles' => implode(', ', $field_storage->getBundles())]),
++        'id' => 'standard',
++        'base' => $target_base_table,
++        'entity type' => $target_entity_type_id,
++        'base field' => $target_entity_type->getKey($key),
++        'relationship field' => $field_name . '_target_' . $column,
++      ];
++
++      if ($key == 'id' || !$entity_type->isRevisionable()) {
++        $base_table = $entity_type->getDataTable() ?: $entity_type->getBaseTable();
++      }
++      else {
++        $base_table = $entity_type->getRevisionDataTable() ?: $entity_type->getRevisionTable();
++      }
++
++      // Provide a reverse relationship for the entity type that is referenced
++      // by the field.
++      $args['@entity'] = $entity_type->getLabel();
++      $args['@label'] = $target_entity_type->getLowercaseLabel();
++      $pseudo_field_name = 'reverse__' . $entity_type_id . '__' . $field_name . '_target_' . $column;
++      $data[$target_base_table][$pseudo_field_name]['relationship'] = [
++        'title' => $key == 'id' ? t('@entity using @field_name', $args) : t('@entity revision using @field_name', $args),
++        'label' => $key == 'id' ? t('@field_name', ['@field_name' => $field_name]) : t('@field_name revision', ['@field_name' => $field_name]),
++        'group' => $target_entity_type->getLabel(),
++        'help' => $key == 'id' ? t('Relate each @entity with a @field_name set to the @label.', $args) : t('Relate each @entity revision with a @field_name set to the @label.', $args),
++        'id' => $key == 'id' ? 'entity_reverse' : 'entity_reference_revisions',
++        'base' => $base_table,
++        'entity_type' => $entity_type_id,
++        'base field' => $entity_type->getKey($key),
++        'field_name' => $field_name,
++        'field table' => $key == 'id' ? $table_mapping->getDedicatedDataTableName($field_storage) : $table_mapping->getDedicatedRevisionTableName($field_storage),
++        'field field' => $field_name . '_target_' . $column,
++        'join_extra' => [
++          [
++            'field' => 'deleted',
++            'value' => 0,
++            'numeric' => TRUE,
++          ],
++        ],
++      ];
++    }
+   }
+ 
+   return $data;
+diff --git a/src/Plugin/views/relationship/EntityReferenceRevisions.php b/src/Plugin/views/relationship/EntityReferenceRevisions.php
+new file mode 100644
+index 0000000..90560f4
+--- /dev/null
++++ b/src/Plugin/views/relationship/EntityReferenceRevisions.php
+@@ -0,0 +1,119 @@
++<?php
++
++namespace Drupal\entity_reference_revisions\Plugin\views\relationship;
++
++use Drupal\views\Plugin\views\relationship\RelationshipPluginBase;
++use Drupal\views\Plugin\ViewsHandlerManager;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++
++/**
++ * A relationship handlers which reverse entity revisioned references.
++ *
++ * @ingroup views_relationship_handlers
++ *
++ * @ViewsRelationship("entity_reference_revisions")
++ */
++class EntityReferenceRevisions extends RelationshipPluginBase {
++
++  /**
++   * The Views join plugin manager.
++   *
++   * @var \Drupal\views\Plugin\ViewsHandlerManager
++   */
++  protected $joinManager;
++
++  /**
++   * Constructs an EntityReferenceRevisions object.
++   *
++   * @param array $configuration
++   *   A configuration array containing information about the plugin instance.
++   * @param string $plugin_id
++   *   The plugin_id for the plugin instance.
++   * @param mixed $plugin_definition
++   *   The plugin implementation definition.
++   * @param \Drupal\views\Plugin\ViewsHandlerManager $join_manager
++   *   The views plugin join manager.
++   */
++  public function __construct(array $configuration, $plugin_id, $plugin_definition, ViewsHandlerManager $join_manager) {
++    parent::__construct($configuration, $plugin_id, $plugin_definition);
++    $this->joinManager = $join_manager;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
++    return new static(
++      $configuration,
++      $plugin_id,
++      $plugin_definition,
++      $container->get('plugin.manager.views.join')
++    );
++  }
++
++  /**
++   * Called to implement a relationship in a query.
++   */
++  public function query() {
++    $this->ensureMyTable();
++    // First, relate our base table to the current base table to the
++    // field, using the base table's id field to the field's column.
++    $views_data = $this->viewsData->get($this->table);
++    $left_field = $views_data['table']['base']['field'];
++
++    $first = [
++      'left_table' => $this->tableAlias,
++      'left_field' => $left_field,
++      'table' => $this->definition['field table'],
++      'field' => $this->definition['field field'],
++      'adjusted' => TRUE,
++    ];
++    if (!empty($this->options['required'])) {
++      $first['type'] = 'INNER';
++    }
++
++    if (!empty($this->definition['join_extra'])) {
++      $first['extra'] = $this->definition['join_extra'];
++    }
++
++    if (!empty($def['join_id'])) {
++      $id = $def['join_id'];
++    }
++    else {
++      $id = 'standard';
++    }
++    $first_join = $this->joinManager->createInstance($id, $first);
++
++
++    $this->first_alias = $this->query->addTable($this->definition['field table'], $this->relationship, $first_join);
++
++    // Second, relate the field table to the entity specified using
++    // the entity id on the field table and the entity's id field.
++    $second = [
++      'left_table' => $this->first_alias,
++      'left_field' => 'revision_id',
++      'table' => $this->definition['base'],
++      'field' => $this->definition['base field'],
++      'adjusted' => TRUE,
++    ];
++
++    if (!empty($this->options['required'])) {
++      $second['type'] = 'INNER';
++    }
++
++    if (!empty($def['join_id'])) {
++      $id = $def['join_id'];
++    }
++    else {
++      $id = 'standard';
++    }
++    $second_join = $this->joinManager->createInstance($id, $second);
++    $second_join->adjusted = TRUE;
++
++    // Use a short alias for this:
++    $alias = $this->definition['field_name'] . '_' . $this->table;
++
++    $this->alias = $this->query->addRelationship($alias, $second_join, $this->definition['base'], $this->relationship);
++  }
++
++}
+diff --git a/tests/modules/entity_composite_relationship_test/config/install/views.view.composite_entities.yml b/tests/modules/entity_composite_relationship_test/config/install/views.view.composite_entities.yml
+new file mode 100644
+index 0000000..eaa55f7
+--- /dev/null
++++ b/tests/modules/entity_composite_relationship_test/config/install/views.view.composite_entities.yml
+@@ -0,0 +1,249 @@
++langcode: en
++status: true
++dependencies:
++  module:
++    - entity_composite_relationship_test
++    - entity_reference_revisions
++    - node
++id: composite_entities
++label: 'Composite entities'
++module: views
++description: ''
++tag: ''
++base_table: entity_test_composite_field_data
++base_field: id
++core: 8.x
++display:
++  default:
++    display_plugin: default
++    id: default
++    display_title: Master
++    position: 0
++    display_options:
++      access:
++        type: none
++        options: {  }
++      cache:
++        type: tag
++        options: {  }
++      query:
++        type: views_query
++        options:
++          disable_sql_rewrite: false
++          distinct: false
++          replica: false
++          query_comment: ''
++          query_tags: {  }
++      exposed_form:
++        type: basic
++        options:
++          submit_button: Apply
++          reset_button: false
++          reset_button_label: Reset
++          exposed_sorts_label: 'Sort by'
++          expose_sort_order: true
++          sort_asc_label: Asc
++          sort_desc_label: Desc
++      pager:
++        type: mini
++        options:
++          items_per_page: 50
++          offset: 0
++          id: 0
++          total_pages: null
++          expose:
++            items_per_page: false
++            items_per_page_label: 'Items per page'
++            items_per_page_options: '5, 10, 25, 50'
++            items_per_page_options_all: false
++            items_per_page_options_all_label: '- All -'
++            offset: false
++            offset_label: Offset
++          tags:
++            previous: ‹‹
++            next: ››
++      style:
++        type: table
++      row:
++        type: fields
++      fields:
++        name:
++          table: entity_test_composite_field_data
++          field: name
++          id: name
++          entity_type: null
++          entity_field: name
++          plugin_id: field
++          relationship: none
++          group_type: group
++          admin_label: ''
++          label: Name
++          exclude: false
++          alter:
++            alter_text: false
++            text: ''
++            make_link: false
++            path: ''
++            absolute: false
++            external: false
++            replace_spaces: false
++            path_case: none
++            trim_whitespace: false
++            alt: ''
++            rel: ''
++            link_class: ''
++            prefix: ''
++            suffix: ''
++            target: ''
++            nl2br: false
++            max_length: 0
++            word_boundary: true
++            ellipsis: true
++            more_link: false
++            more_link_text: ''
++            more_link_path: ''
++            strip_tags: false
++            trim: false
++            preserve_tags: ''
++            html: false
++          element_type: ''
++          element_class: ''
++          element_label_type: ''
++          element_label_class: ''
++          element_label_colon: true
++          element_wrapper_type: ''
++          element_wrapper_class: ''
++          element_default_classes: true
++          empty: ''
++          hide_empty: false
++          empty_zero: false
++          hide_alter_empty: true
++          click_sort_column: value
++          type: string
++          settings: {  }
++          group_column: value
++          group_columns: {  }
++          group_rows: true
++          delta_limit: 0
++          delta_offset: 0
++          delta_reversed: false
++          delta_first_last: false
++          multi_type: separator
++          separator: ', '
++          field_api_classes: false
++        title_1:
++          id: title_1
++          table: node_field_data
++          field: title
++          relationship: reverse__node__field_composite_reference_target_id
++          group_type: group
++          admin_label: ''
++          label: Title
++          exclude: false
++          alter:
++            alter_text: false
++            text: ''
++            make_link: false
++            path: ''
++            absolute: false
++            external: false
++            replace_spaces: false
++            path_case: none
++            trim_whitespace: false
++            alt: ''
++            rel: ''
++            link_class: ''
++            prefix: ''
++            suffix: ''
++            target: ''
++            nl2br: false
++            max_length: 0
++            word_boundary: true
++            ellipsis: true
++            more_link: false
++            more_link_text: ''
++            more_link_path: ''
++            strip_tags: false
++            trim: false
++            preserve_tags: ''
++            html: false
++          element_type: ''
++          element_class: ''
++          element_label_type: ''
++          element_label_class: ''
++          element_label_colon: true
++          element_wrapper_type: ''
++          element_wrapper_class: ''
++          element_default_classes: true
++          empty: ''
++          hide_empty: false
++          empty_zero: false
++          hide_alter_empty: true
++          click_sort_column: value
++          type: string
++          settings:
++            link_to_entity: true
++          group_column: value
++          group_columns: {  }
++          group_rows: true
++          delta_limit: 0
++          delta_offset: 0
++          delta_reversed: false
++          delta_first_last: false
++          multi_type: separator
++          separator: ', '
++          field_api_classes: false
++          entity_type: node
++          entity_field: title
++          plugin_id: field
++      filters: {  }
++      sorts: {  }
++      title: 'Composite entities'
++      header: {  }
++      footer: {  }
++      empty: {  }
++      relationships:
++        reverse__node__field_composite_reference_target_revision_id:
++          id: reverse__node__field_composite_reference_target_revision_id
++          table: entity_test_composite_field_revision
++          field: reverse__node__field_composite_reference_target_revision_id
++          relationship: none
++          group_type: group
++          admin_label: 'field_composite_reference revision'
++          required: false
++          entity_type: entity_test_composite
++          plugin_id: entity_reference_revisions
++        reverse__node__field_composite_reference_target_id:
++          id: reverse__node__field_composite_reference_target_id
++          table: entity_test_composite_field_data
++          field: reverse__node__field_composite_reference_target_id
++          relationship: none
++          group_type: group
++          admin_label: field_composite_reference
++          required: false
++          entity_type: entity_test_composite
++          plugin_id: entity_reverse
++      arguments: {  }
++      display_extenders: {  }
++    cache_metadata:
++      max-age: -1
++      contexts:
++        - 'languages:language_content'
++        - 'languages:language_interface'
++        - url.query_args
++      tags: {  }
++  page_1:
++    display_plugin: page
++    id: page_1
++    display_title: Page
++    position: 1
++    display_options:
++      display_extenders: {  }
++      path: composite-entities
++    cache_metadata:
++      max-age: -1
++      contexts:
++        - 'languages:language_content'
++        - 'languages:language_interface'
++        - url.query_args
++      tags: {  }
+diff --git a/tests/modules/entity_composite_relationship_test/entity_composite_relationship_test.info.yml b/tests/modules/entity_composite_relationship_test/entity_composite_relationship_test.info.yml
+index dae3c2a..27d4d0b 100644
+--- a/tests/modules/entity_composite_relationship_test/entity_composite_relationship_test.info.yml
++++ b/tests/modules/entity_composite_relationship_test/entity_composite_relationship_test.info.yml
+@@ -5,8 +5,10 @@ package: Testing
+ # core: 8.x
+
+ dependencies:
+- - entity_reference_revisions
+- - entity_test
++ - drupal:node
++ - drupal:views
++ - drupal:entity_reference_revisions
++ - drupal:entity_test
+ # Information added by Drupal.org packaging script on 2018-01-05
+ version: '8.x-1.4'
+ core: '8.x'
+diff --git a/tests/modules/entity_composite_relationship_test/src/Entity/EntityTestCompositeRelationship.php b/tests/modules/entity_composite_relationship_test/src/Entity/EntityTestCompositeRelationship.php
+index fb61ad1..bd0dd15 100644
+--- a/tests/modules/entity_composite_relationship_test/src/Entity/EntityTestCompositeRelationship.php
++++ b/tests/modules/entity_composite_relationship_test/src/Entity/EntityTestCompositeRelationship.php
+@@ -14,6 +14,9 @@ use Drupal\entity_test\Entity\EntityTestMulRev;
+  * @ContentEntityType(
+  *   id = "entity_test_composite",
+  *   label = @Translation("Test entity - composite relationship"),
++ *   handlers = {
++ *     "views_data" = "Drupal\views\EntityViewsData",
++ *   },
+  *   base_table = "entity_test_composite",
+  *   revision_table = "entity_test_composite_revision",
+  *   data_table = "entity_test_composite_field_data",
+diff --git a/tests/src/Kernel/EntityReferenceRevisionsViewsTest.php b/tests/src/Kernel/EntityReferenceRevisionsViewsTest.php
+new file mode 100644
+index 0000000..d050510
+--- /dev/null
++++ b/tests/src/Kernel/EntityReferenceRevisionsViewsTest.php
+@@ -0,0 +1,129 @@
++<?php
++
++namespace Drupal\Tests\entity_reference_revisions\Kernel;
++
++use Drupal\entity_composite_relationship_test\Entity\EntityTestCompositeRelationship;
++use Drupal\field\Entity\FieldConfig;
++use Drupal\field\Entity\FieldStorageConfig;
++use Drupal\node\Entity\Node;
++use Drupal\node\Entity\NodeType;
++use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
++use Drupal\views\Views;
++
++/**
++ * Tests Views integration for entity_reference_revisions.
++ *
++ * @group entity_reference_revisions
++ */
++class EntityReferenceRevisionsViewsTest extends ViewsKernelTestBase {
++
++  /**
++   * Modules to enable.
++   *
++   * @var array
++   */
++  public static $modules = [
++    'node',
++    'user',
++    'field',
++    'entity_reference_revisions',
++    'entity_composite_relationship_test',
++    'views',
++  ];
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp($import_test_views = TRUE) {
++    parent::setUp(FALSE);
++
++    $this->installEntitySchema('entity_test_composite');
++    $this->installEntitySchema('node');
++    $this->installSchema('node', ['node_access']);
++    $this->installEntitySchema('user');
++
++    // Create article content type.
++    NodeType::create(['type' => 'article', 'name' => 'Article'])->save();
++
++    // Create the reference to the composite entity test.
++    $field_storage = FieldStorageConfig::create([
++      'field_name' => 'field_composite_reference',
++      'entity_type' => 'node',
++      'type' => 'entity_reference_revisions',
++      'settings' => [
++        'target_type' => 'entity_test_composite',
++      ],
++    ]);
++    $field_storage->save();
++    $field = FieldConfig::create([
++      'field_storage' => $field_storage,
++      'bundle' => 'article',
++      'translatable' => FALSE,
++    ]);
++    $field->save();
++
++    $this->installConfig('entity_composite_relationship_test');
++  }
++
++  /**
++   * Tests the host entity can be referenced in Views.
++   */
++  public function testHostDisplayInView() {
++    // Create the test composite entity.
++    $composite = EntityTestCompositeRelationship::create([
++      'uuid' => $this->randomMachineName(),
++      'name' => 'composite_entity_test',
++    ]);
++    $composite->save();
++
++    // Create a node with a reference to the test composite entity.
++    $node = Node::create([
++      'title' => 'Node title revision 1',
++      'type' => 'article',
++      'field_composite_reference' => $composite,
++    ]);
++    $node->save();
++
++    $view = Views::getView('composite_entities');
++    $this->executeView($view);
++
++    $column_map = [
++      'name' => 'name',
++      'title_1' => 'title_1',
++    ];
++    $this->assertIdenticalResultset($view, [
++      [
++        'name' => 'composite_entity_test',
++        'title_1' => 'Node title revision 1',
++      ],
++    ], $column_map);
++
++    // Set a new revision, composite entity should have a new revision as well.
++    $composite = EntityTestCompositeRelationship::load($composite->id());
++    $composite_original_revision_id = $composite->getRevisionId();
++    $node_original_revision_id = $node->getRevisionId();
++
++    $node->setTitle('Node title revision 2');
++    $node->setNewRevision(TRUE);
++    $node->save();
++    $node_rev_id = $node->getRevisionId();
++
++    // Ensure that we saved a new revision ID.
++    $composite2 = EntityTestCompositeRelationship::load($composite->id());
++    $composite2_rev_id = $composite2->getRevisionId();
++    $this->assertNotEquals($node_rev_id, $node_original_revision_id);
++    $this->assertNotEquals($composite2_rev_id, $composite_original_revision_id);
++
++    // Check if the updated node title is presented in the View result.
++    $view = Views::getView('composite_entities');
++    $this->executeView($view);
++
++    $this->assertIdenticalResultset($view, [
++      [
++        'name' => 'composite_entity_test',
++        'title_1' => 'Node title revision 2',
++      ],
++    ], $column_map);
++  }
++
++}
+-- 
+2.11.0 (Apple Git-81)
+

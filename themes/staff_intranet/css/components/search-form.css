@@ -1,0 +1,115 @@
+/**
+ * @file
+ * The visual styles for staff_intranet's search form(s).
+ */
+
+.featured-top .search-form {
+  font-size: 0.875rem;
+  width:100%;
+  display: inline-block;
+}
+.featured-top .search-form .form-search {
+  margin-right: 5px; /* LTR */
+  margin-top:10px;
+  padding: 4px;
+  width:100%;
+  display: inline-block;
+  height: 24px;
+}
+.featured-top .form-type-search{
+  display: inline-block;
+  float:left;
+  width:70%;
+  margin-top: 0;
+  min-width: 0;
+}
+.featured-top .search-form .form-actions{
+  display: inline-block;
+  width:20%;
+}
+
+[dir="rtl"] .search-form .form-search {
+  float: right;
+  margin-left: 5px;
+  margin-right: 0;
+}
+.button.search-form__submit {
+  background: #126dc1 url(../../images/loupe.svg) no-repeat 15%;
+  font-size:1em;
+  cursor: pointer;
+  height: 32px;
+  margin-left: 10%;
+  margin-right: 0;
+  overflow: hidden;
+  padding: 0 0 0 15%;
+  color:#fff;
+  direction: ltr;
+  width: 90%;
+  min-width: 87px;
+  max-width:150px;
+  border-image: none;
+  border-radius: 0;
+  border-style: solid;
+  border-width: 1px;
+}
+.button.search-form__submit:hover,
+.search-form__submit:hover,
+.button.search-form__submit:focus,
+.search-form__submit:focus {
+  background: rgba(18,109,193, 0.85) url(../../images/loupe.svg) no-repeat 15%;
+  color:#fff;
+}
+.search-form .form-item-keys label {
+  display: block;
+}
+
+.search-extra-links{
+  display: inline-block;
+  vertical-align: top;
+  width: 40%;
+  margin: .25em 0;
+  padding: 0;
+}
+
+.featured-top  .block-search {
+  width:65%;
+  display:inline-block;
+  float:left;
+  margin-left:10px;
+}
+
+@media only screen and (max-width: 1010px) {
+  .featured-top .search-form .form-search {
+    margin-left:10px;
+    width:90%
+  }
+  .button.search-form__submit{
+    margin-left:0;
+  }
+  .featured-top .search-form{
+    width:95%;
+  }
+  .featured-top .form-type-search{
+    float:none;
+  }
+  .featured-top .search-form #edit-actions {
+    margin:0 0.5em;
+  }
+  .featured-top .search-form #edit-actions #edit-submit {
+    margin-top:0;
+    padding-top: 3px;
+    background-position:10%;
+  }
+  .featured-top  .block-search {
+    width:98%;
+    display:block;
+    float:none;
+    margin:0 auto;
+  }
+}
+@media all and (max-width: 560px) {
+  .featured-top  .block-search {
+    width:95%;
+    margin:0;
+  }
+}

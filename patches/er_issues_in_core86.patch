@@ -1,0 +1,42 @@
+diff --git a/modules/contrib/field_states_ui/field_states_ui.form.inc b/modules/contrib/field_states_ui/field_states_ui.form.inc
+index 222e3ae..80a5b87 100644
+--- a/field_states_ui.form.inc
++++ b/field_states_ui.form.inc
+@@ -44,6 +44,9 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+   switch ($type) {
+ 
+     case 'entity_reference':
++      if (isset($element[0])) {
++        $element = $element[0];
++      }
+       switch ($plugin_id) {
+         case 'chosen_select':
+         case 'options_select':
+@@ -54,7 +57,12 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+ 
+         case 'entity_reference_autocomplete':
+         case 'entity_reference_autocomplete_tags':
+-          $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          if (isset($element['target_id'])) {
++            $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          }
++          else {
++            $element['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['#field_parents']);
++          }
+           break;
+ 
+         default:
+@@ -73,7 +81,12 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+               ]
+             )
+           );
+-          $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          if (isset($element['target_id'])) {
++            $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          }
++          else {
++            $element['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['#field_parents']);
++          }
+           break;
+       }
+       break;

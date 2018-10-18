@@ -1,0 +1,41 @@
+/**
+ * @file
+ * staff_intranet specific styling for the Book module.
+ */
+
+.book-navigation .menu {
+  border-top: 1px solid #d6d6d6;
+}
+.book-navigation .book-pager {
+  border-bottom: 1px solid #d6d6d6;
+  border-top: 1px solid #d6d6d6;
+  margin: 0;
+}
+
+.block-views-blockbook-title-block-1, #block-booknavigation{
+  width:20%;
+  min-width:150px;
+  float:left;
+  clear:left;
+}
+.block-views-blockbook-title-block-1{
+  min-height:0;
+}
+#block-booknavigation + #block-staff-intranet-content{
+  width:80%;
+  min-width:300px;
+  float:left;
+}
+.book-navigation .book-pager__item {
+  display: inline-block;
+}
+@media only screen and (max-width: 1010px) {
+  #block-booknavigation, .block-views-blockbook-title-block-1{
+    width:100%;
+    float:none;
+  }
+  #block-booknavigation + #block-staff-intranet-content{
+    width:100%;
+    float:none;
+  }
+}

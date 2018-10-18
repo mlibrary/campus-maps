@@ -1,0 +1,10 @@
+/**
+ * @file
+ * Visual styles for staff_intranet's page-title component.
+ */
+
+.page-title {
+  font-size: 2em;
+  line-height: 1em;
+  max-width:85%;
+}

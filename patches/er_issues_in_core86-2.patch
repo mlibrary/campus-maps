@@ -1,0 +1,43 @@
+diff --git a/modules/contrib/field_states_ui/field_states_ui.form.inc b/modules/contrib/field_states_ui/field_states_ui.form.inc
+index 222e3ae..ec8e539 100644
+--- a/modules/contrib/field_states_ui/field_states_ui.form.inc
++++ b/modules/contrib/field_states_ui/field_states_ui.form.inc
+@@ -39,7 +39,9 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+   $field_definition = $context['items']->getFieldDefinition();
+   $type             = $field_definition->getType();
+   $plugin_id        = $plugin->getPluginId();
+-
++  if (isset($element[0])) {
++    $element = $element[0];
++  }
+   // Handle the type of field appropriately.
+   switch ($type) {
+ 
+@@ -54,7 +56,12 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+ 
+         case 'entity_reference_autocomplete':
+         case 'entity_reference_autocomplete_tags':
+-          $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          if (isset($element['target_id'])) {
++            $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          }
++          else {
++            $element['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['#field_parents']);
++          }
+           break;
+ 
+         default:
+@@ -73,7 +80,12 @@ function field_states_ui_field_widget_alter(&$element, FormStateInterface $form_
+               ]
+             )
+           );
+-          $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          if (isset($element['target_id'])) {
++            $element['target_id']['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['target_id']['#field_parents']);
++          }
++          else {
++            $element['#states'] = field_states_ui_get_states($states, $manager, $form_state, $context, $element, $element['#field_parents']);
++          }
+           break;
+       }
+       break;

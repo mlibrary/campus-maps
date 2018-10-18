@@ -1,0 +1,41 @@
+geofield_map.settings:
+  type: config_object
+  label: 'Geofield Map settings'
+  mapping:
+    gmap_api_key:
+      type: string
+      label: 'Google Maps API Key'
+    gmap_api_localization:
+      type: string
+      label: 'Gmap Api Localization Index'
+    theming:
+      type: mapping
+      label: 'Geofield Map Theming Settings'
+      mapping:
+        markers_location:
+          type: mapping
+          label: 'Markers Icons Storage location Info'
+          mapping:
+            security:
+              type: string
+              label: 'File Storage Security Method'
+            rel_path:
+              type: string
+              label: 'Relative Path'
+        markers_extensions:
+          type: string
+          label: 'Markers Allowed file extensions'
+        markers_filesize:
+          type: string
+          label: 'Maximum file size'
+    geocoder:
+      type: mapping
+      label: 'Geocoder Settings'
+      mapping:
+        caching:
+          type: mapping
+          label: 'Cache Settings'
+          mapping:
+            clientside:
+              type: string
+              label: 'Type of Client Side Storage (None, Local or Session Storage)'

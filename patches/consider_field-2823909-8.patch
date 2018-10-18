@@ -1,0 +1,26 @@
+diff --git a/modules/contrib/paragraphs/src/Plugin/Field/FieldWidget/InlineParagraphsWidget.php b/modules/contrib/paragraphs/src/Plugin/Field/FieldWidget/InlineParagraphsWidget.php
+index 4a6b0bf..3371cd8 100644
+--- a/modules/contrib/paragraphs/src/Plugin/Field/FieldWidget/InlineParagraphsWidget.php
++++ b/modules/contrib/paragraphs/src/Plugin/Field/FieldWidget/InlineParagraphsWidget.php
+@@ -878,7 +878,7 @@ public function formMultipleElements(FieldItemListInterface $items, array &$form
+         'text' => [
+           '#type' => 'container',
+           'value' => [
+-            '#markup' => $this->t('No @title added yet.', ['@title' => $this->getSetting('title')]),
++            '#markup' => $this->t('No @title added yet.', ['@title' => $title]),
+             '#prefix' => '<em>',
+             '#suffix' => '</em>',
+           ]
+diff --git a/modules/contrib/paragraphs/src/Plugin/Field/FieldWidget/ParagraphsWidget.php b/modules/contrib/paragraphs/src/Plugin/Field/FieldWidget/ParagraphsWidget.php
+index eda8415..2f13dc6 100644
+--- a/modules/contrib/paragraphs/src/Plugin/Field/FieldWidget/ParagraphsWidget.php
++++ b/modules/contrib/paragraphs/src/Plugin/Field/FieldWidget/ParagraphsWidget.php
+@@ -868,7 +868,7 @@ public function formMultipleElements(FieldItemListInterface $items, array &$form
+         'text' => [
+           '#type' => 'container',
+           'value' => [
+-            '#markup' => $this->t('No @title added yet.', ['@title' => $this->getSetting('title')]),
++            '#markup' => $this->t('No @title added yet.', ['@title' => $title]),
+             '#prefix' => '<em>',
+             '#suffix' => '</em>',
+           ]

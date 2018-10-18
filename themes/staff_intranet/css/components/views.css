@@ -1,0 +1,72 @@
+/**
+ * @file
+ * Styling for Views in staff_intranet.
+ */
+
+/* Tab styles */
+.views-displays .tabs .open > a {
+  border-radius: 7px 7px 0 0;
+}
+.views-displays .tabs .open > a:hover,
+.views-displays .tabs .open > a:focus {
+  color: #0071B3;
+}
+.views-displays .secondary .form-submit {
+  font-size: 0.846em;
+}
+
+/* Tabs action list styles */
+.views-displays .tabs .action-list {
+  padding: 0;
+}
+
+/* Contextual filter options styles */
+.views-filterable-options .filterable-option:nth-of-type(even) .form-type-checkbox {
+  background-color: #F9F9F9;
+}
+
+/* Views action dropbutton styles */
+.views-ui-display-tab-actions .dropbutton .form-submit {
+  color: #0071B3;
+}
+.views-ui-display-tab-actions .dropbutton .form-submit:hover,
+.views-ui-display-tab-actions .dropbutton .form-submit:focus {
+  color: #018FE2;
+}
+
+/*custom styles*/
+.path-staff-directory .views-view-grid h2 {
+  padding: 10px;
+  background: #00274c;
+}
+.path-staff-directory .views-view-grid h2 a{
+  color:#fff;
+}
+.path-staff-directory .views-col {
+  min-width: 200px;
+  text-align:center;
+}
+.views-view-grid .views-row {
+  padding: .5em;
+}
+.views-view-grid {
+  .margin-bottom:.5em;
+}
+.views-field-field-user-photo-display{
+  float:left;
+}
+.staff-directory-display-name{
+  /*white-space: nowrap;*/
+}
+.img-circle-directory {
+    display: block;
+    height: 9em;
+    margin: auto;
+    width: 9em;
+}
+.ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active, a.ui-button:active, .ui-button:active, .ui-button.ui-state-active:hover {
+  background: #126dc1;
+}
+.ui-accordion{
+  width:95%;
+}
