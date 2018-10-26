@@ -24,6 +24,9 @@ body {
 a,
 .link {
   color: #0074bd;
+}
+.header a,
+.header .link {
   text-decoration: none;
 }
 .main-content a, .main-content .link {
