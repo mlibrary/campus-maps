@@ -435,6 +435,13 @@ trait GeofieldMapFieldTrait {
    */
   private function setMapZoomAndPanElement(array $settings, array $default_settings, array &$elements) {
 
+    if (isset($this->fieldDefinition)) {
+      $force_center_selector = ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_center][center_force]"]';
+    }
+    else {
+      $force_center_selector = ':input[name="style_options[map_center][center_force]"]';
+    }
+
     $elements['map_zoom_and_pan'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Map Zoom and Pan'),
@@ -455,6 +462,11 @@ trait GeofieldMapFieldTrait {
         '#description' => $this->t('In case of multiple GeoMarkers, the Map will naturally focus zoom on the input Geofields bounds.<br>This option will instead force the Map Zoom on the input Start Zoom value'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['force'],
         '#return_value' => 1,
+        '#states' => [
+          'visible' => [
+            $force_center_selector => ['checked' => FALSE],
+          ],
+        ],
       ],
       'min' => [
         '#type' => 'number',

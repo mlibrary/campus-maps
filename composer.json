@@ -37,7 +37,8 @@
         "drupal/geocoder": "^2.0@beta",
         "drupal/views_field_view": "^1.0@beta",
         "drupal/token": "^1.5",
-        "drupal/bulk_update_fields": "^1.0@alpha"
+        "drupal/bulk_update_fields": "^1.0@alpha",
+        "drupal/better_exposed_filters": "^3.0@alpha"
     },
     "require-dev": {
         "webflo/drupal-core-require-dev": "~8.6.1"
@@ -107,7 +108,7 @@
             "customize drop button and see also https://www.drupal.org/node/2914426": "patches/fix_drop_button_for_all_users.patch"
           },
           "drupal/paragraphs": {
-            "https://www.drupal.org/node/2823909": "https://www.drupal.org/files/issues/consider_field-2823909-12.patch"
+            "https://www.drupal.org/node/2823909": "patches/consider_field-2823909-12.patch"
           },
           "drupal/field_states_ui": {
             "https://www.drupal.org/node/3001924": "patches/er_issues_in_core86-4.patch"

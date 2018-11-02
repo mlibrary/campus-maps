@@ -304,21 +304,6 @@
         self.map_data[mapid].zoom_force = !!map_settings.map_zoom_and_pan.zoom.force;
         self.map_data[mapid].center_force = !!map_settings.map_center.center_force;
 
-        // Fix map issue in field_groups / details & vertical tabs
-        google.maps.event.addListenerOnce(map, "idle", function () {
-
-          // Show all map tiles when a map is shown in a vertical tab.
-          $('#' + mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
-            self.map_refresh(mapid);
-          });
-
-          // Show all map tiles when a map is shown in a collapsible detail/ single tab.
-          $('#' + mapid).closest('.field-group-details, .field-group-tab').find('summary').click(function () {
-              self.map_refresh(mapid);
-            }
-          );
-        });
-
         // Parse the Geojson data into Google Maps Locations.
         var features = data.features && data.features.length > 0 ? GeoJSON(data) : null;
 
@@ -383,34 +368,43 @@
         }
 
         // If the Map Initial State is defined by MapBounds.
-        if (!self.map_data[mapid].map_bounds.isEmpty() && self.map_data[mapid].markers.length > 1) {
+        if (!self.map_data[mapid].map_bounds.isEmpty() && self.map_data[mapid].markers.length > 1 && !self.map_data[mapid].center_force) {
           map.fitBounds(self.map_data[mapid].map_bounds);
         }
         // else if the Map Initial State is defined by just One marker.
-        else if (self.map_data[mapid].markers.length === 1) {
+        else if (self.map_data[mapid].markers.length === 1 && !self.map_data[mapid].center_force) {
           map.setCenter(self.map_data[mapid].markers[0].getPosition());
-          map.setZoom(mapOptions.zoom);
         }
+
+        google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
+          // Force the Map Zoom if requested.
+          if (self.map_data[mapid].zoom_force) {
+            self.map_data[mapid].map.setZoom(self.map_data[mapid].map_options.zoom);
+          }
+        });
 
         // At the beginning (once) ...
         google.maps.event.addListenerOnce(map, 'idle', function() {
 
-          // Open the Feature infowindow, is so set.
+          // Fix map issue in field_groups / details & vertical tabs
+          // Show all map tiles when a map is shown in a vertical tab.
+          $('#' + mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
+            self.map_refresh(mapid);
+          });
+          // Show all map tiles when a map is shown in a collapsible detail/ single tab.
+          $('#' + mapid).closest('.field-group-details, .field-group-tab').find('summary').click(function () {
+              self.map_refresh(mapid);
+            }
+          );
+
+          // Open the Feature infowindow, if so set.
           if (self.map_data[mapid].map_marker_and_infowindow.force_open && parseInt(self.map_data[mapid].map_marker_and_infowindow.force_open) === 1) {
             map.setCenter(features[0].getPosition());
             self.infowindow_open(mapid, features[0]);
           }
 
-          // Check if the center and the zoom has to be forced.
-          self.map_check_force_state(mapid);
-          // Set the map start state.
+          // Update map initial state after everything is settled.
           self.map_set_start_state(mapid, map.getCenter(), map.getZoom());
-        });
-
-        // Update map initial state after everything is settled.
-        google.maps.event.addListener(map, 'idle', function() {
-          self.map_data[mapid].map_center = map.getCenter();
-          self.map_data[mapid].map_zoom = map.getZoom();
         });
 
         // Triggers Map resize listener on Window resize
@@ -423,15 +417,6 @@
           map.setCenter(self.map_data[mapid].map_center);
         });
 
-      }
-    },
-    map_check_force_state: function (mapid) {
-      var self = this;
-      if (self.map_data[mapid].center_force) {
-        self.map_data[mapid].map.setCenter(self.map_data[mapid].map_options.center);
-      }
-      if (self.map_data[mapid].zoom_force) {
-        self.map_data[mapid].map.setZoom(self.map_data[mapid].map_options.zoom);
       }
     },
     map_set_start_state: function (mapid, center, zoom) {

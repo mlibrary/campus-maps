@@ -20,6 +20,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\geofield_map\Services\GoogleMapsService;
 use Drupal\Core\Render\Markup;
 use Drupal\geofield_map\Services\MarkerIconService;
@@ -104,6 +105,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   protected $renderer;
 
   /**
+   * The module handler to invoke the alter hook.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * The geofieldMapGoogleMaps service.
    *
    * @var \Drupal\geofield_map\Services\GoogleMapsService
@@ -150,6 +158,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The The geoPhpWrapper.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The Renderer service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    * @param \Drupal\geofield_map\Services\GoogleMapsService $google_maps_service
    *   The Google Maps service.
    * @param \Drupal\geofield_map\Services\MarkerIconService $marker_icon_service
@@ -171,6 +181,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     EntityFieldManagerInterface $entity_field_manager,
     GeoPHPInterface $geophp_wrapper,
     RendererInterface $renderer,
+    ModuleHandlerInterface $module_handler,
     GoogleMapsService $google_maps_service,
     MarkerIconService $marker_icon_service
   ) {
@@ -182,6 +193,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $this->entityFieldManager = $entity_field_manager;
     $this->geoPhpWrapper = $geophp_wrapper;
     $this->renderer = $renderer;
+    $this->moduleHandler = $module_handler;
     $this->googleMapsService = $google_maps_service;
     $this->markerIcon = $marker_icon_service;
   }
@@ -206,6 +218,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $container->get('entity_field.manager'),
       $container->get('geofield.geophp'),
       $container->get('renderer'),
+      $container->get('module_handler'),
       $container->get('geofield_map.google_maps'),
       $container->get('geofield_map.marker_icon')
     );
@@ -731,6 +744,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'features' => $geojson_data,
       ];
     }
+
+    // Allow other modules to add/alter the map js settings.
+    $this->moduleHandler->alter('geofield_map_googlemap_formatter', $js_settings, $items);
+
     $element = [geofield_map_googlemap_render($js_settings)];
 
     // Part of infinite loop stopping strategy.

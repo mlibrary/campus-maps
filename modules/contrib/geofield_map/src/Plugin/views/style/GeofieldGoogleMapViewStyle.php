@@ -23,6 +23,7 @@ use Drupal\geofield_map\Services\GoogleMapsService;
 use Drupal\geofield_map\MapThemerPluginManager;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\views\Plugin\views\PluginBase;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 
@@ -127,6 +128,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $renderer;
 
   /**
+   * The module handler to invoke the alter hook.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * The geofieldMapGoogleMaps service.
    *
    * @var \Drupal\geofield_map\Services\GoogleMapsService
@@ -179,6 +187,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   Current user service.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The Renderer service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    * @param \Drupal\geofield_map\Services\GoogleMapsService $google_maps_service
    *   The Google Maps service.
    * @param \Drupal\geofield_map\MapThemerPluginManager $map_themer_manager
@@ -196,6 +206,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     GeoPHPInterface $geophp_wrapper,
     AccountInterface $current_user,
     RendererInterface $renderer,
+    ModuleHandlerInterface $module_handler,
     GoogleMapsService $google_maps_service,
     MapThemerPluginManager $map_themer_manager
   ) {
@@ -209,6 +220,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->geoPhpWrapper = $geophp_wrapper;
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
+    $this->moduleHandler = $module_handler;
     $this->googleMapsService = $google_maps_service;
     $this->mapThemerManager = $map_themer_manager;
   }
@@ -229,6 +241,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $container->get('geofield.geophp'),
       $container->get('current_user'),
       $container->get('renderer'),
+      $container->get('module_handler'),
       $container->get('geofield_map.google_maps'),
       $container->get('plugin.manager.geofield_map.themer')
     );
@@ -659,6 +672,9 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
         'type' => 'FeatureCollection',
         'features' => $data,
       ];
+
+      // Allow other modules to add/alter the map js settings.
+      $this->moduleHandler->alter('geofield_map_googlemap_view_style', $js_settings, $this);
 
       $element = geofield_map_googlemap_render($js_settings);
 

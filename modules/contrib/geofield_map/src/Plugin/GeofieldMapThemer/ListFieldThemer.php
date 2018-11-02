@@ -122,6 +122,7 @@ class ListFieldThemer extends MapThemerBase {
     // Get the field_storage_definitions.
     $field_storage_definitions = $geofieldMapView->getEntityFieldManager()->getFieldStorageDefinitions($entity_type);
 
+    // Get the defined List Type Fields.
     $list_fields = [];
     foreach ($view_fields as $field_id => $field_label) {
       /* @var \Drupal\field\Entity\FieldStorageConfig $field_storage */
@@ -152,7 +153,7 @@ class ListFieldThemer extends MapThemerBase {
       }
     }
 
-    // Define a default taxonomy_field.
+    // Define a default list_field.
     $default_list_field = !empty($default_element['list_field']) ? $default_element['list_field'] : array_shift(array_keys($list_fields));
 
     // Get the eventual ajax user input of the specific list field.
@@ -182,7 +183,7 @@ class ListFieldThemer extends MapThemerBase {
       $element['list_field'] = [
         '#type' => 'select',
         '#title' => $this->t('List Type Field'),
-        '#description' => $this->t('Chose the List type field to base the Map Theming upon.'),
+        '#description' => $this->t('Choose the List type field to base the Map Theming upon.'),
         '#options' => array_combine(array_keys($list_fields), array_keys($list_fields)),
         '#default_value' => $selected_list_field,
         '#ajax' => [
@@ -215,6 +216,7 @@ class ListFieldThemer extends MapThemerBase {
         $label_alias_upload_help = $this->getLabelAliasHelp();
         $file_upload_help = $this->markerIcon->getFileUploadHelp();
 
+        // Define the Table header.
         $element['fields'][$k] = [
           '#type' => 'container',
           'options' => [
@@ -245,8 +247,20 @@ class ListFieldThemer extends MapThemerBase {
         // Add a Default Value to be used as possible fallback Value/Marker.
         $field['options']['__default_value__'] = '- Default Value - ';
 
+        // Reorder the field options, if already set..
+        if (!empty($default_element) && isset($default_element['fields'][$k]['options'])) {
+          foreach ($default_element['fields'][$k]['options'] as $id => $value) {
+            if (isset($field['options'][$id])) {
+              $ordered_list_options[$id] = $field['options'][$id];
+            }
+          }
+        }
+        else {
+          $ordered_list_options = $field['options'];
+        }
+
         $i = 0;
-        foreach ($field['options'] as $id => $value) {
+        foreach ($ordered_list_options as $id => $value) {
           $fid = (integer) !empty($default_element['fields'][$k]['options'][$id]['icon_file']['fids']) ? $default_element['fields'][$k]['options'][$id]['icon_file']['fids'] : NULL;
           $element['fields'][$k]['options'][$id] = [
             'label' => [
@@ -286,9 +300,11 @@ class ListFieldThemer extends MapThemerBase {
           $i++;
         }
 
+        // Hide the un-selected List Field options.
         if ($k != $selected_list_field) {
           $element['fields'][$k]['#attributes']['class'] = ['hidden'];
         }
+
 
       }
     }
@@ -301,7 +317,7 @@ class ListFieldThemer extends MapThemerBase {
    */
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
 
-    $list_field = $map_theming_values['list_field'];
+    $list_field = isset($map_theming_values['list_field']) ? $map_theming_values['list_field'] : NULL;
     $fallback_icon_style = isset($map_theming_values['fields'][$list_field]['options']['__default_value__']['image_style']) ? $map_theming_values['fields'][$list_field]['options']['__default_value__']['image_style'] : NULL;
     $fallback_icon = isset($map_theming_values['fields'][$list_field]['options']['__default_value__']['icon_file']) ? $map_theming_values['fields'][$list_field]['options']['__default_value__']['icon_file']['fids'] : NULL;
     $image_style = $fallback_icon_style;

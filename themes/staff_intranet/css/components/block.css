@@ -473,7 +473,7 @@ width:100%;
 height:inherit;
 min-height:10px;
 }
-*/
+
 .page-node-type-initiative #block-block-node-body, .path-search #block-staff-intranet-content, .path-committees #block-staff-intranet-content, .page-node-type-conference #block-block-node-body, .page-node-type-department #block-block-node-body, .page-node-type-committee #block-block-node-body, .path-resources-services .region-content .block-menu, .path-committees .block-views, .path-committees .block-fieldblock, .path-projects .block-views, .path-projects .block-fieldblock, .path-sigs .block-views, .path-sigs .block-fieldblock,.path-resources-services #block-staff-intranet-content, .block-menu, #block-block-node-body, #block-staff-intranet-content, .block-views, .block-fieldblock, #block-views-block-department-members-block-1, #block-views-block-members-block-1, #block-committee-chair-contentfield, #block-member-selection-contentfield, #block-committee-email-contentfield, #block-block-node-location, #block-views-block-my-favorites-block-1, #block-views-block-events-and-meetings-block-3, #block-views-block-conference-info-block-1,#block-views-block-attendees-block-1 {
 width:98%;
 height:inherit;
@@ -482,7 +482,7 @@ min-width:280px;
 padding: 0;
 margin-right: 0;
 }
-
+*/
 #block-featuredtoplinks{
   width:98%;
 }

@@ -22,9 +22,6 @@
   }
 }
 @media only screen and (max-width: 1010px) {
-  .block .content {
-    width: 85%;
-  }
   #block-authoredbyon .content {
     width: auto;
   }

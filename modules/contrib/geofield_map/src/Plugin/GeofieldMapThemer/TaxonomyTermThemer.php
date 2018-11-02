@@ -248,6 +248,7 @@ class TaxonomyTermThemer extends MapThemerBase {
         $label_alias_upload_help = $this->getLabelAliasHelp();
         $file_upload_help = $this->markerIcon->getFileUploadHelp();
 
+        // Define the Table header.
         $element['fields'][$k] = [
           '#type' => 'container',
           'terms' => [
@@ -278,8 +279,20 @@ class TaxonomyTermThemer extends MapThemerBase {
         // Add a Default Value to be used as possible fallback Value/Marker.
         $field['terms']['__default_value__'] = '- Default Value - ';
 
+        // Reorder the taxonomy terms options, if already set.
+        if (!empty($default_element) && isset($default_element['fields'][$k]['terms'])) {
+          foreach ($default_element['fields'][$k]['terms'] as $id => $value) {
+            if (isset($field['terms'][$id])) {
+              $ordered_terms_options[$id] = $field['terms'][$id];
+            }
+          }
+        }
+        else {
+          $ordered_terms_options = $field['terms'];
+        }
+
         $i = 0;
-        foreach ($field['terms'] as $tid => $term) {
+        foreach ($ordered_terms_options as $tid => $term) {
           $fid = (integer) !empty($default_element['fields'][$k]['terms'][$tid]['icon_file']['fids']) ? $default_element['fields'][$k]['terms'][$tid]['icon_file']['fids'] : NULL;
           $element['fields'][$k]['terms'][$tid] = [
             'label' => [
@@ -316,9 +329,11 @@ class TaxonomyTermThemer extends MapThemerBase {
             ],
             '#attributes' => ['class' => ['draggable']],
           ];
+
           $i++;
         }
 
+        // Hide the un-selected Taxonomy Term Field options.
         if ($k != $selected_taxonomy_field) {
           $element['fields'][$k]['#attributes']['class'] = ['hidden'];
         }
@@ -333,7 +348,7 @@ class TaxonomyTermThemer extends MapThemerBase {
    * {@inheritdoc}
    */
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
-    $taxonomy_field = $map_theming_values['taxonomy_field'];
+    $taxonomy_field = isset($map_theming_values['taxonomy_field']) ? $map_theming_values['taxonomy_field'] : NULL;
     $fallback_icon_style = isset($map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['image_style']) ? $map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['image_style'] : NULL;
     $fallback_icon = isset($map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['icon_file']) ? $map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['icon_file']['fids'] : NULL;
     $image_style = $fallback_icon_style;

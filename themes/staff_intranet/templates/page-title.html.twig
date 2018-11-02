@@ -13,4 +13,6 @@
  *   displayed after the main title tag that appears in the template.
  */
 #}
+{% if title %}
 {% set title_attributes = title_attributes.addClass('title') %}
+{% endif %}
