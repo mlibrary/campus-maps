@@ -265,9 +265,10 @@ class SettingsForm extends ConfigFormBase {
       $plugins_options[$k] = $form_state_values['plugins'][$k]['options'];
     }
 
-    $this->config('geocoder.settings')->set('cache', $form_state_values['cache']);
-    $this->config('geocoder.settings')->set('plugins_options', $plugins_options);
-    $this->config('geocoder.settings')->save();
+    $config = $this->config('geocoder.settings');
+    $config->set('cache', $form_state_values['cache']);
+    $config->set('plugins_options', $plugins_options);
+    $config->save();
 
     parent::submitForm($form, $form_state);
   }

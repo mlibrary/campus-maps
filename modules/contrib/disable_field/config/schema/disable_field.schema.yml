@@ -1,0 +1,22 @@
+field.widget.third_party.disable_field:
+  type: mapping
+  label: 'Per-content type disable_field settings'
+  mapping:
+    add_disable:
+        type: sequence
+        label: 'Option for disable field on add content form'
+    add_disable_roles:
+      type: sequence
+      label: 'Roles for disable field on add content form'
+    add_disable_roles_enable:
+      type: sequence
+      label: 'Roles for enable field on add content form'
+    edit_disable:
+      type: sequence
+      label: 'Option for disable field on edit content form'
+    edit_disable_roles:
+      type: sequence
+      label: 'Roles for disable field on edit content form'
+    edit_disable_roles_enable:
+      type: sequence
+      label: 'Roles for disable field on edit content form'

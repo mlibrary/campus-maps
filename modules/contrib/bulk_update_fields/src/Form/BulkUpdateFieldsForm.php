@@ -159,11 +159,30 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           ->get('bulk_update_fields_ids')
           ->get($this->currentUser->id());
         $options = [];
+        // Exclude some base fields.
+        // TODO add date fields and revision log.
+        $excluded_base_fields = [
+          'nid',
+          'uuid',
+          'vid',
+          'type',
+          'revision_uid',
+          'title',
+          'path',
+          'menu_link',
+          'status',
+          'uid',
+          'default_langcode',
+          'revision_timestamp',
+          'revision_log',
+          'created',
+          'changed'
+        ];
         foreach ($this->userInput['entities'] as $entity) {
           $this->entity = $entity;
           $fields = $entity->getFieldDefinitions();
           foreach ($fields as $field) {
-            if ($field->getFieldStorageDefinition()->isBaseField() === FALSE && !isset($options[$field->getName()])) {
+            if (!in_array($field->getName(), $excluded_base_fields) && !isset($options[$field->getName()])) {
               $options[$field->getName()]['field_name'] = $field->getName();
             }
           }

@@ -19,7 +19,7 @@ interface GeocoderInterface {
    *   plugin id. Defaults to an empty array. These options would be merged with
    *   (and would override) plugins options set in the module configurations.
    *
-   * @return \Geocoder\Model\AddressCollection|null
+   * @return \Geocoder\Model\AddressCollection|\Geometry|null
    *   An address collection or NULL on geocoding failure.
    */
   public function geocode($data, array $plugins, array $options = []);

@@ -5,3 +5,14 @@ geofield_map.settings:
     _title: 'Geofield Map settings'
   requirements:
     _permission: 'configure geofield_map'
+
+geofield_map.ajax_popup:
+  path: '/geofield-map-ajax-popup/{entity_type}/{entity}/{view_mode}/{langcode}'
+  defaults:
+    _controller: '\Drupal\geofield_map\Controller\GeofieldMapAjaxPopupController::popupBuild'
+  requirements:
+    _custom_access: '\Drupal\geofield_map\Controller\GeofieldMapAjaxPopupController::accessCheck'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}

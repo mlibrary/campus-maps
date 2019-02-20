@@ -1,0 +1,18 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the profilename install profile.
+ */
+
+ /**
+ * Rename the action id to match the plugin.
+ * Needed for Contrib VBO compatibility
+ */
+function bulk_update_fields_update_8001(&$sandbox) {
+  $actions_storage = \Drupal::entityTypeManager()->getStorage('action');
+  $bulk_update_fields_action = $actions_storage->load('bulk_update_fields_to_another_value');
+  $bulk_update_fields_action
+    ->set('id', 'bulk_update_fields_action_base')
+    ->save();
+  $actions_storage->resetCache();
+}

@@ -2,17 +2,9 @@
 
 namespace Drupal\geofield_map\Plugin\GeofieldMapThemer;
 
-use Drupal\geofield_map\MapThemerBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\geofield_map\Services\MarkerIconService;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -27,85 +19,23 @@ use Drupal\Core\Ajax\ReplaceCommand;
  *
  * @MapThemer(
  *   id = "geofieldmap_list_fields",
- *   name = @Translation("List Type Field (Geofield Map)"),
+ *   name = @Translation("List Type Field (geofield_map) - Image Upload (deprecated)"),
  *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on List (Options) Type fields in View.",
- *   type = "key_value",
  *   context = {"ViewStyle"},
- *   defaultSettings = {
- *    "values": {}
+ *   weight = 7,
+ *   markerIconSelection = {
+ *    "type" = "managed_file",
+ *    "configSyncCompatibility" = FALSE,
  *   },
+ *   defaultSettings = {
+ *    "values" = {},
+ *    "legend" = {
+ *      "class" = "option",
+ *     },
+ *   }
  * )
  */
-class ListFieldThemer extends MapThemerBase {
-
-  /**
-   * The config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $config;
-
-  /**
-   * The entity type bundle info.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
-   * Constructs a Drupal\Component\Plugin\PluginBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
-   *   The translation manager.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   A config factory for retrieving required config objects.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
-   *   The entity manager.
-   * @param \Drupal\geofield_map\Services\MarkerIconService $marker_icon_service
-   *   The Marker Icon Service.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info.
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    TranslationInterface $translation_manager,
-    ConfigFactoryInterface $config_factory,
-    RendererInterface $renderer,
-    EntityTypeManagerInterface $entity_manager,
-    MarkerIconService $marker_icon_service,
-    EntityTypeBundleInfoInterface $entity_type_bundle_info
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $translation_manager, $renderer, $entity_manager, $marker_icon_service);
-    $this->config = $config_factory;
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('string_translation'),
-      $container->get('config.factory'),
-      $container->get('renderer'),
-      $container->get('entity_type.manager'),
-      $container->get('geofield_map.marker_icon'),
-      $container->get('entity_type.bundle.info')
-    );
-  }
+class ListFieldThemer extends ListFieldThemerUrl {
 
   /**
    * {@inheritdoc}
@@ -142,19 +72,17 @@ class ListFieldThemer extends MapThemerBase {
     foreach ($list_fields as $field_id => $field_label) {
       // Reorder the field_id options on existing (Default) Element settings.
       if (!empty($default_element)) {
-        $weighted_options[$field_id] = [];
-        foreach ($list_fields[$field_id]['options'] as $key => $option) {
-          $weighted_options[$field_id][$key] = [
-            'weight' => isset($default_element['fields'][$field_id]['options'][$key]) ? $default_element['fields'][$field_id]['options'][$key]['weight'] : 0,
-          ];
-        }
-        uasort($weighted_options[$field_id], 'Drupal\Component\Utility\SortArray::sortByWeightElement');
-        $list_fields[$field_id]['options'] = array_replace(array_flip(array_keys($weighted_options[$field_id])), $list_fields[$field_id]['options']);
+        // Eventually filter out the default terms that have been removed, in
+        // the meanwhile.
+        $default_existing_array_keys = array_intersect(array_keys($default_element['fields'][$field_id]['options']), array_keys($list_fields[$field_id]['options']));
+        $list_fields[$field_id]['options'] = array_replace(array_flip($default_existing_array_keys), $list_fields[$field_id]['options']);
       }
     }
 
     // Define a default list_field.
-    $default_list_field = !empty($default_element['list_field']) ? $default_element['list_field'] : array_shift(array_keys($list_fields));
+    $keys = array_keys($list_fields);
+    $fallback_list_field = array_shift($keys);
+    $default_list_field = !empty($default_element['list_field']) ? $default_element['list_field'] : $fallback_list_field;
 
     // Get the eventual ajax user input of the specific list field.
     $user_input = $form_state->getUserInput();
@@ -192,111 +120,84 @@ class ListFieldThemer extends MapThemerBase {
         ],
       ];
 
+      $label_alias_upload_help = $this->getLabelAliasHelp();
+      $file_upload_help = $this->markerIcon->getFileUploadHelp();
+
       $element['list_field']['fields'] = [];
       foreach ($list_fields as $k => $field) {
 
-        $caption = [
-          'title' => [
-            '#type' => 'html_tag',
-            '#tag' => 'label',
-            '#value' => $this->t('Options from  @field field', [
-              '@field' => $k,
-            ]),
-            'notes' => [
+        // Define the Table Header variables.
+        $table_settings = [
+          'header' => [
+            'label' => $this->t('Option'),
+            'label_alias' => Markup::create($this->t('Option Alias @description', [
+              '@description' => $this->renderer->renderPlain($label_alias_upload_help),
+            ])),
+            'marker_icon' => Markup::create($this->t('Marker Icon @file_upload_help', [
+              '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
+            ])),
+            'image_style' => Markup::create($this->t('Icon Image Style')),
+          ],
+          'tabledrag_group' => 'options-order-weight',
+          'caption' => [
+            'title' => [
               '#type' => 'html_tag',
-              '#tag' => 'div',
-              '#value' => $this->t('The - Default Value - will be used as fallback Value/Marker for unset Options'),
-              '#attributes' => [
-                'style' => ['style' => 'font-size:0.8em; color: gray; font-weight: normal'],
+              '#tag' => 'label',
+              '#value' => $this->t('Options from  @field field', [
+                '@field' => $k,
+              ]),
+              'notes' => [
+                '#type' => 'html_tag',
+                '#tag' => 'div',
+                '#value' => $this->t('The - Default Value - will be used as fallback Value/Marker for unset Options'),
+                '#attributes' => [
+                  'style' => ['style' => 'font-size:0.8em; color: gray; font-weight: normal'],
+                ],
               ],
             ],
           ],
         ];
 
-        $label_alias_upload_help = $this->getLabelAliasHelp();
-        $file_upload_help = $this->markerIcon->getFileUploadHelp();
-
-        // Define the Table header.
+        // Build the Table Header.
         $element['fields'][$k] = [
           '#type' => 'container',
-          'options' => [
-            '#type' => 'table',
-            '#header' => [
-              $this->t('Option'),
-              $this->t('Weight'),
-              Markup::create($this->t('Option Alias @description', [
-                '@description' => $this->renderer->renderPlain($label_alias_upload_help),
-              ])),
-              Markup::create($this->t('Marker Icon @file_upload_help', [
-                '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
-              ])),
-              $this->t('Icon Image Style'),
-              $this->t('Hide from Legend'),
-            ],
-            '#tabledrag' => [
-              [
-                'action' => 'order',
-                'relationship' => 'sibling',
-                'group' => 'options-order-weight',
-              ],
-            ],
-            '#caption' => $this->renderer->renderPlain($caption),
-          ],
+          'options' => $this->buildTableHeader($table_settings),
         ];
 
         // Add a Default Value to be used as possible fallback Value/Marker.
         $field['options']['__default_value__'] = '- Default Value - ';
 
-        // Reorder the field options, if already set..
-        if (!empty($default_element) && isset($default_element['fields'][$k]['options'])) {
-          foreach ($default_element['fields'][$k]['options'] as $id => $value) {
-            if (isset($field['options'][$id])) {
-              $ordered_list_options[$id] = $field['options'][$id];
-            }
-          }
-        }
-        else {
-          $ordered_list_options = $field['options'];
-        }
-
         $i = 0;
-        foreach ($ordered_list_options as $id => $value) {
+        foreach ($field['options'] as $id => $value) {
           $fid = (integer) !empty($default_element['fields'][$k]['options'][$id]['icon_file']['fids']) ? $default_element['fields'][$k]['options'][$id]['icon_file']['fids'] : NULL;
-          $element['fields'][$k]['options'][$id] = [
+
+          // Define the table row parameters.
+          $row = [
+            'id' => "[geofieldmap_list_fields][values][fields][{$k}][options][{$id}]",
             'label' => [
-              '#type' => 'value',
-              '#value' => $value,
-              'markup' => [
-                '#markup' => $value,
-              ],
+              'value' => $value,
+              'markup' => $value,
             ],
             'weight' => [
-              '#type' => 'weight',
-              '#title_display' => 'invisible',
-              '#default_value' => isset($default_element['fields'][$k]['options'][$id]['weight']) ? $default_element['fields'][$k]['options'][$id]['weight'] : $i,
-              '#delta' => 20,
-              '#attributes' => ['class' => ['options-order-weight']],
+              'value' => isset($default_element['fields'][$k]['options'][$id]['weight']) ? $default_element['fields'][$k]['options'][$id]['weight'] : $i,
+              'class' => $table_settings['tabledrag_group'],
             ],
             'label_alias' => [
-              '#type' => 'textfield',
-              '#default_value' => isset($default_element['fields'][$k]['options'][$id]['label_alias']) ? $default_element['fields'][$k]['options'][$id]['label_alias'] : '',
-              '#size' => 30,
-              '#maxlength' => 128,
+              'value' => isset($default_element['fields'][$k]['options'][$id]['label_alias']) ? $default_element['fields'][$k]['options'][$id]['label_alias'] : '',
             ],
-            'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
+            'icon_file_id' => $fid,
             'image_style' => [
-              '#type' => 'select',
-              '#title' => t('Image style'),
-              '#title_display' => 'invisible',
-              '#options' => $this->markerIcon->getImageStyleOptions(),
-              '#default_value' => isset($default_element['fields'][$k]['options'][$id]['image_style']) ? $default_element['fields'][$k]['options'][$id]['image_style'] : 'geofield_map_default_icon_style',
+              'options' => $this->markerIcon->getImageStyleOptions(),
+              'value' => isset($default_element['fields'][$k]['options'][$id]['image_style']) ? $default_element['fields'][$k]['options'][$id]['image_style'] : 'geofield_map_default_icon_style',
             ],
             'legend_exclude' => [
-              '#type' => 'checkbox',
-              '#default_value' => isset($default_element['fields'][$k]['options'][$id]['legend_exclude']) ? $default_element['fields'][$k]['options'][$id]['legend_exclude'] : '0',
+              'value' => isset($default_element['fields'][$k]['options'][$id]['legend_exclude']) ? $default_element['fields'][$k]['options'][$id]['legend_exclude'] : (count($field['options']) > 10 ? TRUE : FALSE) ,
             ],
-            '#attributes' => ['class' => ['draggable']],
+            'attributes' => ['class' => ['draggable']],
           ];
+
+          // Builds the table row for the MapThemer.
+          $element['fields'][$k]['options'][$id] = $this->buildDefaultMapThemerRow($row);
           $i++;
         }
 
@@ -335,17 +236,7 @@ class ListFieldThemer extends MapThemerBase {
    * {@inheritdoc}
    */
   public function getLegend(array $map_theming_values, array $configuration = []) {
-    $legend = [
-      '#type' => 'table',
-      '#header' => [
-        isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Option'),
-        isset($configuration['markers_label']) ? $configuration['markers_label'] : $this->t('Marker/Icon'),
-      ],
-      '#caption' => isset($configuration['legend_caption']) ? $configuration['legend_caption'] : '',
-      '#attributes' => [
-        'class' => ['geofield-map-legend', 'option'],
-      ],
-    ];
+    $legend = $this->defaultLegendHeader($configuration);
 
     $list_field = $map_theming_values['list_field'];
 
@@ -367,7 +258,7 @@ class ListFieldThemer extends MapThemerBase {
         continue;
       }
       $label = isset($value['label']) ? $value['label'] : $key;
-      $legend[$key] = [
+      $legend['table'][$key] = [
         'value' => [
           '#type' => 'container',
           'label' => [
@@ -379,7 +270,7 @@ class ListFieldThemer extends MapThemerBase {
         ],
         'marker' => [
           '#type' => 'container',
-          'icon_file' => !empty($fid) ? $this->markerIcon->getLegendIcon($fid, $image_style) : $this->getDefaultLegendIcon(),
+          'icon_file' => !empty($fid) ? $this->markerIcon->getLegendIconFromFid($fid, $image_style) : $this->getDefaultLegendIcon(),
           '#attributes' => [
             'class' => ['marker'],
           ],
@@ -387,11 +278,13 @@ class ListFieldThemer extends MapThemerBase {
       ];
     }
 
+    $legend['notes'] = $this->defaultLegendFooter($configuration);
+
     return $legend;
   }
 
   /**
-   * Ajax callback triggered Taxonomy Field Options Selection.
+   * Ajax callback triggered List Field Options Selection.
    *
    * @param array $form
    *   The build form.

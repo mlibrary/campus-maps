@@ -170,6 +170,13 @@ class GeofieldMap extends GeofieldElementBase {
     $element['lat']['#attributes']['id'] = 'lat-' . $element['#id'];
     $element['lon']['#attributes']['id'] = 'lon-' . $element['#id'];
 
+    if ($element['#hide_coordinates']) {
+      $element['lat']['#attributes']['class'][] = 'visually-hidden';
+      $element['lat']['#title_display'] = 'invisible';
+      $element['lon']['#attributes']['class'][] = 'visually-hidden';
+      $element['lon']['#title_display'] = 'invisible';
+    }
+
     $address_field_exists = FALSE;
     if (!empty($element['#geoaddress_field']['field'])) {
       $address_field_name = $element['#geoaddress_field']['field'];

@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * Install and uninstall functions for the Disable Textfield module.
+ */
+
+/**
+ * Deletes useless table disable_field.
+ * Now settings of the module will be stored in fields entities.
+ */
+function disable_field_update_8001() {
+  $schema = \Drupal\Core\Database\Database::getConnection()->schema();
+  $schema->dropTable('disable_field');
+}

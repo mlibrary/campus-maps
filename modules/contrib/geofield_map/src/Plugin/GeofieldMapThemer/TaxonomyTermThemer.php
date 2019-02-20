@@ -2,17 +2,9 @@
 
 namespace Drupal\geofield_map\Plugin\GeofieldMapThemer;
 
-use Drupal\geofield_map\MapThemerBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\geofield_map\Services\MarkerIconService;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
@@ -29,85 +21,23 @@ use Drupal\Core\Ajax\ReplaceCommand;
  *
  * @MapThemer(
  *   id = "geofieldmap_taxonomy_term",
- *   name = @Translation("Taxonomy Term (Geofield Map)"),
+ *   name = @Translation("Taxonomy Term (geofield_map) - Image Upload (deprecated)"),
  *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on Taxonomy Terms reference field in View.",
- *   type = "key_value",
  *   context = {"ViewStyle"},
- *   defaultSettings = {
- *    "values": {}
+ *   weight = 5,
+ *   markerIconSelection = {
+ *    "type" = "managed_file",
+ *    "configSyncCompatibility" = FALSE,
  *   },
+ *   defaultSettings = {
+ *    "values" = {},
+ *    "legend" = {
+ *      "class" = "taxonomy-term",
+ *     },
+ *   }
  * )
  */
-class TaxonomyTermThemer extends MapThemerBase {
-
-  /**
-   * The config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $config;
-
-  /**
-   * The entity type bundle info.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
-   * Constructs a Drupal\Component\Plugin\PluginBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
-   *   The translation manager.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   A config factory for retrieving required config objects.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
-   *   The entity manager.
-   * @param \Drupal\geofield_map\Services\MarkerIconService $marker_icon_service
-   *   The Marker Icon Service.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info.
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    TranslationInterface $translation_manager,
-    ConfigFactoryInterface $config_factory,
-    RendererInterface $renderer,
-    EntityTypeManagerInterface $entity_manager,
-    MarkerIconService $marker_icon_service,
-    EntityTypeBundleInfoInterface $entity_type_bundle_info
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $translation_manager, $renderer, $entity_manager, $marker_icon_service);
-    $this->config = $config_factory;
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('string_translation'),
-      $container->get('config.factory'),
-      $container->get('renderer'),
-      $container->get('entity_type.manager'),
-      $container->get('geofield_map.marker_icon'),
-      $container->get('entity_type.bundle.info')
-    );
-  }
+class TaxonomyTermThemer extends TaxonomyTermThemerUrl {
 
   /**
    * {@inheritdoc}
@@ -173,20 +103,17 @@ class TaxonomyTermThemer extends MapThemerBase {
       // Reorder the field_id referenceable terms on existing (Default)
       // Element settings.
       if (!empty($default_element)) {
-        $weighted_terms[$field_id] = [];
-        foreach ($taxonomy_ref_fields[$field_id]['terms'] as $tid => $term) {
-          $weighted_terms[$field_id][$tid] = [
-            'weight' => isset($default_element['fields'][$field_id]['terms'][$tid]) ? $default_element['fields'][$field_id]['terms'][$tid]['weight'] : 0,
-          ];
-        }
-        uasort($weighted_terms[$field_id], 'Drupal\Component\Utility\SortArray::sortByWeightElement');
-        $taxonomy_ref_fields[$field_id]['terms'] = array_replace(array_flip(array_keys($weighted_terms[$field_id])), $taxonomy_ref_fields[$field_id]['terms']);
+        // Eventually filter out the default terms that have been removed, in
+        // the meanwhile.
+        $default_existing_array_keys = array_intersect(array_keys($default_element['fields'][$field_id]['terms']), array_keys($taxonomy_ref_fields[$field_id]['terms']));
+        $taxonomy_ref_fields[$field_id]['terms'] = array_replace(array_flip($default_existing_array_keys), $taxonomy_ref_fields[$field_id]['terms']);
       }
-
     }
 
     // Define a default taxonomy_field.
-    $default_taxonomy_field = !empty($default_element['taxonomy_field']) ? $default_element['taxonomy_field'] : array_shift(array_keys($taxonomy_ref_fields));
+    $keys = array_keys($taxonomy_ref_fields);
+    $fallback_taxonomy_field = array_shift($keys);
+    $default_taxonomy_field = !empty($default_element['taxonomy_field']) ? $default_element['taxonomy_field'] : $fallback_taxonomy_field;
 
     // Get the eventual ajax user input of the specific taxonomy field.
     $user_input = $form_state->getUserInput();
@@ -224,112 +151,85 @@ class TaxonomyTermThemer extends MapThemerBase {
         ],
       ];
 
+      $label_alias_upload_help = $this->getLabelAliasHelp();
+      $file_upload_help = $this->markerIcon->getFileUploadHelp();
+
       $element['taxonomy_field']['fields'] = [];
       foreach ($taxonomy_ref_fields as $k => $field) {
 
-        $caption = [
-          'title' => [
-            '#type' => 'html_tag',
-            '#tag' => 'label',
-            '#value' => $this->t('Taxonomy terms from @vocabularies', [
-              '@vocabularies' => implode(', ', $field['target_bundles']),
-            ]),
-            'notes' => [
+        // Define the Table Header variables.
+        $table_settings = [
+          'header' => [
+            'label' => $this->t('Taxonomy term'),
+            'label_alias' => Markup::create($this->t('Term Alias @description', [
+              '@description' => $this->renderer->renderPlain($label_alias_upload_help),
+            ])),
+            'marker_icon' => Markup::create($this->t('Marker Icon @file_upload_help', [
+              '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
+            ])),
+            'image_style' => Markup::create($this->t('Icon Image Style')),
+          ],
+          'tabledrag_group' => 'terms-order-weight',
+          'caption' => [
+            'title' => [
               '#type' => 'html_tag',
-              '#tag' => 'div',
-              '#value' => $this->t('The - Default Value - will be used as fallback Value/Marker for unset Terms'),
-              '#attributes' => [
-                'style' => ['style' => 'font-size:0.8em; color: gray; font-weight: normal'],
+              '#tag' => 'label',
+              '#value' => $this->t('Taxonomy terms from @vocabularies', [
+                '@vocabularies' => implode(', ', $field['target_bundles']),
+              ]),
+              'notes' => [
+                '#type' => 'html_tag',
+                '#tag' => 'div',
+                '#value' => $this->t('The - Default Value - will be used as fallback Value/Marker for unset Terms'),
+                '#attributes' => [
+                  'style' => ['style' => 'font-size:0.8em; color: gray; font-weight: normal'],
+                ],
               ],
             ],
           ],
         ];
 
-        $label_alias_upload_help = $this->getLabelAliasHelp();
-        $file_upload_help = $this->markerIcon->getFileUploadHelp();
-
-        // Define the Table header.
+        // Build the Table Header.
         $element['fields'][$k] = [
           '#type' => 'container',
-          'terms' => [
-            '#type' => 'table',
-            '#header' => [
-              $this->t('Taxonomy term'),
-              $this->t('Weight'),
-              Markup::create($this->t('Term Alias @description', [
-                '@description' => $this->renderer->renderPlain($label_alias_upload_help),
-              ])),
-              Markup::create($this->t('Marker Icon @file_upload_help', [
-                '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
-              ])),
-              $this->t('Icon Image Style'),
-              $this->t('Hide from Legend'),
-            ],
-            '#tabledrag' => [
-              [
-                'action' => 'order',
-                'relationship' => 'sibling',
-                'group' => 'terms-order-weight',
-              ],
-            ],
-            '#caption' => $this->renderer->renderPlain($caption),
-          ],
+          'terms' => $this->buildTableHeader($table_settings),
         ];
 
         // Add a Default Value to be used as possible fallback Value/Marker.
         $field['terms']['__default_value__'] = '- Default Value - ';
 
-        // Reorder the taxonomy terms options, if already set.
-        if (!empty($default_element) && isset($default_element['fields'][$k]['terms'])) {
-          foreach ($default_element['fields'][$k]['terms'] as $id => $value) {
-            if (isset($field['terms'][$id])) {
-              $ordered_terms_options[$id] = $field['terms'][$id];
-            }
-          }
-        }
-        else {
-          $ordered_terms_options = $field['terms'];
-        }
-
         $i = 0;
-        foreach ($ordered_terms_options as $tid => $term) {
-          $fid = (integer) !empty($default_element['fields'][$k]['terms'][$tid]['icon_file']['fids']) ? $default_element['fields'][$k]['terms'][$tid]['icon_file']['fids'] : NULL;
-          $element['fields'][$k]['terms'][$tid] = [
+        foreach ($field['terms'] as $tid => $term) {
+          $default_row = isset($default_element['fields']) && isset($default_element['fields'][$k]['terms'][$tid]) ? $default_element['fields'][$k]['terms'][$tid] : NULL;
+          $fid = (integer) isset($default_row) && !empty($default_row['icon_file']['fids']) ? $default_row['icon_file']['fids'] : NULL;
+
+          // Define the table row parameters.
+          $row = [
+            'id' => "[geofieldmap_taxonomy_term][values][fields][{$k}][terms][{$tid}]",
             'label' => [
-              '#type' => 'value',
-              '#value' => $term,
-              'markup' => [
-                '#markup' => $term,
-              ],
+              'value' => $term,
+              'markup' => $term,
             ],
             'weight' => [
-              '#type' => 'weight',
-              '#title_display' => 'invisible',
-              '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['weight']) ? $default_element['fields'][$k]['terms'][$tid]['weight'] : $i,
-              '#delta' => 20,
-              '#attributes' => ['class' => ['terms-order-weight']],
+              'value' => isset($default_row) && isset($default_row['weight']) ? $default_row['weight'] : $i,
+              'class' => $table_settings['tabledrag_group'],
             ],
             'label_alias' => [
-              '#type' => 'textfield',
-              '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['label_alias']) ? $default_element['fields'][$k]['terms'][$tid]['label_alias'] : '',
-              '#size' => 30,
-              '#maxlength' => 128,
+              'value' => isset($default_row) && isset($default_row['label_alias']) ? $default_row['label_alias'] : '',
             ],
-            'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
+            'icon_file_id' => $fid,
             'image_style' => [
-              '#type' => 'select',
-              '#title' => t('Image style'),
-              '#title_display' => 'invisible',
-              '#options' => $this->markerIcon->getImageStyleOptions(),
-              '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['image_style']) ? $default_element['fields'][$k]['terms'][$tid]['image_style'] : 'geofield_map_default_icon_style',
+              'options' => $this->markerIcon->getImageStyleOptions(),
+              'value' => isset($default_row) && isset($default_row['image_style']) ? $default_row['image_style'] : 'geofield_map_default_icon_style',
             ],
             'legend_exclude' => [
-              '#type' => 'checkbox',
-              '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['legend_exclude']) ? $default_element['fields'][$k]['terms'][$tid]['legend_exclude'] : '0',
+              'value' => isset($default_row) && isset($default_row['legend_exclude']) ? $default_row['legend_exclude'] : (count($field['terms']) > 10 ? TRUE : FALSE) ,
             ],
-            '#attributes' => ['class' => ['draggable']],
+            'attributes' => ['class' => ['draggable']],
           ];
 
+          // Builds the table row for the MapThemer.
+          $element['fields'][$k]['terms'][$tid] = $this->buildDefaultMapThemerRow($row);
           $i++;
         }
 
@@ -337,7 +237,6 @@ class TaxonomyTermThemer extends MapThemerBase {
         if ($k != $selected_taxonomy_field) {
           $element['fields'][$k]['#attributes']['class'] = ['hidden'];
         }
-
       }
     }
     return $element;
@@ -366,17 +265,7 @@ class TaxonomyTermThemer extends MapThemerBase {
    * {@inheritdoc}
    */
   public function getLegend(array $map_theming_values, array $configuration = []) {
-    $legend = [
-      '#type' => 'table',
-      '#header' => [
-        isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Term'),
-        isset($configuration['markers_label']) ? $configuration['markers_label'] : $this->t('Marker/Icon'),
-      ],
-      '#caption' => isset($configuration['legend_caption']) ? $configuration['legend_caption'] : '',
-      '#attributes' => [
-        'class' => ['geofield-map-legend', 'taxonomy-term'],
-      ],
-    ];
+    $legend = $this->defaultLegendHeader($configuration);
 
     $taxonomy_field = $map_theming_values['taxonomy_field'];
 
@@ -398,7 +287,7 @@ class TaxonomyTermThemer extends MapThemerBase {
         continue;
       }
       $label = isset($term['label']) ? $term['label'] : $vid;
-      $legend[$vid] = [
+      $legend['table'][$vid] = [
         'value' => [
           '#type' => 'container',
           'label' => [
@@ -410,13 +299,15 @@ class TaxonomyTermThemer extends MapThemerBase {
         ],
         'marker' => [
           '#type' => 'container',
-          'icon_file' => !empty($fid) ? $this->markerIcon->getLegendIcon($fid, $image_style) : $this->getDefaultLegendIcon(),
+          'icon_file' => !empty($fid) ? $this->markerIcon->getLegendIconFromFid($fid, $image_style) : $this->getDefaultLegendIcon(),
           '#attributes' => [
             'class' => ['marker'],
           ],
         ],
       ];
     }
+
+    $legend['notes'] = $this->defaultLegendFooter($configuration);
 
     return $legend;
   }

@@ -40,7 +40,7 @@ trait GeofieldMapFieldTrait {
     "text_with_summary",
   ];
 
-  protected $customMapStylePlaceholder = '[{"elementType":"geometry","stylers":[{"color":"#1d2c4d"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#1a3646"}]},{"featureType":"administrative.country","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"administrative.province","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e1626"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#4e6d70"}]}]';
+  protected $customMapStylePlaceholder = '[{"elementType":"geometry","stylers":[{"color":"#1d2c4d"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#1a3646"}]},{"featureType":"administrative.country","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"administrative.province","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e1626"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#4e6d70"}]},{"featureType":"poi","stylers":[{"visibility":"off"}]}]';
 
   /**
    * Get the GMap Api Key from the geofield_map.google_maps service.
@@ -115,6 +115,7 @@ trait GeofieldMapFieldTrait {
         'map_oms_options' => '{"markersWontMove": "true", "markersWontHide": "true", "basicFormatEvents": "true", "nearbyDistance": 3}',
       ],
       'map_additional_options' => '',
+      'map_geometries_options' => '{"strokeColor":"black","strokeOpacity":"0.8","strokeWeight":2,"fillColor":"blue","fillOpacity":"0.1", "clickable": false}',
       'custom_style_map' => [
         'custom_style_control' => 0,
         'custom_style_name' => '',
@@ -123,7 +124,7 @@ trait GeofieldMapFieldTrait {
       ],
       'map_markercluster' => [
         'markercluster_control' => 0,
-        'markercluster_additional_options' => '',
+        'markercluster_additional_options' => '{"maxZoom":12, "gridSize":50}',
       ],
     ];
   }
@@ -189,6 +190,9 @@ trait GeofieldMapFieldTrait {
 
     // Set Map Additional Options Element.
     $this->setMapAdditionalOptionsElement($settings, $elements);
+
+    // Set Map Geometries Options Element.
+    $this->setGeometriesAdditionalOptionsElement($settings, $elements);
 
     // Set Overlapping Marker Spiderfier Element.
     $this->setMapOmsElement($settings, $default_settings, $elements);
@@ -302,7 +306,7 @@ trait GeofieldMapFieldTrait {
       ]);
     }
     else {
-      $map_google_api_key_value = $this->t("<span class='geofield-map-warning'>Gmap Api Key missing.<br>Google Maps functionality may not be available. </span>@settings_page_link", [
+      $map_google_api_key_value = $this->t("<span class='geofield-map-warning'>Gmap Api Key missing - @settings_page_link<br>Google Maps functionalities not available. </span>", [
         '@settings_page_link' => $this->link->generate($this->t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')
@@ -674,6 +678,14 @@ trait GeofieldMapFieldTrait {
       '#weight' => -10,
     ];
 
+    // Add SVG UI file support.
+    $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= !$this->moduleHandler->moduleExists('svg_image') ? '<br>' . $this->t('SVG Files support is disabled. Enabled it with @svg_image_link', [
+      '@svg_image_link' => $this->link->generate('SVG Image Module', Url::fromUri('https://www.drupal.org/project/svg_image', [
+        'absolute' => TRUE,
+        'attributes' => ['target' => 'blank'],
+      ])),
+    ]) : '<br>' . $this->t('SVG Files support enabled.');
+
     $multivalue_fields_states = [];
 
     $infowindow_fields_options = [];
@@ -736,7 +748,7 @@ trait GeofieldMapFieldTrait {
       $elements['map_marker_and_infowindow']['infowindow_field'] = [
         '#type' => 'select',
         '#title' => $this->t('Marker Infowindow Content from'),
-        '#description' => $this->t('Choose an existing string/text type field from which populate the Marker Infowindow'),
+        '#description' => $this->t('Choose an existing string/text type field from which populate the Marker Infowindow.'),
         '#options' => $info_window_source_options,
         '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
       ];
@@ -821,6 +833,31 @@ trait GeofieldMapFieldTrait {
 "gestureHandling": "none",
 "streetViewControlOptions": {"position": 5}
 }',
+      '#element_validate' => [[get_class($this), 'jsonValidate']],
+    ];
+  }
+
+  /**
+   * Set Map Geometries Options Element.
+   *
+   * @param array $settings
+   *   The Form Settings.
+   * @param array $elements
+   *   The Form element to alter.
+   */
+  private function setGeometriesAdditionalOptionsElement(array $settings, array &$elements) {
+    $elements['map_geometries_options'] = [
+      '#type' => 'textarea',
+      '#rows' => 5,
+      '#title' => $this->t('Map Geometries Options'),
+      '#description' => $this->t('Set here options that will be applied to the rendering of Map Geometries (Lines & Polylines, Polygons, Multipolygons, etc.).<br>Refer to the @polygons_documentation.', [
+        '@polygons_documentation' => $this->link->generate($this->t('Google Maps Polygons Documentation'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/reference/polygon#PolylineOptions', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+      '#default_value' => $settings['map_geometries_options'],
+      '#placeholder' => self::getDefaultSettings()['map_geometries_options'],
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
   }
@@ -930,6 +967,19 @@ trait GeofieldMapFieldTrait {
         [get_class($this), 'customMapStyleValidate'],
       ],
     ];
+    $elements['custom_style_map']['custom_style_hint'] = [
+      '#type' => 'container',
+      'intro' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Hint: Use the following json text to disable the default Google Pois from the Map'),
+      ],
+      'json' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('<b>[{"featureType":"poi","stylers":[{"visibility":"off"}]}]</b>'),
+      ],
+    ];
     $elements['custom_style_map']['custom_style_default'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Force the Custom Map Style as Default'),
@@ -997,7 +1047,7 @@ trait GeofieldMapFieldTrait {
       '#title' => $this->t('Marker Cluster Additional Options'),
       '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
       '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
-      '#placeholder' => '{"maxZoom": 12, "gridSize": 25, "imagePath": "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png"}',
+      '#placeholder' => '{"maxZoom":12,"gridSize":50}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
@@ -1014,7 +1064,7 @@ trait GeofieldMapFieldTrait {
       'warning_text' => [
         '#type' => 'html_tag',
         '#tag' => 'span',
-        '#value' => $this->t('Markers Spiderfy is Active ! | If not, a "maxZoom" property should be set in the Marker Cluster Additional Options to be able to output the Spederfy effect.'),
+        '#value' => $this->t('Markers Spiderfy is Active ! | A "maxZoom" property should be set in the Marker Cluster Options to output the Spiderfy effect.'),
       ],
     ];
 

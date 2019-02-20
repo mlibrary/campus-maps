@@ -1,6 +1,6 @@
 services:
   plugin.manager.leaflet_tile_layer_plugin:
-    class: Drupal\geofield_map\LeafletTileLayer\LeafletTileLayerPluginManager
+    class: Drupal\geofield_map\LeafletTileLayerPluginManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@request_stack']
 
   plugin.manager.geofield_map.themer:
@@ -9,7 +9,7 @@ services:
 
   geofield_map.marker_icon:
       class: Drupal\geofield_map\Services\MarkerIconService
-      arguments: ['@config.factory', '@string_translation', '@entity_type.manager', '@module_handler', '@link_generator']
+      arguments: ['@config.factory', '@string_translation', '@entity_type.manager', '@module_handler', '@link_generator', '@plugin.manager.element_info']
 
   geofield_map.google_maps:
     class: Drupal\geofield_map\Services\GoogleMapsService

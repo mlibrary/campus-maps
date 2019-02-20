@@ -6,10 +6,9 @@ It represents the perfect solution to:
   <li>render each Content's Locations throughout a fully customizable Interactive Geofield Map Formatter;</li>
   <li>expose and query Contents throughout fully customizable  Map Views Integration;</li>
   <li>implement advanced front-end Google Maps with Marker Icon & Infowindow advanced customizations, custom Google Map Styles and Marker Clustering capabilities;</li>
+  <li>customize Map Geometries properties (Lines & Polylines, Polygons,
+    Multipolygons, etc.), based on Google Maps Polygons APIs;</li>
 </ul>
-
-<h2><strong>WARNING:<br><u>UPDATE TO Geofield Map 8.x-2.16 (and above ...) IS HIGHLY RECOMMENDED </u> for correct working with Drupal 8.6 core</strong></h2>
-Drupal Core 8.6 introduced a regression in the #states APIs, that affects Geofield Map up to 8.x-2.15 version.<a href="https://www.drupal.org/project/geofield_map/issues/3007221"><br>Refer to this specific issue for more information</a>.</u></strong>
 
 <hr>
 <h4>Geofield Map 2.x. What's New</h4>
@@ -44,12 +43,15 @@ providing an interactive and very intuitive map on which to perform localization
 </ul>
 
 <h4><strong>Geofield Map Formatter</strong></h4>
-An higly customizable  Google Map formatter, by which render and expose the contents Geofields / Geolocations, throughout:
+An higly customizable  Google Map formatter, by which render and expose the Geo contents throughout:
 <ul>
   <li>a wide set of Map options fully compliant with <a href="https://developers.google.com/maps/documentation/javascript/" title="Google Maps Js v3 APIs" target="_blank">Google Maps Js v3 APIs</a>;</li>
   <li>the possibility to fully personalize the Map Marker Icon and its Infowindow content;</li>
   <li>the integration of <a href="https://github.com/googlemaps/js-marker-clusterer" title="Markecluster Google Maps Library" target="_blank">Markecluster Google Maps Library</a> functionalities and its personalization;</li>
 </ul>
+
+<p>A "Geofield Google Map (static)" formatter is also available, that renders a
+  Google Map, accordingly to the <a href="https://developers.google.com/maps/documentation/maps-static/dev-guide" target="_blank">Google Maps Static API</a> (only Points supported, and not Geometries such as Polylines, Polygons, etc.).</p>
 
 <h4>Views Integration</h4>
 A dedicated Geofield Map View style plugin able to render a Views result on a higly customizable  Google Map,
@@ -100,6 +102,8 @@ Both in Geofield Map Formatter and in the Geofield Map View style it is possible
 
 <p>As Drupal 8 Plugin system based, the Geofield MapThemers Plugin and Legend block system is fully extendable and overridable.
   You, as D8 developer, are free to override and extend the existing ones, or create your custom MapThemer based on your specific needs and logics.</p>
+
+<b>New: </b><u>SVG Image files are now supported for Marker Icons, via the <a href="https://www.drupal.org/project/svg_image">Svg Image module</a></u>
 
 <h4>How to use.</h4>
 

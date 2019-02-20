@@ -15,6 +15,8 @@ Integration;
 *   implement advanced front-end Google Maps with Marker Icon & Infowindow 
 advanced customizations, custom Google Map Styles and Marker Clustering 
 capabilities;
+*   customize Map Geometries properties (Lines & Polylines, Polygons, 
+Multipolygons, etc.), based on Google Maps Polygons APIs
 
 * * *
 
@@ -66,6 +68,15 @@ contents Geofields / Geolocations, throughout:
 content;
 *   the integration of 
 [Markecluster Google Maps Library](https://github.com/googlemaps/js-marker-clusterer "Markecluster Google Maps Library") functionalities and its personalization;
+
+A "Geofield Google Map (static)" formatter is also available, that renders a 
+Google Map, accordingly to the [Google Maps Static API](https://developers.google.com/maps/documentation/maps-static/dev-guide)
+(only Points supported, and not Geometries such as Polylines, Polygons, etc.).
+The use of the static maps API is significantly cheaper than the dynamic map. The
+drawback is that the map is displayed as a static image (i.e. without any
+controls, zoom, pan, etc). 
+For more information on pricing you can consult the 
+[Google Maps Static Pricing documentation](https://developers.google.com/maps/billing/understanding-cost-of-use#static-maps).
 
 #### Views Integration
 

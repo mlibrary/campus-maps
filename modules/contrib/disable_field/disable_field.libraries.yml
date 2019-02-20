@@ -1,0 +1,6 @@
+disable_field:
+  version: 0
+  js:
+    js/disable_field.js: {}
+  dependencies:
+    - core/jquery

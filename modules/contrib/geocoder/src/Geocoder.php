@@ -44,7 +44,7 @@ class Geocoder implements GeocoderInterface {
   public function geocode($data, array $plugins, array $options = []) {
 
     // Retrieve plugins options from the module configurations.
-    $plugins_options = $this->config->get('plugins_options');
+    $plugins_options = $this->config->get('plugins_options') ?: [];
 
     // Merge possible options overrides into plugins options.
     $plugins_options = NestedArray::mergeDeep($plugins_options, $options);

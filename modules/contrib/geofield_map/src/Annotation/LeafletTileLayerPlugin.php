@@ -7,7 +7,7 @@ use Drupal\Component\Annotation\Plugin;
 /**
  * Defines a LeafletTileLayerPlugin item annotation object.
  *
- * @see \Drupal\geofield_map\leafletTileLayers\LeafletTileLayerPluginManager
+ * @see \Drupal\geofield_map\LeafletTileLayerPluginManager
  * @see plugin_api
  *
  * @Annotation

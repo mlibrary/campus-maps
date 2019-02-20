@@ -241,7 +241,7 @@ abstract class GeocodeFormatterBase extends FormatterBase implements ContainerFa
 
     // Filter out unchecked plugins.
     $provider_plugin_ids = array_filter($plugins_settings, function ($plugin) {
-      return $plugin['checked'] == TRUE;
+      return isset($plugin['checked']) && $plugin['checked'] == TRUE;
     });
 
     $provider_plugin_ids = array_combine(array_keys($provider_plugin_ids), array_keys($provider_plugin_ids));

@@ -24,6 +24,6 @@
         }
     },
     "require": {
-        "drupal/geofield": "1.0.*@beta"
+        "drupal/geofield": "^1.0"
     }
 }

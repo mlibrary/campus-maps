@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\geofield_map\leafletTileLayerPlugin;
+namespace Drupal\geofield_map\Plugin\LeafletTileLayerPlugin;
 
-use Drupal\geofield_map\leafletTileLayers\LeafletTileLayerPluginBase;
+use Drupal\geofield_map\LeafletTileLayerPluginBase;
 
 /**
  * Provides an Esri_WorldTopoMap Leaflet TileLayer Plugin.

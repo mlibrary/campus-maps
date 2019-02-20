@@ -69,7 +69,12 @@ class LeafletService {
    *   The leaflet_map render array.
    */
   public function leafletRenderMap(array $map, array $features = [], $height = '400px') {
-    $map_id = Html::getUniqueId('leaflet_map');
+    $map_id = isset($map['id']) ? $map['id'] : Html::getUniqueId('leaflet_map');
+    $attached_libraries = ['leaflet/leaflet-drupal', 'leaflet/general'];
+    if ($this->moduleHandler->moduleExists('leaflet_markercluster') && isset($map['settings']['leaflet_markercluster']) && $map['settings']['leaflet_markercluster']['control']) {
+      $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster';
+      $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster-drupal';
+    }
 
     $settings[$map_id] = [
       'mapId' => $map_id,
@@ -83,7 +88,7 @@ class LeafletService {
       '#height' => $height,
       '#map' => $map,
       '#attached' => [
-        'library' => ['leaflet/leaflet-drupal'],
+        'library' => $attached_libraries,
         'drupalSettings' => [
           'leaflet' => $settings,
         ],
@@ -155,83 +160,115 @@ class LeafletService {
       if (!($geom = $this->geoPhpWrapper->load(isset($item['wkt']) ? $item['wkt'] : $item))) {
         continue;
       }
-      $datum = ['type' => strtolower($geom->geometryType())];
+      $data[] = $this->leafletProcessGeometry($geom);
 
-      switch ($datum['type']) {
-        case 'point':
-          $datum += [
-            'lat' => $geom->getY(),
-            'lon' => $geom->getX(),
-          ];
-          break;
-
-        case 'linestring':
-          $components = $geom->getComponents();
-          /* @var \Geometry $component */
-          foreach ($components as $component) {
-            $datum['points'][] = [
-              'lat' => $component->getY(),
-              'lon' => $component->getX(),
-            ];
-          }
-          break;
-
-        case 'polygon':
-          /* @var \Collection[] $tmp */
-          $tmp = $geom->getComponents();
-          $components = $tmp[0]->getComponents();
-          /* @var \Geometry $component */
-          foreach ($components as $component) {
-            $datum['points'][] = [
-              'lat' => $component->getY(),
-              'lon' => $component->getX(),
-            ];
-          }
-          break;
-
-        case 'multipolygon':
-          $components = [];
-          $tmp = $geom->getComponents();
-          foreach ($tmp as $delta => $polygon) {
-            $polygon_component = $polygon->getComponents();
-            foreach ($polygon_component as $delta => $linestring) {
-              $components[] = $linestring;
-            }
-          }
-          foreach ($components as $key => $component) {
-            $subcomponents = $component->getComponents();
-            foreach ($subcomponents as $subcomponent) {
-              $datum['component'][$key]['points'][] = array(
-                'lat' => $subcomponent->getY(),
-                'lon' => $subcomponent->getX(),
-              );
-            }
-          }
-
-          $data[] = $datum;
-          break;
-        case 'multipolyline':
-        case 'multilinestring':
-          if ($datum['type'] == 'multilinestring') {
-            $datum['type'] = 'multipolyline';
-          }
-          $components = $geom->getComponents();
-          foreach ($components as $key => $component) {
-            /* @var \GeometryCollection $component */
-            $subcomponents = $component->getComponents();
-            /* @var \Geometry $subcomponent */
-            foreach ($subcomponents as $subcomponent) {
-              $datum['component'][$key]['points'][] = [
-                'lat' => $subcomponent->getY(),
-                'lon' => $subcomponent->getX(),
-              ];
-            }
-          }
-          break;
-      }
-      $data[] = $datum;
     }
     return $data;
+  }
+
+  /**
+   * Process the Geometry Collection.
+   *
+   * @param \Geometry $geom
+   *   The Geometry Collection.
+   *
+   * @return array
+   *   The return array.
+   */
+  private function leafletProcessGeometry(\Geometry $geom) {
+    $datum = array('type' => strtolower($geom->geometryType()));
+
+    switch ($datum['type']) {
+      case 'point':
+        $datum = array(
+          'type' => 'point',
+          'lat' => $geom->getY(),
+          'lon' => $geom->getX(),
+        );
+        break;
+
+      case 'linestring':
+        /* @var \GeometryCollection $geom */
+        $components = $geom->getComponents();
+        /* @var \Geometry $component */
+        foreach ($components as $component) {
+          $datum['points'][] = array(
+            'lat' => $component->getY(),
+            'lon' => $component->getX(),
+          );
+        }
+        break;
+
+      case 'polygon':
+        /* @var \GeometryCollection $geom */
+        $tmp = $geom->getComponents();
+        /* @var \GeometryCollection $geom */
+        $geom = $tmp[0];
+        $components = $geom->getComponents();
+        /* @var \Geometry $component */
+        foreach ($components as $component) {
+          $datum['points'][] = array(
+            'lat' => $component->getY(),
+            'lon' => $component->getX(),
+          );
+        }
+        break;
+
+      case 'multipolyline':
+      case 'multilinestring':
+        if ($datum['type'] == 'multilinestring') {
+          $datum['type'] = 'multipolyline';
+        }
+        /* @var \GeometryCollection $geom */
+        $components = $geom->getComponents();
+        /* @var \GeometryCollection $component */
+        foreach ($components as $key => $component) {
+          $subcomponents = $component->getComponents();
+          /* @var \Geometry $subcomponent */
+          foreach ($subcomponents as $subcomponent) {
+            $datum['component'][$key]['points'][] = array(
+              'lat' => $subcomponent->getY(),
+              'lon' => $subcomponent->getX(),
+            );
+          }
+          unset($subcomponent);
+        }
+        break;
+
+      case 'multipolygon':
+        $components = [];
+        /* @var \GeometryCollection $geom */
+        $tmp = $geom->getComponents();
+        /* @var \GeometryCollection $polygon */
+        foreach ($tmp as $delta => $polygon) {
+          $polygon_component = $polygon->getComponents();
+          foreach ($polygon_component as $k => $linestring) {
+            $components[] = $linestring;
+          }
+        }
+        foreach ($components as $key => $component) {
+          $subcomponents = $component->getComponents();
+          /* @var \Geometry $subcomponent */
+          foreach ($subcomponents as $subcomponent) {
+            $datum['component'][$key]['points'][] = array(
+              'lat' => $subcomponent->getY(),
+              'lon' => $subcomponent->getX(),
+            );
+          }
+        }
+        break;
+
+      case 'geometrycollection':
+      case 'multipoint':
+        /* @var \GeometryCollection $geom */
+        $components = $geom->getComponents();
+        foreach ($components as $key => $component) {
+          $datum['component'][$key] = $this->leafletProcessGeometry($component);
+        }
+        break;
+
+    }
+    return $datum;
   }
 
   /**
@@ -244,13 +281,11 @@ class LeafletService {
    */
   public function preProcessMapSettings(array &$map_settings) {
     // Generate correct Absolute iconUrl & shadowUrl, if not external.
-    if (!empty($map_settings['icon']['iconUrl']) && !UrlHelper::isExternal($map_settings['icon']['iconUrl']) && strpos($map_settings['icon']['iconUrl'], '{{') === FALSE) {
-      $map_settings['icon']['iconUrl'] = Url::fromUri('base:' . $map_settings['icon']['iconUrl'], ['absolute' => TRUE])
-        ->toString();
+    if (!empty($map_settings['icon']['iconUrl'])) {
+      $map_settings['icon']['iconUrl'] = $this->pathToAbsolute($map_settings['icon']['iconUrl']);
     }
-    if (!empty($map_settings['icon']['shadowUrl']) && !UrlHelper::isExternal($map_settings['icon']['shadowUrl']) && strpos($map_settings['icon']['shadowUrl'], '{{') === FALSE) {
-      $map_settings['icon']['shadowUrl'] = Url::fromUri('base:' . $map_settings['icon']['shadowUrl'], ['absolute' => TRUE])
-        ->toString();
+    if (!empty($map_settings['icon']['shadowUrl'])) {
+      $map_settings['icon']['shadowUrl'] = $this->pathToAbsolute($map_settings['icon']['shadowUrl']);
     }
   }
 
@@ -265,6 +300,43 @@ class LeafletService {
       'absolute' => TRUE,
       'attributes' => ['target' => 'blank'],
     ]));
+  }
+
+  /**
+   * Generate an Absolute Url from a string Path.
+   *
+   * @param string $path
+   *   The path string to generate.
+   *
+   * @return string
+   *   The absolute $path
+   */
+  public function pathToAbsolute($path) {
+    if (!UrlHelper::isExternal($path)) {
+      $path = Url::fromUri('base:', ['absolute' => TRUE])->toString() . $path;
+    }
+    return $path;
+  }
+
+  /**
+   * Check if an array has all his values empty.
+   *
+   * @param array $array
+   *   The array to check.
+   *
+   * @return bool
+   *   The bool result.
+   */
+  public static function multipleEmpty(array $array) {
+    foreach ($array as $value) {
+      if (empty($value)) {
+        continue;
+      }
+      else {
+        return FALSE;
+      }
+    }
+    return TRUE;
   }
 
 }

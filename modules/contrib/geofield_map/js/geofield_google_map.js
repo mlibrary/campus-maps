@@ -2,10 +2,6 @@
 
   Drupal.behaviors.geofieldGoogleMap = {
     attach: function (context, settings) {
-      Drupal.geoField = Drupal.geoField || {};
-      Drupal.geoField.maps = Drupal.geoField.maps || {};
-
-
       if (drupalSettings['geofield_google_map']) {
         $(context).find('.geofield-google-map').once('geofield-processed').each(function (index, element) {
           var mapid = $(element).attr('id');
@@ -21,7 +17,7 @@
 
             // Load before the Gmap Library, if needed.
             Drupal.geoFieldMap.loadGoogle(mapid, map_settings.gmap_api_key, function () {
-              Drupal.geoFieldMap.map_initialize(mapid, map_settings, data);
+              Drupal.geoFieldMap.map_initialize(mapid, map_settings, data, context);
             });
           }
         });
@@ -44,15 +40,16 @@
     maps_api_loading: false,
 
     /**
-     * Returns the re-coded google maps api language parameter, from html lang attribute.
+     * Returns the re-coded google maps api language parameter, from html lang
+     * attribute.
      */
     googleMapsLanguage: function (html_language) {
       switch (html_language) {
         case 'zh-hans':
-          html_language = 'zh-CN'
+          html_language = 'zh-CN';
           break;
         case 'zh-hant':
-          html_language = 'zh-TW'
+          html_language = 'zh-TW';
           break;
       }
       return html_language;
@@ -85,7 +82,7 @@
     // Lead Google Maps library.
     loadGoogle: function (mapid, gmap_api_key, callback) {
       var self = this;
-      var html_language = $('html').attr("lang") ? $('html').attr("lang") : 'en'
+      var html_language = $('html').attr("lang") ? $('html').attr("lang") : 'en';
 
       // Add the callback.
       self.addCallback(callback);
@@ -158,32 +155,45 @@
       }
 
       var map = self.map_data[mapid].map;
-      if (oms) {
-        self.map_data[mapid].oms.addMarker(feature);
-      }
-      else {
-        feature.setMap(map);
-      }
-      self.map_data[mapid].markers.push(feature);
 
+      // If the feature is a Point, make it a Marker and extend the Map bounds.
       if (feature.getPosition) {
+        if (oms) {
+          self.map_data[mapid].oms.addMarker(feature);
+        }
+        else {
+          feature.setMap(map);
+        }
+        self.map_data[mapid].markers.push(feature);
         self.map_data[mapid].map_bounds.extend(feature.getPosition());
-      } else {
-        var path = feature.getPath();
-        path.forEach(function(element) {
-          self.map_data[mapid].map_bounds.extend(element);
-        });
 
+        // Check for eventual simple or OverlappingMarkerSpiderfier click Listener
+        var clickListener = oms ? 'spider_click' : 'click';
+        google.maps.event.addListener(feature, clickListener, function() {
+          self.infowindow_open(mapid, feature);
+        });
       }
-      // Check for eventual simple or OverlappingMarkerSpiderfier click Listener
-      var clickListener = oms ? 'spider_click' : 'click';
-      google.maps.event.addListener(feature, clickListener, function() {
-        self.infowindow_open(mapid, feature);
-      });
+
+      // If the feature is a Polyline or a Polygon, add to the Map and extend the Map bounds.
+      if (feature.getPath) {
+        var feature_options = JSON.parse(self.map_data[mapid].map_geometries_options) || {};
+        feature.setOptions(feature_options);
+        feature.setMap(map);
+        var path = feature.getPath();
+        var path_bounds = new google.maps.LatLngBounds();
+        path.forEach(function (element) {
+          self.map_data[mapid].map_bounds.extend(element);
+          path_bounds.extend(element);
+        });
+        google.maps.event.addListener(feature, 'click', function() {
+          self.infowindow_open(mapid, feature, path_bounds.getCenter());
+        });
+      }
+
     },
 
     // Closes and open the Map Infowindow at the input feature.
-    infowindow_open: function (mapid, feature) {
+    infowindow_open: function (mapid, feature, anchor) {
       var self = this;
       var map = self.map_data[mapid].map;
       var properties = feature.get('geojsonProperties');
@@ -193,14 +203,26 @@
       map.infowindow.close();
       if (properties.description) {
         map.infowindow.setContent(properties.description);
+
+        /// Note: if the feature is a Marker (and not a Polyline/Polygon) its
+        // extensions will override the infowindow anchor position, in the map.
+        // infowindow.open method.
+        map.infowindow.setPosition(anchor);
         setTimeout(function () {
           map.infowindow.open(map, feature);
         }, 200);
       }
     },
 
+    map_refresh: function (mapid) {
+      var self = this;
+      setTimeout(function() {
+        google.maps.event.trigger(self.map_data[mapid].map, 'resize');
+      }, 10);
+    },
+
     // Init Geofield Google Map and its functions.
-    map_initialize: function (mapid, map_settings, data) {
+    map_initialize: function (mapid, map_settings, data, context) {
       var self = this;
       $.noConflict();
 
@@ -329,7 +351,6 @@
           // Define the icon_image, if set.
           var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
 
-
           if (features.setMap) {
             self.place_feature(features, icon_image, mapid);
           }
@@ -356,7 +377,7 @@
             };
 
             // Add markercluster_additional_options if any.
-            if(map_settings.map_markercluster.markercluster_additional_options.length > 0) {
+            if (map_settings.map_markercluster.markercluster_additional_options.length > 0) {
               var markeclusterAdditionalOptions = JSON.parse(map_settings.map_markercluster.markercluster_additional_options);
               // Merge markeclusterOption with markeclusterAdditionalOptions.
               $.extend(markeclusterOption, markeclusterAdditionalOptions);
@@ -368,7 +389,7 @@
         }
 
         // If the Map Initial State is defined by MapBounds.
-        if (!self.map_data[mapid].map_bounds.isEmpty() && self.map_data[mapid].markers.length > 1 && !self.map_data[mapid].center_force) {
+        if (!self.mapBoundsAreNull(self.map_data[mapid].map_bounds) && !self.map_data[mapid].center_force) {
           map.fitBounds(self.map_data[mapid].map_bounds);
         }
         // else if the Map Initial State is defined by just One marker.
@@ -383,42 +404,47 @@
           }
         });
 
+        // Add an event listener for the Ajax Infowindow Popup.
+        google.maps.event.addListener(map.infowindow, 'domready', function(){
+          var infowindow_content = document.createElement('div');
+          infowindow_content.innerHTML = map.infowindow.getContent().trim();
+          var content = $('[data-geofield-google-map-ajax-popup]', infowindow_content);
+          if (content.length) {
+            var url = content.data('geofield-google-map-ajax-popup');
+            $.get(url, function (response) {
+              if (response) {
+                map.infowindow.setContent(response)
+              }
+            });
+          }
+        });
+
         // At the beginning (once) ...
         google.maps.event.addListenerOnce(map, 'idle', function() {
 
-          // Fix map issue in field_groups / details & vertical tabs
-          // Show all map tiles when a map is shown in a vertical tab.
-          $('#' + mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
-            self.map_refresh(mapid);
-          });
-          // Show all map tiles when a map is shown in a collapsible detail/ single tab.
-          $('#' + mapid).closest('.field-group-details, .field-group-tab').find('summary').click(function () {
-              self.map_refresh(mapid);
-            }
-          );
-
           // Open the Feature infowindow, if so set.
           if (self.map_data[mapid].map_marker_and_infowindow.force_open && parseInt(self.map_data[mapid].map_marker_and_infowindow.force_open) === 1) {
-            map.setCenter(features[0].getPosition());
+           // map.setCenter(features[0].getPosition());
             self.infowindow_open(mapid, features[0]);
           }
 
           // Update map initial state after everything is settled.
           self.map_set_start_state(mapid, map.getCenter(), map.getZoom());
-        });
 
-        // Triggers Map resize listener on Window resize
-        google.maps.event.addDomListener(window, "resize", function() {
-          google.maps.event.trigger(map, "resize");
-        });
-
-        // Ensure map marker stays center on map resize
-        google.maps.event.addDomListener(map, "resize", function() {
-          map.setCenter(self.map_data[mapid].map_center);
+          // Trigger a custom event on Geofield Map initialized, with mapid.
+          $(context).trigger('geofieldMapInit', mapid);
         });
 
       }
     },
+
+    mapBoundsAreNull: function (mapBounds) {
+      var north_east = mapBounds.getNorthEast();
+      var south_west = mapBounds.getSouthWest();
+      return north_east.toString() === south_west.toString();
+
+    },
+
     map_set_start_state: function (mapid, center, zoom) {
       var self = this;
       self.map_data[mapid].map_start_center = center;

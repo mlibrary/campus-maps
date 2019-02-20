@@ -6,8 +6,8 @@ description: Bulk update fields from one value to another
 dependencies:
   - drupal:action
 
-# Information added by Drupal.org packaging script on 2017-08-08
-version: '8.x-1.0-alpha1'
+# Information added by Drupal.org packaging script on 2018-12-11
+version: '8.x-1.0-alpha2'
 core: '8.x'
 project: 'bulk_update_fields'
-datestamp: 1502215753
+datestamp: 1544530984

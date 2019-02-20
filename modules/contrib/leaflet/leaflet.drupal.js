@@ -1,7 +1,22 @@
-(function ($) {
+(function ($, Drupal, drupalSettings) {
 
   Drupal.behaviors.leaflet = {
     attach: function (context, settings) {
+
+      // Attach leaflet ajax popup listeners.
+      $(document).on('leaflet.map', function (e, settings, lMap) {
+        lMap.on('popupopen', function (e) {
+          var content = $('[data-leaflet-ajax-popup]', e.popup._contentNode);
+          if (content.length) {
+            var url = content.data('leaflet-ajax-popup');
+            $.get(url, function (response) {
+              if (response) {
+                e.popup.setContent(response)
+              }
+            });
+          }
+        });
+      });
 
       $.each(settings.leaflet, function (m, data) {
         $('#' + data.mapId, context).each(function () {
@@ -11,6 +26,7 @@
           if ($container.data('leaflet') === undefined) {
             $container.data('leaflet', new Drupal.Leaflet(L.DomUtil.get(data.mapId), data.mapId, data.map));
             if (data.features.length > 0) {
+              Drupal.Leaflet.path = data.map.settings.path && data.map.settings.path.length > 0 ? JSON.parse(data.map.settings.path) : {};
               $container.data('leaflet').add_features(data.features, true);
             }
 
@@ -42,6 +58,7 @@
     this.overlays = {};
     this.lMap = null;
     this.layer_control = null;
+    this.path = {};
 
     this.initialise();
   };
@@ -50,10 +67,29 @@
     // Instantiate a new Leaflet map.
     this.lMap = new L.Map(this.mapId, this.settings);
 
-    // Add map base layers.
+    // add map layers (base and overlay layers)
+    var layers = {}, overlays = {};
+    var i = 0;
     for (var key in this.map_definition.layers) {
       var layer = this.map_definition.layers[key];
-      this.add_base_layer(key, layer);
+      // Distinguish between "base" and "overlay" layers.
+      // Default to "base" in case "layer_type" has not been defined in hook_leaflet_map_info().
+      layer.layer_type = (typeof layer.layer_type === 'undefined') ? 'base' : layer.layer_type;
+
+      switch (layer.layer_type) {
+        case 'overlay':
+          var overlay_layer = this.create_layer(layer, key);
+          var layer_hidden = (typeof layer.layer_hidden === "undefined") ? false : layer.layer_hidden ;
+          this.add_overlay(key, overlay_layer, layer_hidden);
+          break;
+        default:
+          this.add_base_layer(key, layer, i);
+          if (i === 0) {    //  Only the first base layer needs to be added to the map - all the others are accessed via the layer switcher
+            i++;
+          }
+          break;
+      }
+      i++;
     }
 
     // Set initial view, fallback to displaying the whole world.
@@ -84,20 +120,18 @@
     // Only add a layer switcher if it is enabled in settings, and we have
     // at least two base layers or at least one overlay.
     if (this.layer_control == null && this.settings.layerControl && (count_layers(this.base_layers) > 1 || count_layers(this.overlays) > 0)) {
-      // Only add base-layers if we have more than one, i.e. if there actually
-      // is a choice for the user.
-      var _layers = this.base_layers.length > 1 ? this.base_layers : [];
       // Instantiate layer control, using settings.layerControl as settings.
-      this.layer_control = new L.Control.Layers(_layers, this.overlays, this.settings.layerControl);
+      this.layer_control = new L.Control.Layers(this.base_layers, this.overlays, this.settings.layerControl);
       this.lMap.addControl(this.layer_control);
     }
   };
 
-  Drupal.Leaflet.prototype.add_base_layer = function (key, definition) {
+  Drupal.Leaflet.prototype.add_base_layer = function (key, definition, i) {
     var map_layer = this.create_layer(definition, key);
     this.base_layers[key] = map_layer;
-    this.lMap.addLayer(map_layer);
-
+    if (i === 0) {    //  Only the first base layer needs to be added to the map - all the others are accessed via the layer switcher
+      this.lMap.addLayer(map_layer);
+    }
     if (this.layer_control == null) {
       this.initialise_layer_control();
     }
@@ -107,9 +141,11 @@
     }
   };
 
-  Drupal.Leaflet.prototype.add_overlay = function (label, layer) {
+  Drupal.Leaflet.prototype.add_overlay = function (label, layer, layer_hidden) {
     this.overlays[label] = layer;
-    this.lMap.addLayer(layer);
+    if (!layer_hidden) {
+      this.lMap.addLayer(layer);
+    }
 
     if (this.layer_control == null) {
       this.initialise_layer_control();
@@ -121,6 +157,7 @@
   };
 
   Drupal.Leaflet.prototype.add_features = function (features, initial) {
+    var self = this;
     for (var i = 0; i < features.length; i++) {
       var feature = features[i];
       var lFeature;
@@ -131,7 +168,7 @@
         for (var groupKey in feature.features) {
           var groupFeature = feature.features[groupKey];
           lFeature = this.create_feature(groupFeature);
-          if (lFeature != undefined) {
+          if (lFeature !== undefined) {
             if (groupFeature.popup) {
               lFeature.bindPopup(groupFeature.popup);
             }
@@ -140,11 +177,14 @@
         }
 
         // Add the group to the layer switcher.
-        this.add_overlay(feature.label, lGroup);
+        this.add_overlay(feature.label, lGroup, FALSE);
       }
       else {
         lFeature = this.create_feature(feature);
-        if (lFeature != undefined) {
+        if (lFeature !== undefined) {
+          if (lFeature.setStyle) {
+            lFeature.setStyle(Drupal.Leaflet.path);
+          }
           this.lMap.addLayer(lFeature);
 
           if (feature.popup) {
@@ -177,12 +217,18 @@
       case 'polygon':
         lFeature = this.create_polygon(feature);
         break;
-      case 'multipolygon':
+       case 'multipolygon':
+        lFeature = this.create_multipolygon(feature);
+        break;
       case 'multipolyline':
         lFeature = this.create_multipoly(feature);
         break;
       case 'json':
         lFeature = this.create_json(feature.json);
+        break;
+      case 'multipoint':
+      case 'geometrycollection':
+        lFeature = this.create_collection(feature);
         break;
       default:
         return; // Crash and burn.
@@ -238,19 +284,19 @@
     if (options.iconSize) {
       icon.options.iconSize = new L.Point(parseInt(options.iconSize.x), parseInt(options.iconSize.y));
     }
-    if (options.iconAnchor) {
+    if (options.iconAnchor && options.iconAnchor.x && options.iconAnchor.y) {
       icon.options.iconAnchor = new L.Point(parseFloat(options.iconAnchor.x), parseFloat(options.iconAnchor.y));
     }
-    if (options.popupAnchor) {
-      icon.options.popupAnchor = new L.Point(parseFloat(options.popupAnchor.x), parseFloat(options.popupAnchor.y));
+    if (options.popupAnchor && options.popupAnchor.x && options.popupAnchor.y) {
+      icon.options.popupAnchor = new L.Point(parseInt(options.popupAnchor.x), parseInt(options.popupAnchor.y));
     }
-    if (options.shadowUrl !== undefined) {
+    if (options.shadowUrl) {
       icon.options.shadowUrl = options.shadowUrl;
     }
-    if (options.shadowSize) {
+    if (options.shadowSize && options.shadowSize.x && options.shadowSize.y) {
       icon.options.shadowSize = new L.Point(parseInt(options.shadowSize.x), parseInt(options.shadowSize.y));
     }
-    if (options.shadowAnchor) {
+    if (options.shadowAnchor && options.shadowAnchor.x && options.shadowAnchor.y) {
       icon.options.shadowAnchor = new L.Point(parseInt(options.shadowAnchor.x), parseInt(options.shadowAnchor.y));
     }
     if (options.className) {
@@ -261,19 +307,49 @@
   };
 
   Drupal.Leaflet.prototype.create_point = function (marker) {
+    var self = this;
     var latLng = new L.LatLng(marker.lat, marker.lon);
     this.bounds.push(latLng);
     var lMarker;
-
     var tooltip = marker.label ? marker.label.replace(/<[^>]*>/g, '').trim() : '';
+    var options = {
+      title: tooltip
+    };
+
+    if (marker.alt !== undefined) {
+      options.alt = marker.alt;
+    }
+
+    function checkImage(imageSrc, setIcon, logError) {
+      var img = new Image();
+      img.src = imageSrc;
+      img.onload = setIcon;
+      img.onerror = logError;
+    }
+
+    lMarker = new L.Marker(latLng, options);
 
     if (marker.icon) {
-      var icon = this.create_icon(marker.icon);
-      lMarker = new L.Marker(latLng, {icon: icon, title: tooltip});
+      checkImage(marker.icon.iconUrl,
+        // Success loading image.
+        function(){
+          marker.icon.iconSize = marker.icon.iconSize || {};
+          marker.icon.iconSize.x = marker.icon.iconSize.x || this.naturalWidth;
+          marker.icon.iconSize.y = marker.icon.iconSize.y || this.naturalHeight;
+          if (marker.icon.shadowUrl) {
+            marker.icon.shadowSize = marker.icon.shadowSize || {};
+            marker.icon.shadowSize.x = marker.icon.shadowSize.x || this.naturalWidth;
+            marker.icon.shadowSize.y = marker.icon.shadowSize.y || this.naturalHeight;
+          }
+          options.icon = self.create_icon(marker.icon);
+          lMarker.setIcon(options.icon);
+        },
+        // Error loading image.
+        function(err){
+          console.log("Leaflet: The Icon Image doesn't exist at the requested path: " + marker.icon.iconUrl);
+        });
     }
-    else {
-      lMarker = new L.Marker(latLng, {title: tooltip});
-    }
+
     return lMarker;
   };
 
@@ -287,6 +363,14 @@
     return new L.Polyline(latlngs);
   };
 
+  Drupal.Leaflet.prototype.create_collection = function (collection) {
+    var layers = new L.featureGroup();
+    for (var x = 0; x < collection.component.length; x++) {
+      layers.addLayer(this.create_feature(collection.component[x]));
+    }
+    return layers;
+  };
+
   Drupal.Leaflet.prototype.create_polygon = function (polygon) {
     var latlngs = [];
     for (var i = 0; i < polygon.points.length; i++) {
@@ -295,6 +379,21 @@
       this.bounds.push(latlng);
     }
     return new L.Polygon(latlngs);
+  };
+
+  Drupal.Leaflet.prototype.create_multipolygon = function (multipolygon) {
+    var polygons = [];
+    for (var x = 0; x < multipolygon.component.length; x++) {
+      var latlngs = [];
+      var polygon = multipolygon.component[x];
+      for (var i = 0; i < polygon.points.length; i++) {
+        var latlng = [polygon.points[i].lat, polygon.points[i].lon];
+        latlngs.push(latlng);
+        this.bounds.push(latlng);
+      }
+      polygons.push(latlngs);
+    }
+    return new L.Polygon(polygons);
   };
 
   Drupal.Leaflet.prototype.create_multipoly = function (multipoly) {
@@ -310,10 +409,10 @@
       polygons.push(latlngs);
     }
     if (multipoly.multipolyline) {
-      return new L.MultiPolyline(polygons);
+      return new L.polyline(polygons);
     }
     else {
-      return new L.MultiPolygon(polygons);
+      return new L.polygon(polygons);
     }
   };
 
@@ -356,4 +455,4 @@
     }
   };
 
-})(jQuery);
+})(jQuery, Drupal, drupalSettings);

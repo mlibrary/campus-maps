@@ -45,6 +45,13 @@ class MapThemer extends Plugin {
   public $type;
 
   /**
+   * Define info regarding the Map Themer Marker Icon Selection Type.
+   *
+   * @var array
+   */
+  public $markerIconSelection;
+
+  /**
    * The Geofield Map Themer plugin application context.
    *
    * @var array

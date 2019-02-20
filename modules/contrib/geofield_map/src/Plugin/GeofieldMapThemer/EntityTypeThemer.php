@@ -2,16 +2,9 @@
 
 namespace Drupal\geofield_map\Plugin\GeofieldMapThemer;
 
-use Drupal\geofield_map\MapThemerBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\geofield_map\Services\MarkerIconService;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
@@ -23,73 +16,23 @@ use Drupal\Core\Entity\EntityInterface;
  *
  * @MapThemer(
  *   id = "geofieldmap_entity_type",
- *   name = @Translation("Entity Type (Geofield Map)"),
- *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on the View filtered Entity Types/Bundles.",
- *   type = "key_value",
+ *   name = @Translation("Entity Type (geofield_map) - Image Upload (deprecated)"),
+ *   description = "This Geofield Map Themer allows the Image Upload of different Marker Icons based on Entity Types/Bundles.(<u>Note:</u> NOT compatible with D8 Consifguration Management)",
  *   context = {"ViewStyle"},
- *   defaultSettings = {
- *    "values": {}
+ *   weight = 3,
+ *   markerIconSelection = {
+ *    "type" = "managed_file",
+ *    "configSyncCompatibility" = FALSE,
  *   },
+ *   defaultSettings = {
+ *    "values" = {},
+ *    "legend" = {
+ *      "class" = "entity-type",
+ *     },
+ *   }
  * )
  */
-class EntityTypeThemer extends MapThemerBase {
-
-  /**
-   * The entity type bundle info.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
-   * Constructs a Drupal\Component\Plugin\PluginBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
-   *   The translation manager.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
-   *   The entity manager.
-   * @param \Drupal\geofield_map\Services\MarkerIconService $marker_icon_service
-   *   The Marker Icon Service.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info.
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    TranslationInterface $translation_manager,
-    RendererInterface $renderer,
-    EntityTypeManagerInterface $entity_manager,
-    MarkerIconService $marker_icon_service,
-    EntityTypeBundleInfoInterface $entity_type_bundle_info
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $translation_manager, $renderer, $entity_manager, $marker_icon_service);
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('string_translation'),
-      $container->get('renderer'),
-      $container->get('entity_type.manager'),
-      $container->get('geofield_map.marker_icon'),
-      $container->get('entity_type.bundle.info')
-    );
-  }
+class EntityTypeThemer extends EntityTypeThemerUrl {
 
   /**
    * {@inheritdoc}
@@ -116,79 +59,66 @@ class EntityTypeThemer extends MapThemerBase {
       $view_bundles = array_keys($weighted_bundles);
     }
 
-    $caption = [
-      'title' => [
-        '#type' => 'html_tag',
-        '#tag' => 'label',
-        '#value' => $this->t('Icon Urls, per Entity Types'),
-      ],
-    ];
-
     $label_alias_upload_help = $this->getLabelAliasHelp();
     $file_upload_help = $this->markerIcon->getFileUploadHelp();
 
-    $element = [
-      '#type' => 'table',
-      '#header' => [
-        $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
-        $this->t('Weight'),
-        Markup::create($this->t('Label Alias @description', [
+    // Define the Table Header variables.
+    $table_settings = [
+      'header' => [
+        'label' => $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
+        'label_alias' => Markup::create($this->t('Label Alias @description', [
           '@description' => $this->renderer->renderPlain($label_alias_upload_help),
         ])),
-        Markup::create($this->t('Marker Icon @file_upload_help', [
+        'marker_icon' => Markup::create($this->t('Marker Icon @file_upload_help', [
           '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
         ])),
-        $this->t('Icon Image Style'),
-        $this->t('Exclude from Legend'),
+        'image_style' => Markup::create($this->t('Icon Image Style')),
       ],
-      '#tabledrag' => [[
-        'action' => 'order',
-        'relationship' => 'sibling',
-        'group' => 'bundles-order-weight',
+      'tabledrag_group' => 'bundles-order-weight',
+      'caption' => [
+        'title' => [
+          '#type' => 'html_tag',
+          '#tag' => 'label',
+          '#value' => $this->t('Icon Urls, per Entity Types'),
+        ],
       ],
-      ],
-      '#caption' => $this->renderer->renderPlain($caption),
     ];
+
+    // Build the Table Header.
+    $element = $this->buildTableHeader($table_settings);
 
     foreach ($view_bundles as $k => $bundle) {
 
       $fid = (integer) !empty($default_element[$bundle]['icon_file']['fids']) ? $default_element[$bundle]['icon_file']['fids'] : NULL;
-      $element[$bundle] = [
+      $label_value = $entity_bundles[$bundle]['label'];
+
+      // Define the table row parameters.
+      $row = [
+        'id' => "[geofieldmap_entity_type][values][{$bundle}]",
         'label' => [
-          '#type' => 'value',
-          '#value' => $entity_bundles[$bundle]['label'],
-          'markup' => [
-            '#markup' => $entity_bundles[$bundle]['label'],
-          ],
+          'value' => $label_value,
+          'markup' => $label_value,
         ],
         'weight' => [
-          '#type' => 'weight',
-          '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
-          '#title_display' => 'invisible',
-          '#default_value' => isset($default_element[$bundle]['weight']) ? $default_element[$bundle]['weight'] : $k,
-          '#delta' => 20,
-          '#attributes' => ['class' => ['bundles-order-weight']],
+          'value' => isset($default_element[$bundle]['weight']) ? $default_element[$bundle]['weight'] : $k,
+          'class' => $table_settings['tabledrag_group'],
         ],
         'label_alias' => [
-          '#type' => 'textfield',
-          '#default_value' => isset($default_element[$bundle]['label_alias']) ? $default_element[$bundle]['label_alias'] : '',
-          '#size' => 30,
-          '#maxlength' => 128,
+          'value' => isset($default_element[$bundle]['label_alias']) ? $default_element[$bundle]['label_alias'] : '',
         ],
-        'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
+        'icon_file_id' => $fid,
         'image_style' => [
-          '#type' => 'select',
-          '#title' => t('Image style'),
-          '#title_display' => 'invisible',
-          '#options' => $this->markerIcon->getImageStyleOptions(),
-          '#default_value' => isset($default_element[$bundle]['image_style']) ? $default_element[$bundle]['image_style'] : 'geofield_map_default_icon_style',
+          'options' => $this->markerIcon->getImageStyleOptions(),
+          'value' => isset($default_element[$bundle]['image_style']) ? $default_element[$bundle]['image_style'] : 'geofield_map_default_icon_style',
         ],
         'legend_exclude' => [
-          '#type' => 'checkbox',
-          '#default_value' => isset($default_element[$bundle]['legend_exclude']) ? $default_element[$bundle]['legend_exclude'] : '0',
+          'value' => isset($default_element[$bundle]['legend_exclude']) ? $default_element[$bundle]['legend_exclude'] : (count($view_bundles) > 10 ? TRUE : FALSE),
         ],
-        '#attributes' => ['class' => ['draggable']],
+        'attributes' => ['class' => ['draggable']],
       ];
+
+      // Builds the table row for the MapThemer.
+      $element[$bundle] = $this->buildDefaultMapThemerRow($row);;
 
     }
 
@@ -212,17 +142,7 @@ class EntityTypeThemer extends MapThemerBase {
    * {@inheritdoc}
    */
   public function getLegend(array $map_theming_values, array $configuration = []) {
-    $legend = [
-      '#type' => 'table',
-      '#header' => [
-        isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Type/Bundle'),
-        isset($configuration['markers_label']) ? $configuration['markers_label'] : $this->t('Marker'),
-      ],
-      '#caption' => isset($configuration['legend_notes']) ? $configuration['legend_notes'] : '',
-      '#attributes' => [
-        'class' => ['geofield-map-legend', 'entity-type'],
-      ],
-    ];
+    $legend = $this->defaultLegendHeader($configuration);
 
     foreach ($map_theming_values as $bundle => $value) {
 
@@ -240,7 +160,7 @@ class EntityTypeThemer extends MapThemerBase {
         continue;
       }
       $label = isset($value['label']) ? $value['label'] : $bundle;
-      $legend[$bundle] = [
+      $legend['table'][$bundle] = [
         'value' => [
           '#type' => 'container',
           'label' => [
@@ -252,13 +172,15 @@ class EntityTypeThemer extends MapThemerBase {
         ],
         'marker' => [
           '#type' => 'container',
-          'icon_file' => !empty($fid) ? $this->markerIcon->getLegendIcon($fid, $image_style) : $this->getDefaultLegendIcon(),
+          'icon_file' => !empty($fid) ? $this->markerIcon->getLegendIconFromFid($fid, $image_style) : $this->getDefaultLegendIcon(),
           '#attributes' => [
             'class' => ['marker'],
           ],
         ],
       ];
     }
+
+    $legend['notes'] = $this->defaultLegendFooter($configuration);
 
     return $legend;
   }

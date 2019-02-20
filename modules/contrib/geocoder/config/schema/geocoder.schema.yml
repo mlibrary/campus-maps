@@ -170,6 +170,11 @@ geocoder.settings.plugins.freegeoip:
   label: 'Freegeoip arguments'
   sequence:
 
+geocoder.settings.plugins.geojsonfile:
+  type: sequence
+  label: 'GeoJson arguments'
+  sequence:
+
 geocoder.settings.plugins.geoip:
   type: sequence
   label: 'Geoip arguments'
@@ -183,6 +188,11 @@ geocoder.settings.plugins.geoplugin:
 geocoder.settings.plugins.gpxfile:
   type: sequence
   label: 'Gpxfile arguments'
+  sequence:
+
+geocoder.settings.plugins.kmlfile:
+  type: sequence
+  label: 'Kmlfile arguments'
   sequence:
 
 geocoder.settings.plugins.hostip:

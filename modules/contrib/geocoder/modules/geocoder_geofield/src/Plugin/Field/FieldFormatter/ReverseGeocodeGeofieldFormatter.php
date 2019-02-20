@@ -3,7 +3,7 @@
 namespace Drupal\geocoder_geofield\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\geocoder_field\Plugin\Field\GeocodeFormatterBase;
+use Drupal\geocoder_field\Plugin\Field\FieldFormatter\GeocodeFormatter;
 
 /**
  * Plugin implementation of the Geocode formatter.
@@ -16,7 +16,7 @@ use Drupal\geocoder_field\Plugin\Field\GeocodeFormatterBase;
  *   }
  * )
  */
-class ReverseGeocodeGeofieldFormatter extends GeocodeFormatterBase {
+class ReverseGeocodeGeofieldFormatter extends GeocodeFormatter {
 
   /**
    * {@inheritdoc}

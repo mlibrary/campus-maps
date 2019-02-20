@@ -73,7 +73,7 @@ class MapThemerPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * Generate an Options array for all the MapThemers plugins.
+   * Generate a by weight ordered Options array for all the MapThemers plugins.
    *
    * @param string $context
    *   Context value to filter the MapThemers plugins with.
@@ -83,7 +83,9 @@ class MapThemerPluginManager extends DefaultPluginManager {
    */
   public function getMapThemersList($context = NULL) {
     $options = [];
-    foreach ($this->getDefinitions() as $k => $map_themer) {
+    $map_themers_definitions = $this->getDefinitions();
+    uasort($map_themers_definitions, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
+    foreach ($map_themers_definitions as $k => $map_themer) {
       if (empty($context) || in_array($context, $map_themer['context'])) {
         /* @var \Drupal\Core\StringTranslation\TranslatableMarkup $map_themer_name */
         $map_themer_name = $map_themer['name'];

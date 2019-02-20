@@ -52,10 +52,13 @@ Geocode functionalities on Entity fields from the Drupal backend:
 * The **geocoder_field** module adds the ability to setup Geocode operations
   on entity insert & edit operations among specific fields types so as field 
   Geo formatters, using all the available Geocoder Provider Plugins and Output 
-  Geo Formats (via Dumpers).
+  Geo Formats (via Dumpers). It also enables the File provider/formatter 
+  functionalities for Geocoding valid Exif Geo data present into JPG images;
 * The **geocoder_geofield** module provides integration with Geofield
   (module/field type) and the ability to both use it as target of Geocode or
-  source of Reverse Geocode with the other fields;
+  source of Reverse Geocode with the other fields. It also enables the
+  provider/formatter functionalities for Geocoding valid GPX, KML and GeoJson
+  data present into files contents;
 * The **geocoder_address** module provides integration with Address
   (module/field type) and the ability to both use it as target of Reverse
   Geocode or source of Geocode with the other fields;

@@ -8,13 +8,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\geofield_map\MapThemerPluginManager;
+use Drupal\geofield_map\MapThemerInterface;
 use Drupal\geofield_map\Services\MarkerIconService;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\views\Views;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
-use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a custom Geofield Map Legend block.
@@ -64,11 +67,67 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
   protected $mapThemerManager;
 
   /**
-   * The MapThemer Manager service .
+   * The MapThemer Plugin used in referenced View Style.
    *
    * @var \Drupal\geofield_map\MapThemerInterface
    */
   protected $mapThemerPlugin;
+
+  /**
+   * Get the MapThemer Plugin used in referenced View Style.
+   *
+   * @param string $view_id
+   *   The View Id.
+   * @param string $view_display_id
+   *   The View Display Id.
+   *
+   * @return array|null
+   *   The MapThemer Plugin, or null.
+   */
+  protected function getMapThemerPluginAndValues($view_id, $view_display_id) {
+    $view_displays = $this->config->get('views.view.' . $view_id)->get('display');
+    if (!empty($view_displays) && !empty($view_displays[$view_display_id]) && isset($view_displays[$view_display_id]['display_options']['style'])) {
+      $view_options = $view_displays[$view_display_id]['display_options']['style']['options'];
+      $plugin_id = isset($view_options['map_marker_and_infowindow']['theming']) ? $view_options['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;
+      if (isset($plugin_id) && $plugin_id != 'none' && isset($view_options['map_marker_and_infowindow']['theming'][$plugin_id])) {
+        try {
+          /* @var \Drupal\geofield_map\MapThemerInterface $mapThemerPlugin */
+          $plugin = $this->mapThemerManager->createInstance($plugin_id);
+          $theming_values = isset($view_options['map_marker_and_infowindow']['theming'][$plugin_id]['values']) ? $view_options['map_marker_and_infowindow']['theming'][$plugin_id]['values'] : NULL;
+          return [$plugin, $theming_values];
+        }
+        catch (\Exception $e) {
+          watchdog_exception('Geofield Map Legend', $e);
+          return NULL;
+        }
+      }
+    }
+  }
+
+  /**
+   * Legend Failure element..
+   *
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $failure_message
+   *   The View Id.
+   *
+   * @return array|null
+   *   The MapThemer Plugin, or null.
+   */
+  protected function legendFailureElement(TranslatableMarkup $failure_message = NULL) {
+    if (!isset($failure_message)) {
+      $failure_message = $this->t("The Legend can't be rendered");
+    }
+    $legend_failure = $this->currentUser->hasPermission('configure geofield_map') ? [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $failure_message,
+      '#attributes' => [
+        'class' => ['geofield-map-message legend-failure-message'],
+      ],
+    ] : [];
+
+    return $legend_failure;
+  }
 
   /**
    * The Icon Managed File Service.
@@ -152,16 +211,38 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
     $form['#attached']['library'][] = 'geofield_map/geofield_map_general';
     $form['#attached']['library'][] = 'geofield_map/geofield_map_legend';
 
+    $user_input = $form_state->getUserInput();
+    $user_selected_geofield_map_legend = !empty($user_input['settings']['geofield_map_legend']) ? $user_input['settings']['geofield_map_legend'] : NULL;
+
     $geofield_map_legends = $this->getGeofieldMapLegends();
+    $selected_geofield_map_legend = isset($user_selected_geofield_map_legend) ? $user_selected_geofield_map_legend : (isset($this->configuration['geofield_map_legend']) && array_key_exists($this->configuration['geofield_map_legend'], $geofield_map_legends) ? $this->configuration['geofield_map_legend'] : 'none:none');
+    list($view_id, $view_display_id) = explode(':', $selected_geofield_map_legend);
+    $map_themer_plugin_and_values = $this->getMapThemerPluginAndValues($view_id, $view_display_id);
+
+    $map_themer_plugin = NULL;
+    if (!empty($map_themer_plugin_and_values)) {
+      /* @var \Drupal\geofield_map\MapThemerInterface $map_themer_plugin */
+      $map_themer_plugin = $map_themer_plugin_and_values[0];
+      $map_themer_plugin_definition = $map_themer_plugin->getPluginDefinition();
+    }
+
+    $geofield_map_legends_options = array_merge(['none:none' => '_ none _'], $geofield_map_legends);
+
+    $form['#prefix'] = '<div id="geofield-map-legend-settings-block-wrapper">';
+    $form['#suffix'] = '</div>';
 
     if (!empty($geofield_map_legends)) {
       $form['geofield_map_legend'] = [
         '#type' => 'select',
         '#title' => $this->t('Geofield Map Legend'),
         '#description' => $this->t('Select the Geofield Map legend to render in this block<br>Choose the View and the Display you want to grab the Legend definition from.'),
-        '#options' => $geofield_map_legends,
-        '#default_value' => isset($this->configuration['geofield_map_legend']) ? $this->configuration['geofield_map_legend'] : t('none'),
+        '#options' => $geofield_map_legends_options,
+        '#default_value' => $selected_geofield_map_legend ?: 'none',
         '#required' => TRUE,
+        '#ajax' => [
+          'callback' => [static::class, 'mapLegendSelectionUpdate'],
+          'effect' => 'fade',
+        ],
       ];
 
       $form['values_label'] = [
@@ -190,18 +271,41 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
         $markers_image_style_options['geofield_map_default_icon_style'] = 'geofield_map_default_icon_style';
       }
 
-      $form['markers_image_style'] = [
-        '#type' => 'select',
-        '#title' => t('Markers Image style'),
-        '#options' => $markers_image_style_options,
-        '#default_value' => isset($this->configuration['markers_image_style']) ? $this->configuration['markers_image_style'] : 'geofield_map_default_icon_style',
-        '#description' => $this->t('Choose the image style the markers icons will be rendered in the Legend with.'),
-      ];
+      if ($map_themer_plugin instanceof MapThemerInterface && $map_themer_plugin_definition['markerIconSelection']['type'] == 'managed_file') {
+        $form['markers_image_style'] = [
+          '#type' => 'select',
+          '#title' => t('Markers Image style'),
+          '#options' => $markers_image_style_options,
+          '#default_value' => isset($this->configuration['markers_image_style']) ? $this->configuration['markers_image_style'] : 'geofield_map_default_icon_style',
+          '#description' => $this->t('Choose the image style the markers icons will be rendered in the Legend with.'),
+        ];
+      }
+
+      if ($map_themer_plugin instanceof MapThemerInterface && $map_themer_plugin_definition['markerIconSelection']['type'] == 'file_uri') {
+        $form['markers_width'] = [
+          '#type' => 'number',
+          '#title' => t('Markers Width (pixels)'),
+          '#default_value' => isset($this->configuration['markers_width']) ? $this->configuration['markers_width'] : 50,
+          '#description' => $this->t('Choose the max image width for the marker in the legend.<br>(Empty value for natural image weight.)'),
+          '#min' => 10,
+          '#max' => 300,
+          '#size' => 4,
+          '#step' => 5,
+        ];
+      }
+
+      $form['legend_caption'] = array(
+        '#type' => 'textarea',
+        '#title' => $this->t('Legend Caption'),
+        '#description' => $this->t('Write here the Table Legend Caption).'),
+        '#default_value' => isset($this->configuration['legend_caption']) ? $this->configuration['legend_caption'] : '',
+        '#rows' => 1,
+      );
 
       $form['legend_notes'] = array(
         '#type' => 'textarea',
         '#title' => $this->t('Legend Notes'),
-        '#description' => $this->t('Write here notes to the Legend that will be rendered as Notes (caption or footer depending on the specific Geofield Map Themer plugin Legend rendering).'),
+        '#description' => $this->t("Write here Notes to the Legend (Footer as default, might be altered in the Map Themer plugin)."),
         '#default_value' => isset($this->configuration['legend_notes']) ? $this->configuration['legend_notes'] : '',
         '#rows' => 3,
       );
@@ -237,45 +341,21 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
         'library' => ['geofield_map/geofield_map_general'],
       ],
     ];
-    $geofield_map_legend_id = $this->configuration['geofield_map_legend'];
-    if (!empty($geofield_map_legend_id)) {
-      list($view_id, $view_display_id) = explode(':', $geofield_map_legend_id);
-      $legend_failure = [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t("The Legend can't be rendered because the chosen [@view_id:@view_display_id] view & view display combination don't exists or correspond to a valid Geofield Map Legend anymore. <u>Please reconfigure this Geofield Map Legend block consequently.</u>", [
-          '@view_id' => $view_id,
-          '@view_display_id' => $view_display_id,
-        ]),
-        '#attributes' => [
-          'class' => ['geofield-map-message legend-failure-message'],
-        ],
-      ];
-      $view_displays = $this->config->get('views.view.' . $view_id)->get('display');
-      if (!empty($view_displays) && !empty($view_displays[$view_display_id])) {
-        $view_options = $view_displays[$view_display_id]['display_options']['style']['options'];
-        $plugin_id = isset($view_options['map_marker_and_infowindow']['theming']) ? $view_options['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;
-        if (isset($plugin_id) && $plugin_id != 'none' && isset($view_options['map_marker_and_infowindow']['theming'][$plugin_id])) {
-          try {
-            $this->mapThemerPlugin = $this->mapThemerManager->createInstance($plugin_id);
-            $theming_values = $view_options['map_marker_and_infowindow']['theming'][$plugin_id]['values'];
-            $legend = $this->mapThemerPlugin->getLegend($theming_values, $this->configuration);
-          }
-          catch (PluginException $e) {
-            if ($this->currentUser->hasPermission('configure geofield_map')) {
-              $legend = [
-                '#markup' => $this->t("This legend is not being rendered as @error_message", [
-                  '@error_message' => $e->getMessage(),
-                ]),
-              ];
-            }
-          }
-        }
-        elseif ($this->currentUser->hasPermission('configure geofield_map')) {
-          $legend = $legend_failure;
-        }
+    $selected_geofield_map_legend = $this->configuration['geofield_map_legend'];
+    if (!empty($selected_geofield_map_legend)) {
+      list($view_id, $view_display_id) = explode(':', $selected_geofield_map_legend);
+      $failure_message = $this->t("The Legend can't be rendered because the chosen [@view_id:@view_display_id] view & view display combination don't exists or correspond to a valid Geofield Map Legend anymore. <u>Please reconfigure this Geofield Map Legend block consequently.</u>", [
+        '@view_id' => $view_id,
+        '@view_display_id' => $view_display_id,
+      ]);
+      $legend_failure = $this->legendFailureElement($failure_message);
+      $map_themer_plugin_and_values = $this->getMapThemerPluginAndValues($view_id, $view_display_id);
+      if (!empty($map_themer_plugin_and_values)) {
+        /* @var \Drupal\geofield_map\MapThemerInterface $map_themer_plugin */
+        list($map_themer_plugin, $theming_values) = $map_themer_plugin_and_values;
+        $legend = !empty($theming_values) ? $map_themer_plugin->getLegend($theming_values, $this->configuration) : $this->legendFailureElement($this->t('The legend cannot be rendered due to a wrong setup of the Map Themer in the ViewStyle'));
       }
-      elseif ($this->currentUser->hasPermission('configure geofield_map')) {
+      else {
         $legend = $legend_failure;
       }
     }
@@ -289,10 +369,12 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
     $this->configuration['geofield_map_legend'] = $form_state->getValue('geofield_map_legend');
+    $this->configuration['legend_caption'] = $form_state->getValue('legend_caption');
     $this->configuration['legend_notes'] = $form_state->getValue('legend_notes');
     $this->configuration['values_label'] = $form_state->getValue('values_label');
     $this->configuration['markers_label'] = $form_state->getValue('markers_label');
     $this->configuration['markers_image_style'] = $form_state->getValue('markers_image_style');
+    $this->configuration['markers_width'] = $form_state->getValue('markers_width');
   }
 
   /**
@@ -320,6 +402,26 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
       }
     }
     return $geofield_legends;
+  }
+
+  /**
+   * Ajax callback triggered by Geofield Map Legend Selection.
+   *
+   * @param array $form
+   *   The build form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   Ajax response with updated form element.
+   */
+  public static function mapLegendSelectionUpdate(array $form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand(
+      '#geofield-map-legend-settings-block-wrapper',
+      $form['settings']
+    ));
+    return $response;
   }
 
 }

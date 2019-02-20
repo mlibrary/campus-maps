@@ -15,6 +15,7 @@ use Drupal\geocoder_field\GeocoderFieldPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 
 /**
  * Provides a default generic geocoder field plugin.
@@ -39,6 +40,13 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $config;
+
+  /**
+   * The entity field manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
 
   /**
    * The module handler.
@@ -105,6 +113,8 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
    *   The renderer.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager service.
    */
   public function __construct(
     array $configuration,
@@ -116,7 +126,9 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
     DumperPluginManager $dumper_plugin_manager,
     ProviderPluginManager $provider_plugin_manager,
     RendererInterface $renderer,
-    LinkGeneratorInterface $link_generator
+    LinkGeneratorInterface $link_generator,
+    EntityFieldManagerInterface $entity_field_manager
+
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->config = $config_factory->get('geocoder.settings');
@@ -126,6 +138,7 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
     $this->providerPluginManager = $provider_plugin_manager;
     $this->renderer = $renderer;
     $this->link = $link_generator;
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
@@ -142,7 +155,8 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
       $container->get('plugin.manager.geocoder.dumper'),
       $container->get('plugin.manager.geocoder.provider'),
       $container->get('renderer'),
-      $container->get('link_generator')
+      $container->get('link_generator'),
+      $container->get('entity_field.manager')
     );
   }
 

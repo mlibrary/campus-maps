@@ -1,0 +1,5 @@
+disable textfield module:
+  title: 'Disable TextField'
+  description: 'Perform administration tasks for disable Textfield.'
+  restrict access: TRUE
+
