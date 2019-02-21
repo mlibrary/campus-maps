@@ -144,7 +144,7 @@ function staff_intranet_theme_suggestions_form_alter(array &$suggestions, array 
   if ($variables['element']['#form_id'] == 'search_block_form') {
     $suggestions[] = 'form__search_block_form';
   }
-  elseif ($variables['element']['#form_id'] == 'views_exposed_form' && $variables['element']['#action'] == '/title-geofield-map') {
+  elseif ($variables['element']['#form_id'] == 'views_exposed_form' && strpos($variables['element']['#action'],'/title-geofield-map') !== FALSE) {
     $suggestions[] = 'form__title_geofield_map_views_exposed_form';
   }
 }
