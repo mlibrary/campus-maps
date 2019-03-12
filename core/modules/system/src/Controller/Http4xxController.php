@@ -41,7 +41,7 @@ class Http4xxController extends ControllerBase {
    */
   public function on403() {
     $dest = \Drupal::destination()->getAsArray()['destination'];
-    $login_path = '/campus_maps/user/login?destination='.$dest;
+    $login_path = '/campus_map/user/login?destination='.$dest;
     return [
       '#markup' => $this->t('<p><strong>Library staff and student employees:</strong> <a href="'.$login_path.'">Log In</a> to access the intranet.</p>
  <p>If you need assistance please contact <a maitto="design-discovery@umich.edu">design-discovery@umich.edu</a>.</p>'),
