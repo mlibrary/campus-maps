@@ -7,7 +7,7 @@ index ee8a977..972a1c3 100644
     */
    public function on403() {
 +    $dest = \Drupal::destination()->getAsArray()['destination'];
-+    $login_path = '/user/login?destination='.$dest;
++    $login_path = '/campus_maps/user/login?destination='.$dest;
      return [
 -      '#markup' => $this->t('You are not authorized to access this page.'),
 +      '#markup' => $this->t('<p><strong>Library staff and student employees:</strong> <a href="'.$login_path.'">Log In</a> to access the intranet.</p>
