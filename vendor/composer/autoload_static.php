@@ -59,10 +59,6 @@ class ComposerStaticInitDrupal8
             'Webmozart\\PathUtil\\' => 19,
             'Webmozart\\Assert\\' => 17,
         ),
-        'U' => 
-        array (
-            'Unish\\' => 6,
-        ),
         'T' => 
         array (
             'Twig\\' => 5,
@@ -160,9 +156,11 @@ class ComposerStaticInitDrupal8
         ),
         'C' => 
         array (
+            'Consolidation\\SiteProcess\\' => 26,
             'Consolidation\\SiteAlias\\' => 24,
             'Consolidation\\OutputFormatters\\' => 31,
             'Consolidation\\Log\\' => 18,
+            'Consolidation\\Filter\\' => 21,
             'Consolidation\\Config\\' => 21,
             'Consolidation\\AnnotatedCommand\\' => 31,
             'Composer\\Semver\\' => 16,
@@ -171,6 +169,7 @@ class ComposerStaticInitDrupal8
         ),
         'B' => 
         array (
+            'Brumann\\Polyfill\\' => 17,
             'Behat\\Mink\\Driver\\' => 18,
             'Behat\\Mink\\' => 11,
         ),
@@ -227,10 +226,6 @@ class ComposerStaticInitDrupal8
         'Webmozart\\Assert\\' => 
         array (
             0 => __DIR__ . '/..' . '/webmozart/assert/src',
-        ),
-        'Unish\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/drush/drush/tests',
         ),
         'Twig\\' => 
         array (
@@ -430,7 +425,7 @@ class ComposerStaticInitDrupal8
         ),
         'Drush\\Internal\\' => 
         array (
-            0 => __DIR__ . '/..' . '/drush/drush/internal-copy',
+            0 => __DIR__ . '/..' . '/drush/drush/src/internal-forks',
         ),
         'Drush\\' => 
         array (
@@ -492,6 +487,10 @@ class ComposerStaticInitDrupal8
         array (
             0 => __DIR__ . '/..' . '/doctrine/common/lib/Doctrine/Common',
         ),
+        'Consolidation\\SiteProcess\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/consolidation/site-process/src',
+        ),
         'Consolidation\\SiteAlias\\' => 
         array (
             0 => __DIR__ . '/..' . '/consolidation/site-alias/src',
@@ -503,6 +502,10 @@ class ComposerStaticInitDrupal8
         'Consolidation\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/consolidation/log/src',
+        ),
+        'Consolidation\\Filter\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/consolidation/filter-via-dot-access-data/src',
         ),
         'Consolidation\\Config\\' => 
         array (
@@ -523,6 +526,10 @@ class ComposerStaticInitDrupal8
         'CommerceGuys\\Addressing\\' => 
         array (
             0 => __DIR__ . '/..' . '/commerceguys/addressing/src',
+        ),
+        'Brumann\\Polyfill\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/brumann/polyfill-unserialize/src',
         ),
         'Behat\\Mink\\Driver\\' => 
         array (
