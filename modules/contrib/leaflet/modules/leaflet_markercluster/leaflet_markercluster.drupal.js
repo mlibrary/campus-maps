@@ -3,10 +3,11 @@
  */
 
 (function ($) {
-  Drupal.Leaflet.prototype.add_features = function (features, initial) {
+  Drupal.Leaflet.prototype.add_features = function (mapid, features, initial) {
 
     var leaflet_markercluster_options = this.settings.leaflet_markercluster.options && this.settings.leaflet_markercluster.options.length > 0 ? JSON.parse(this.settings.leaflet_markercluster.options) : {};
     var cluster_layer = new L.MarkerClusterGroup(leaflet_markercluster_options);
+    var collections_cluster_layers = {};
     for (var i = 0; i < features.length; i++) {
       var feature = features[i];
       var lFeature;
@@ -19,7 +20,7 @@
           lFeature = this.create_feature(groupFeature);
           if (lFeature !== undefined) {
             if (lFeature.setStyle) {
-              lFeature.setStyle(Drupal.Leaflet.path);
+              lFeature.setStyle(Drupal.Leaflet[mapid].path);
             }
             if (groupFeature.popup) {
               lFeature.bindPopup(groupFeature.popup);
@@ -35,13 +36,20 @@
         lFeature = this.create_feature(feature);
         if (lFeature !== undefined) {
           if (lFeature.setStyle) {
-            lFeature.setStyle(Drupal.Leaflet.path);
-          }
-          // this.lMap.addLayer(lFeature);
-          cluster_layer.addLayer(lFeature);
+            lFeature.setStyle(Drupal.Leaflet[mapid].path);
+            collections_cluster_layers[i] = new L.MarkerClusterGroup(leaflet_markercluster_options);
+            collections_cluster_layers[i].addLayer(lFeature);
+            if (feature.popup) {
+              collections_cluster_layers[i].bindPopup(feature.popup);
+            }
 
-          if (feature.popup) {
-            lFeature.bindPopup(feature.popup);
+          }
+          else {
+            // this.lMap.addLayer(lFeature);
+            cluster_layer.addLayer(lFeature);
+            if (feature.popup) {
+              lFeature.bindPopup(feature.popup);
+            }
           }
         }
       }
@@ -52,6 +60,12 @@
 
     // Add all markers to the map
     this.lMap.addLayer(cluster_layer)
+
+    for (var i in collections_cluster_layers) {
+      if(collections_cluster_layers.hasOwnProperty(i)) {
+        this.lMap.addLayer(collections_cluster_layers[i])
+      }
+    }
 
     // Fit bounds after adding features.
     this.fitbounds();

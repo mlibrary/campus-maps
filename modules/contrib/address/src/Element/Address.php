@@ -21,7 +21,7 @@ use Drupal\Core\Render\Element\FormElement;
  * Provides an address form element.
  *
  * Use #field_overrides to override the country-specific address format,
- * forcing specific fields to be hidden, optional, or required.
+ * forcing specific properties to be hidden, optional, or required.
  *
  * Usage example:
  * @code
@@ -38,7 +38,7 @@ use Drupal\Core\Render\Element\FormElement;
  *     'country_code' => 'US',
  *     'langcode' => 'en',
  *   ],
- *   '@field_overrides' => [
+ *   '#field_overrides' => [
  *     AddressField::ORGANIZATION => FieldOverride::REQUIRED,
  *     AddressField::ADDRESS_LINE2 => FieldOverride::HIDDEN,
  *     AddressField::POSTAL_CODE => FieldOverride::OPTIONAL,
@@ -268,6 +268,10 @@ class Address extends FormElement {
     // Hide the label for the second address line.
     if (isset($element['address_line2'])) {
       $element['address_line2']['#title_display'] = 'invisible';
+    }
+    // Allow the postal code pattern to be used for client side validation.
+    if (isset($element['postal_code'])) {
+      $element['postal_code']['#attributes']['pattern'] = $address_format->getPostalCodePattern();
     }
     // Add predefined options to the created subdivision elements.
     $element = static::processSubdivisionElements($element, $value, $address_format);

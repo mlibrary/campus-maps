@@ -37,6 +37,12 @@ As a more powerful alternative, you can use node view modes to be rendered in
 the popup. In the Description field, select "<entire node>" and then select a
 View mode.
 
+__Note:__ As Geofield widget you might consider using one of the following 
+complementary modules:
+- [Leaflet Widget module](https://www.drupal.org/project/leaflet_widget);
+- [Geofield Map module](https://www.drupal.org/project/geofield_map);
+
+
 ###API Usage
 
 Rendering a map is as simple as instantiating the LeafletService and its 

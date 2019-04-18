@@ -26,6 +26,7 @@ use Drupal\Leaflet\LeafletService;
  *   title = @Translation("Leaflet Marker"),
  *   help = @Translation("Display the row as a leaflet marker."),
  *   display_types = {"leaflet"},
+ *   no_ui = TRUE
  * )
  */
 class LeafletMarker extends RowPluginBase implements ContainerFactoryPluginInterface {

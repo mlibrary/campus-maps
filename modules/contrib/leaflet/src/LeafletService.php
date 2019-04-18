@@ -71,13 +71,17 @@ class LeafletService {
   public function leafletRenderMap(array $map, array $features = [], $height = '400px') {
     $map_id = isset($map['id']) ? $map['id'] : Html::getUniqueId('leaflet_map');
     $attached_libraries = ['leaflet/leaflet-drupal', 'leaflet/general'];
+    // Add the Leaflet Fullscreen library, if requested.
+    if (isset($map['settings']['fullscreen_control'])) {
+      $attached_libraries[] = 'leaflet/leaflet.fullscreen';
+    }
+    // Add the Leaflet Markecluster library and functionalities, if requested.
     if ($this->moduleHandler->moduleExists('leaflet_markercluster') && isset($map['settings']['leaflet_markercluster']) && $map['settings']['leaflet_markercluster']['control']) {
       $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster';
       $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster-drupal';
     }
-
     $settings[$map_id] = [
-      'mapId' => $map_id,
+      'mapid' => $map_id,
       'map' => $map,
       // JS only works with arrays, make sure we have one with numeric keys.
       'features' => array_values($features),
@@ -218,6 +222,7 @@ class LeafletService {
       case 'multilinestring':
         if ($datum['type'] == 'multilinestring') {
           $datum['type'] = 'multipolyline';
+          $datum['multipolyline'] = TRUE;
         }
         /* @var \GeometryCollection $geom */
         $components = $geom->getComponents();
@@ -327,7 +332,7 @@ class LeafletService {
    * @return bool
    *   The bool result.
    */
-  public static function multipleEmpty(array $array) {
+  public function multipleEmpty(array $array) {
     foreach ($array as $value) {
       if (empty($value)) {
         continue;

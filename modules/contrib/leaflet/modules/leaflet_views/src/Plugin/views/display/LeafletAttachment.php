@@ -14,6 +14,7 @@ use Drupal\views\ViewExecutable;
  *   id = "leaflet_attachment",
  *   title = @Translation("Leaflet Attachment"),
  *   help = @Translation("Add additional markers to a leaflet map."),
+ *   no_ui = TRUE
  * )
  *
  * @todo We only use very few features from the parent class Attachment, so this

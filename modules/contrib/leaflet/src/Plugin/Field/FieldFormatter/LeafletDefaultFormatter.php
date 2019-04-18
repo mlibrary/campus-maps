@@ -226,6 +226,9 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
     // Generate the Leaflet Map General Settings.
     $this->generateMapGeneralSettings($elements, $settings);
 
+    // Generate the Leaflet Map Reset Control.
+    $this->setResetMapControl($elements, $settings);
+
     // Generate the Leaflet Map Position Form Element.
     $map_position_options = $this->getSetting('map_position');
     $elements['map_position'] = $this->generateMapPositionElement($map_position_options);
@@ -291,22 +294,27 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
     // Add a specific map id.
     $map['id'] = Html::getUniqueId("leaflet_map_{$entity_type}_{$bundle}_{$entity_id}_{$field->getName()}");
 
+    // Get and set the Geofield cardinality.
+    $map['geofield_cardinality'] = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
+
     // Set Map additional map Settings.
     $this->setAdditionalMapOptions($map, $settings);
+
+    // Get token context.
+    $token_context = [
+      'field' => $items,
+      $this->fieldDefinition->getTargetEntityTypeId() => $items->getEntity(),
+    ];
 
     $features = [];
     foreach ($items as $delta => $item) {
 
       $points = $this->leafletService->leafletProcessGeofield($item->value);
       $feature = $points[0];
+      $feature['entity_id'] = $entity_id;
 
       // Eventually set the popup content.
       if ($settings['popup']) {
-        // Get token context.
-        $token_context = [
-          'field' => $items,
-          $this->fieldDefinition->getTargetEntityTypeId() => $items->getEntity(),
-        ];
         // Construct the renderable array for popup title / text.
         $build = [];
         if ($this->getSetting('popup_content')) {
@@ -327,7 +335,7 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
         // Remove empty icon options so that they might be replaced by the
         // ones set by the hook_leaflet_map_info.
         foreach ($settings['icon'] as $k => $icon_option) {
-          if (empty($icon_option) || (is_array($icon_option) && $this->leafletService::multipleEmpty($icon_option))) {
+          if (empty($icon_option) || (is_array($icon_option) && $this->leafletService->multipleEmpty($icon_option))) {
             unset($settings['icon'][$k]);
           }
         }
@@ -336,6 +344,8 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
 
       // Eventually set the custom icon.
       if (!empty($settings['icon']['iconUrl'])) {
+        $settings['icon']['iconUrl'] = !empty($settings['icon']['iconUrl']) > 0 ? $this->token->replace($settings['icon']['iconUrl'], $token_context) : '';
+        $settings['icon']['shadowUrl'] = !empty($settings['icon']['shadowUrl']) > 0 ? $this->token->replace($settings['icon']['shadowUrl'], $token_context) : '';
         $feature['icon'] = $settings['icon'];
       }
 
