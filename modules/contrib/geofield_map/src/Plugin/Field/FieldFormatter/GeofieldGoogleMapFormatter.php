@@ -234,17 +234,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   /**
    * {@inheritdoc}
    */
-  public function getSettings() {
-    // Merge defaults before returning the array.
-    if (!$this->defaultSettingsMerged) {
-      $this->mergeDefaults();
-    }
-    return $this->settings;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function settingsForm(array $form, FormStateInterface $form_state) {
 
     $default_settings = self::defaultSettings();
@@ -551,7 +540,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'force_open' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $this->t('Open Infowindow on Load: @state', ['@state' => $settings['map_marker_and_infowindow']['force_open'] ? $this->t('Yes') : $this->t('No')]),
+        '#value' => $this->t('Open Infowindow on Load: @state', ['@state' => !empty($settings['map_marker_and_infowindow']['force_open']) ? $this->t('Yes') : $this->t('No')]),
         '#weight' => 3,
       ],
     ];
@@ -604,7 +593,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'markercluster_control' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $this->t('Marker Cluster Enabled: @state', ['@state' => $settings['map_markercluster']['markercluster_control'] ? $this->t('Yes') : $this->t('No')]),
+        '#value' => $this->t('Marker Cluster Enabled: @state', ['@state' => isset($settings['map_markercluster']['markercluster_control']) && $settings['map_markercluster']['markercluster_control'] ? $this->t('Yes') : $this->t('No')]),
       ],
     ];
 
@@ -616,7 +605,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'value' => [
           '#type' => 'html_tag',
           '#tag' => 'div',
-          '#value' => $settings['map_markercluster']['markercluster_additional_options'],
+          '#value' => isset($settings['map_markercluster']['markercluster_additional_options']) ? $settings['map_markercluster']['markercluster_additional_options'] : [],
         ],
       ];
     }
@@ -703,6 +692,9 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'data' => [],
     ];
 
+    // Get and set the Geofield cardinality.
+    $js_settings['map_settings']['geofield_cardinality'] = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
+
     $description = [];
     $description_field = isset($map_settings['map_marker_and_infowindow']['infowindow_field']) ? $map_settings['map_marker_and_infowindow']['infowindow_field'] : NULL;
     /* @var \Drupal\Core\Field\FieldItemList $description_field_entity */
@@ -729,7 +721,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       }
     }
 
-    $geojson_data = $this->getGeoJsonData($items, $description);
+    // Define a Tooltip for the Feature.
+    if (isset($entity)) {
+      $tooltip = $entity->label();
+    }
+
+    $geojson_data = $this->getGeoJsonData($items, $entity->id(), $description, $tooltip);
 
     // Add Custom Icon File, if set.
     if (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])

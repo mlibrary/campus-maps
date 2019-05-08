@@ -597,7 +597,7 @@ trait LeafletSettingsElementsTrait {
     $element['reset_map']['control'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable Map Reset Control'),
-      '#description' => $this->t('This will show a "Reset Map" button to reset the Map to its initial center & zoom state.'),
+      '#description' => $this->t('This will show a "Reset Map" button to reset the Map to its initial center & zoom state<br><b><u>Warning: </u></b>Due to an issue in the Leaflet library (@see https://github.com/Leaflet/Leaflet/issues/6172) the Map Reset control doesn\'t work correctly in Fitting Bounds of coordinates having mixed positive and negative values of latitude &longitudes.<br>In this case the Map will be Reset to the default set Map Center.'),
       '#default_value' => isset($settings['reset_map']['control']) ? $settings['reset_map']['control'] : $default_settings['reset_map']['control'],
     ];
 

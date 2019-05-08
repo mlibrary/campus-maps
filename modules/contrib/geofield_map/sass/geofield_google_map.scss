@@ -15,10 +15,11 @@
 }
 
 // Map Infowindow Styling
-.gm-style-iw {
-  width: 220px;
+.gm-style .gm-style-iw {
+  max-width: 440px;
   img {
     margin: 4px 0;
+    max-width: 100%
   }
   h1 {
     font-size: 22px;
@@ -41,5 +42,11 @@
   }
   .geofield-google-map {
     display: none;
+  }
+}
+
+@media (max-device-width:480px) {
+  .gm-style .gm-style-iw {
+    max-width: 240px;
   }
 }

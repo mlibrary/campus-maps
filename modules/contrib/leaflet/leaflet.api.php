@@ -19,7 +19,7 @@ use Drupal\leaflet_views\Plugin\views\style\LeafletMap;
  * collection of features.
  *
  * The settings array maps to the settings available to the leaflet map object,
- * see http://leafletjs.com/reference.html#map-properties.
+ * see http://leafletjs.com/reference.html#map-property.
  *
  * Layers are the available base layers for the map and, if you enable the
  * layer control, can be toggled on the map.
@@ -43,10 +43,17 @@ function hook_leaflet_map_info() {
         'fadeAnimation' => TRUE,
         'zoomAnimation' => TRUE,
         'closePopupOnClick' => TRUE,
-        'layerControl' => TRUE,
+        // Sets the map min max and starting zoom,
         // 'minZoom' => 10,
         // 'maxZoom' => 15,
-        // 'zoom' => 15, // set the map zoom fixed to 15.
+        // 'zoom' => 15,
+        //
+        // Specific of the Drupal Leaflet module
+        // Enables Layer Control in case of multiple layers, and add options.
+        'layerControl' => TRUE,
+        'layerControlOptions' => [
+          'position' => 'topright',
+        ],
       ],
       'layers' => [
         'earth' => [

@@ -22,6 +22,9 @@ geofield_map.settings:
             rel_path:
               type: string
               label: 'Relative Path'
+        additional_markers_location:
+          type: string
+          label: 'Additional Markers Location'
         markers_extensions:
           type: string
           label: 'Markers Allowed file extensions'

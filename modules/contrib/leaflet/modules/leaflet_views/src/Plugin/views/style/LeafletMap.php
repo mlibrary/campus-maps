@@ -236,6 +236,16 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
   /**
    * {@inheritdoc}
    */
+  public function getFieldValue($index, $field) {
+    $this->view->row_index = $index;
+    $value = isset($this->view->field[$field]) ? $this->view->field[$field]->getValue($this->view->result[$index]) : NULL;
+    unset($this->view->row_index);
+    return $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function evenEmpty() {
     // Render map even if there is no data.
     return TRUE;

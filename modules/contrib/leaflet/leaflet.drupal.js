@@ -34,30 +34,32 @@
       $.each(settings.leaflet, function (m, data) {
         $('#' + data.mapid, context).each(function () {
           var $container = $(this);
+          var mapid = data.mapid;
 
           // If the attached context contains any leaflet maps, make sure we have a Drupal.leaflet_widget object.
           if ($container.data('leaflet') === undefined) {
-            $container.data('leaflet', new Drupal.Leaflet(L.DomUtil.get(data.mapid), data.mapid, data.map));
-            if (data.features.length > 0) {
-              var mapid = data.mapid;
 
-              // Initialize the Drupal.Leaflet.[data.mapid] object,
-              // for possible external interaction.
-              Drupal.Leaflet[mapid].markers = {}
+            $container.data('leaflet', new Drupal.Leaflet(L.DomUtil.get(mapid), mapid, data.map));
+          if (data.features.length > 0) {
 
-              // Define the Drupal.Leaflet.path object.
-              Drupal.Leaflet[mapid].path = data.map.settings.path && data.map.settings.path.length > 0 ? JSON.parse(data.map.settings.path) : {};
+            // Initialize the Drupal.Leaflet.[data.mapid] object,
+            // for possible external interaction.
+            Drupal.Leaflet[mapid].markers = {}
 
-              // Add Leaflet Map Features.
-              $container.data('leaflet').add_features(mapid, data.features, true);
-            }
+            // Define the Drupal.Leaflet.path object.
+            Drupal.Leaflet[mapid].path = data.map.settings.path && data.map.settings.path.length > 0 ? JSON.parse(data.map.settings.path) : {};
 
-            // Set map position features.
-            $container.data('leaflet').fitbounds();
-
-            // Add the leaflet map to our settings object to make it accessible
-            data.lMap = $container.data('leaflet').lMap;
+            // Add Leaflet Map Features.
+            $container.data('leaflet').add_features(mapid, data.features, true);
           }
+
+          // Set map position features.
+          $container.data('leaflet').fitbounds();
+
+          // Add the leaflet map to our settings object to make it accessible
+          data.lMap = $container.data('leaflet').lMap;
+          }
+
           else {
             // If we already had a map instance, add new features.
             // @todo Does this work? Needs testing.
@@ -68,7 +70,7 @@
 
           // After having initialized the Leaflet Map and added features,
           // allow other modules to get access to it via trigger.
-          $(document).trigger('leaflet.map', [data.map, data.lMap, data.mapid]);
+          $(document).trigger('leaflet.map', [data.map, data.lMap, mapid]);
 
         });
       });
@@ -160,7 +162,7 @@
     // at least two base layers or at least one overlay.
     if (self.layer_control == null && self.settings.layerControl && (count_layers(self.base_layers) > 1 || count_layers(self.overlays) > 0)) {
       // Instantiate layer control, using settings.layerControl as settings.
-      self.layer_control = new L.Control.Layers(self.base_layers, self.overlays, self.settings.layerControl);
+      self.layer_control = new L.Control.Layers(self.base_layers, self.overlays, self.settings.layerControlOptions);
       self.lMap.addControl(self.layer_control);
     }
   };
@@ -519,7 +521,12 @@
     }
   };
 
+  Drupal.Leaflet.prototype.map_reset = function (mapid) {
+    Drupal.Leaflet[mapid].lMap.setView(Drupal.Leaflet[mapid].start_center, Drupal.Leaflet[mapid].start_zoom);
+  };
+
   Drupal.Leaflet.prototype.map_reset_control = function(controlDiv, mapid, reset_map_position) {
+    var self = this;
     var control = new L.Control({position: reset_map_position});
     control.onAdd = function() {
       // Set CSS for the control border.
@@ -548,7 +555,7 @@
       L.DomEvent
         .disableClickPropagation(controlUI)
         .addListener(controlUI, 'click', function() {
-          Drupal.Leaflet[mapid].lMap.setView(Drupal.Leaflet[mapid].start_center, Drupal.Leaflet[mapid].start_zoom);
+          self.map_reset(mapid);
         },controlUI);
       return controlUI;
     };

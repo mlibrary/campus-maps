@@ -12,7 +12,7 @@
     ],
     "support": {
         "issues": "https://www.drupal.org/project/issues/geofield_map",
-        "source": "http://git.drupal.org/project/geofield_map.git"
+        "source": "https://git.drupalcode.org/project/geofield_map"
     },
     "license": "GPL-2.0+",
     "minimum-stability": "dev",

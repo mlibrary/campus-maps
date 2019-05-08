@@ -328,21 +328,21 @@ class GeofieldGoogleStaticMapFormatter extends FormatterBase implements Containe
         continue;
       }
       $locations[] = urlencode($value['latlon']);
-    }
 
-    $elements[$delta] = [
-      '#theme' => 'geofield_static_google_map',
-      '#width' => $settings['width'],
-      '#height' => $settings['height'],
-      '#scale' => $settings['scale'],
-      '#locations' => $locations,
-      '#zoom' => $settings['zoom'],
-      '#langcode' => $language,
-      '#static_map_type' => $settings['static_map_type'],
-      '#apikey' => (string) $this->getGmapApiKey(),
-      '#marker_color' => $settings['marker_color'],
-      '#marker_size' => $settings['marker_size'],
-    ];
+      $elements[$delta] = [
+        '#theme' => 'geofield_static_google_map',
+        '#width' => $settings['width'],
+        '#height' => $settings['height'],
+        '#scale' => $settings['scale'],
+        '#locations' => $locations,
+        '#zoom' => $settings['zoom'],
+        '#langcode' => $language,
+        '#static_map_type' => $settings['static_map_type'],
+        '#apikey' => (string) $this->getGmapApiKey(),
+        '#marker_color' => $settings['marker_color'],
+        '#marker_size' => $settings['marker_size'],
+      ];
+    }
 
     return $elements;
   }

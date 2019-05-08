@@ -156,6 +156,11 @@
 
       var map = self.map_data[mapid].map;
 
+      // Add a default Tooltip on the title geojsonProperty, if existing.
+      if (feature.setTitle && feature.geojsonProperties.tooltip) {
+        feature.setTitle(feature.geojsonProperties.tooltip);
+      }
+
       // If the feature is a Point, make it a Marker and extend the Map bounds.
       if (feature.getPosition) {
         if (oms) {
@@ -164,7 +169,21 @@
         else {
           feature.setMap(map);
         }
-        self.map_data[mapid].markers.push(feature);
+
+        // Generate the markers object index based on entity id (and geofield
+        // cardinality), and add the marker to the markers object.
+        var entity_id = feature['geojsonProperties']['entity_id'];
+        if (self.map_data[mapid].geofield_cardinality && self.map_data[mapid].geofield_cardinality !== 1) {
+          var i = 0;
+          while (self.map_data[mapid].markers[entity_id + '-' + i]) {
+            i++;
+          }
+          self.map_data[mapid].markers[entity_id + '-' + i] = feature;
+        }
+        else {
+          self.map_data[mapid].markers[entity_id] = feature;
+        }
+
         self.map_data[mapid].map_bounds.extend(feature.getPosition());
 
         // Check for eventual simple or OverlappingMarkerSpiderfier click Listener
@@ -317,7 +336,7 @@
         self.map_data[mapid].map = map;
         self.map_data[mapid].map_options = mapOptions;
         self.map_data[mapid].features = data.features;
-        self.map_data[mapid].markers = [];
+        self.map_data[mapid].markers = {};
 
         // Define the MapBounds property.
         self.map_data[mapid].map_bounds = new google.maps.LatLngBounds();
@@ -348,6 +367,22 @@
             content: ''
           });
 
+          // If the map.infowindow is defined, add an event listener for the
+          // Ajax Infowindow Popup.
+          google.maps.event.addListener(map.infowindow, 'domready', function(){
+            var infowindow_content = document.createElement('div');
+            infowindow_content.innerHTML = map.infowindow.getContent().trim();
+            var content = $('[data-geofield-google-map-ajax-popup]', infowindow_content);
+            if (content.length) {
+              var url = content.data('geofield-google-map-ajax-popup');
+              $.get(url, function (response) {
+                if (response) {
+                  map.infowindow.setContent(response)
+                }
+              });
+            }
+          });
+
           // Define the icon_image, if set.
           var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
 
@@ -370,7 +405,7 @@
 
           // Implement Markeclustering, if more than 1 marker on the map,
           // and the markercluster option is set to true.
-          if (self.map_data[mapid].markers.length > 1 && typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
+          if (self.map_data[mapid].markers.constructor === Object && Object.keys(self.map_data[mapid].markers).length > 0 && typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
 
             var markeclusterOption = {
               imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
@@ -384,7 +419,7 @@
             }
 
             // Define a markerCluster property, so other code can interact with it.
-            self.map_data[mapid].markerCluster = new MarkerClusterer(map, self.map_data[mapid].markers, markeclusterOption);
+            self.map_data[mapid].markerCluster = new MarkerClusterer(map, Object.values(self.map_data[mapid].markers), markeclusterOption);
           }
         }
 
@@ -393,29 +428,14 @@
           map.fitBounds(self.map_data[mapid].map_bounds);
         }
         // else if the Map Initial State is defined by just One marker.
-        else if (self.map_data[mapid].markers.length === 1 && !self.map_data[mapid].center_force) {
-          map.setCenter(self.map_data[mapid].markers[0].getPosition());
+        else if (self.map_data[mapid].markers.constructor === Object && Object.keys(self.map_data[mapid].markers).length === 1 && !self.map_data[mapid].center_force) {
+          map.setCenter(self.map_data[mapid].markers[Object.keys(self.map_data[mapid].markers)[0]].getPosition());
         }
 
         google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
           // Force the Map Zoom if requested.
           if (self.map_data[mapid].zoom_force) {
             self.map_data[mapid].map.setZoom(self.map_data[mapid].map_options.zoom);
-          }
-        });
-
-        // Add an event listener for the Ajax Infowindow Popup.
-        google.maps.event.addListener(map.infowindow, 'domready', function(){
-          var infowindow_content = document.createElement('div');
-          infowindow_content.innerHTML = map.infowindow.getContent().trim();
-          var content = $('[data-geofield-google-map-ajax-popup]', infowindow_content);
-          if (content.length) {
-            var url = content.data('geofield-google-map-ajax-popup');
-            $.get(url, function (response) {
-              if (response) {
-                map.infowindow.setContent(response)
-              }
-            });
           }
         });
 
@@ -461,6 +481,7 @@
       controlUI.style.margin = '6px';
       controlUI.style.textAlign = 'center';
       controlUI.title = Drupal.t('Click to reset the map to its initial state');
+      controlUI.id = 'geofield-map--' + mapid + '--reset-control';
       controlDiv.appendChild(controlUI);
 
       // Set CSS for the control interior.
@@ -478,6 +499,7 @@
         Drupal.geoFieldMap.map_data[mapid].map.setCenter(Drupal.geoFieldMap.map_data[mapid].map_start_center);
         Drupal.geoFieldMap.map_data[mapid].map.setZoom(Drupal.geoFieldMap.map_data[mapid].map_start_zoom);
       });
+      return controlUI;
     }
 
   };

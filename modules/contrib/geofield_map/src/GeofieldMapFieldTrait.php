@@ -109,6 +109,7 @@ trait GeofieldMapFieldTrait {
         'infowindow_field' => 'title',
         'multivalue_split' => 0,
         'force_open' => 0,
+        'tooltip_field' => '',
       ],
       'map_oms' => [
         'map_oms_control' => 1,
@@ -244,8 +245,12 @@ trait GeofieldMapFieldTrait {
    *
    * @param mixed $items
    *   The Geofield Data Values.
+   * @param int $entity_id
+   *   The Entity Id.
    * @param string $description
    *   The description value.
+   * @param string $tooltip
+   *   The tooltip value.
    * @param array $additional_data
    *   Additional data to be added to the feature properties, i.e.
    *   GeofieldGoogleMapViewStyle will add row fields (already rendered).
@@ -254,7 +259,7 @@ trait GeofieldMapFieldTrait {
    *   The data array for the current feature, including Geojson and additional
    *   data.
    */
-  protected function getGeoJsonData($items, $description = NULL, array $additional_data = NULL) {
+  protected function getGeoJsonData($items, $entity_id, $description = NULL, $tooltip = NULL, array $additional_data = NULL) {
     $data = [];
     foreach ($items as $delta => $item) {
 
@@ -274,7 +279,9 @@ trait GeofieldMapFieldTrait {
           // If a multivalue field value with the same index exist, use this,
           // else use the first item as fallback.
           'description' => isset($description[$delta]) ? $description[$delta] : (isset($description[0]) ? $description[0] : NULL),
+          'tooltip' => $tooltip,
           'data' => $additional_data,
+          'entity_id' => $entity_id,
         ];
 
         $data[] = $datum;
@@ -369,7 +376,7 @@ trait GeofieldMapFieldTrait {
     $elements['map_empty'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Which behaviour for the empty map?'),
-      '#description' => $this->t('If there are no entries on the map, what should be the output of field?'),
+      '#description' => $this->t('If there are no entries on the map, what should be the output?'),
     ];
 
     if (isset($this->fieldDefinition)) {
@@ -673,7 +680,7 @@ trait GeofieldMapFieldTrait {
       '#size' => '120',
       '#description' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash). If not set, or not found/loadable, the Default Google Marker will be used.'),
       '#default_value' => $settings['map_marker_and_infowindow']['icon_image_path'],
-      '#placeholder' => 'modules/custom/geofield_map/images/beachflag.png',
+      '#placeholder' => 'modules/contrib/geofield_map/images/beachflag.png',
       '#element_validate' => [[get_class($this), 'urlValidate']],
       '#weight' => -10,
     ];
@@ -718,37 +725,25 @@ trait GeofieldMapFieldTrait {
       $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', ['@entity' => $form['#entity_type']]);
 
       $info_window_source_options = $desc_options;
-
+      $info_window_source_description = $this->t('Choose an existing string/text type field from which populate the Marker Infowindow.');
     }
     // Else it is a Geofield View Style Format Settings.
     else {
       $info_window_source_options = isset($settings['infowindow_content_options']) ? $settings['infowindow_content_options'] : [];
-
+      $info_window_source_description = $this->t('Choose an existing field from which populate the Marker Infowindow.');
       foreach ($info_window_source_options as $k => $field) {
         /* @var \\Drupal\Core\Field\BaseFieldDefinition $fields_configurations[$k] */
         if (array_key_exists($k, $fields_configurations) && $fields_configurations[$k]->getCardinality() !== 1) {
           $multivalue_fields_states[] = ['value' => $k];
         }
-
-        if (array_key_exists($k, $fields_configurations) && $fields_configurations[$k]->getCardinality() !== 1) {
-          $multivalue_fields_states[] = ['value' => $k];
-        }
-
-        // Remove the fields options that are not string/text type fields
-        // of the view entity type.
-        if (isset($this->entityType) && substr($k, 0, 5) == 'field' && !array_key_exists($k, $infowindow_fields_options[$this->entityType])) {
-          unset($info_window_source_options[$k]);
-        }
-
       }
-
     }
 
     if (!empty($info_window_source_options)) {
       $elements['map_marker_and_infowindow']['infowindow_field'] = [
         '#type' => 'select',
         '#title' => $this->t('Marker Infowindow Content from'),
-        '#description' => $this->t('Choose an existing string/text type field from which populate the Marker Infowindow.'),
+        '#description' => $info_window_source_description,
         '#options' => $info_window_source_options,
         '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
       ];
@@ -810,6 +805,15 @@ trait GeofieldMapFieldTrait {
         '#description' => $this->t('If checked the Infowindow will automatically open on page load.<br><b>Note:</b> in case of multivalue Geofield, the Infowindow will be opened (and the Map centered) on the first item.'),
         '#default_value' => !empty($settings['map_marker_and_infowindow']['force_open']) ? $settings['map_marker_and_infowindow']['force_open'] : 0,
         '#return_value' => 1,
+      ];
+    }
+    else {
+      $elements['map_marker_and_infowindow']['tooltip_field'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Marker Tooltip'),
+        '#description' => $this->t('Choose the option whose value will appear as Tooltip on hover the Marker.'),
+        '#options' => array_merge(['' => '- Any - No Tooltip'], $this->viewFields),
+        '#default_value' => $settings['map_marker_and_infowindow']['tooltip_field'],
       ];
     }
   }
@@ -1023,6 +1027,8 @@ trait GeofieldMapFieldTrait {
    *   The Form element to alter.
    */
   private function setMapMarkerclusterElement(array $settings, array &$elements) {
+    $default_settings = $this::getDefaultSettings();
+
     $elements['map_markercluster'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Marker Clustering'),
@@ -1038,7 +1044,7 @@ trait GeofieldMapFieldTrait {
     $elements['map_markercluster']['markercluster_control'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable Marker Clustering'),
-      '#default_value' => $settings['map_markercluster']['markercluster_control'],
+      '#default_value' => isset($settings['map_markercluster']['markercluster_control']) ? $settings['map_markercluster']['markercluster_control'] : $default_settings['map_markercluster']['markercluster_control'],
       '#return_value' => 1,
     ];
     $elements['map_markercluster']['markercluster_additional_options'] = [
@@ -1046,7 +1052,7 @@ trait GeofieldMapFieldTrait {
       '#rows' => 4,
       '#title' => $this->t('Marker Cluster Additional Options'),
       '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
-      '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
+      '#default_value' => isset($settings['map_markercluster']['markercluster_additional_options']) ? $settings['map_markercluster']['markercluster_additional_options']: $default_settings['map_markercluster']['markercluster_additional_options'],
       '#placeholder' => '{"maxZoom":12,"gridSize":50}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];

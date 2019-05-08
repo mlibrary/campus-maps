@@ -67,9 +67,6 @@
       }
     }
 
-    // Fit bounds after adding features.
-    this.fitbounds();
-
     // Allow plugins to do things after features have been added.
     $(document).trigger('leaflet.features', [initial || false, this])
   };

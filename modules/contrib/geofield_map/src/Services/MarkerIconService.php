@@ -13,6 +13,7 @@ use Drupal\file\FileInterface;
 use Drupal\file\Entity\File;
 use Symfony\Component\Yaml\Yaml;
 use Drupal\Core\Url;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Config;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\Entity\EntityStorageException;
@@ -141,6 +142,30 @@ class MarkerIconService {
   }
 
   /**
+   * Generates alphabetically ordered Markers Files/Icons list.
+   *
+   * @return array
+   *   The Markers Files/Icons list.
+   */
+  protected function setMarkersFilesList() {
+    $markers_files_list = [];
+    $regex = '/\.(' . preg_replace('/ +/', '|', preg_quote($this->allowedExtension)) . ')$/i';
+    $security = $this->geofieldMapSettings->get('theming.markers_location.security');
+    $rel_path = $this->geofieldMapSettings->get('theming.markers_location.rel_path');
+    $files = file_scan_directory($security . $rel_path, $regex);
+    $additional_markers_location = $this->geofieldMapSettings->get('theming.additional_markers_location');
+    if (!empty($additional_markers_location)) {
+      $additional_files = file_scan_directory($additional_markers_location, $regex);
+      $files = array_merge($files, $additional_files);
+    }
+    ksort($files, SORT_STRING);
+    foreach ($files as $k => $file) {
+      $markers_files_list[$k] = $file->filename;
+    }
+    return $markers_files_list;
+  }
+
+  /**
    * Constructor of the Icon Managed File Service.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -180,15 +205,8 @@ class MarkerIconService {
       '#theme' => 'image',
       '#uri' => '',
     ];
-
     $this->allowedExtension = $this->geofieldMapSettings->get('theming.markers_extensions');
-    $regex = '/\.(' . preg_replace('/ +/', '|', preg_quote($this->allowedExtension)) . ')$/i';
-    $security = $this->geofieldMapSettings->get('theming.markers_location.security');
-    $rel_path = $this->geofieldMapSettings->get('theming.markers_location.rel_path');
-    $files = file_scan_directory($security . $rel_path, $regex);
-    foreach ($files as $k => $file) {
-      $this->markersFilesList[$k] = $file->filename;
-    }
+    $this->markersFilesList = $this->setMarkersFilesList();
   }
 
   /**

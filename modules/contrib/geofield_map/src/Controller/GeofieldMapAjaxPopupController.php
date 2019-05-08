@@ -82,7 +82,7 @@ class GeofieldMapAjaxPopupController extends ControllerBase {
     $entity_view_builder = $this->entityManager->getViewBuilder($entity->getEntityTypeId());
     $build = $entity_view_builder->view($entity, $view_mode, $langcode);
     $response = new HtmlResponse();
-    $response->setContent($this->renderer->renderRoot($build));
+    $response->setContent($this->renderer->renderPlain($build));
     return $response;
   }
 

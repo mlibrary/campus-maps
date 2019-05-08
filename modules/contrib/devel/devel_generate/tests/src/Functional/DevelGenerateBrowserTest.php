@@ -1,31 +1,19 @@
 <?php
 
-namespace Drupal\devel_generate\Tests;
+namespace Drupal\Tests\devel_generate\Functional;
 
-use Drupal\comment\Tests\CommentTestTrait;
-use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Core\Language\Language;
-use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\node\Entity\Node;
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\devel_generate\Traits\DevelGenerateSetupTrait;
 
 /**
  * Tests the logic to generate data.
  *
  * @group devel_generate
  */
-class DevelGenerateTest extends WebTestBase {
+class DevelGenerateBrowserTest extends BrowserTestBase {
 
-  use CommentTestTrait;
-  use EntityReferenceTestTrait;
-
-  /**
-   * Vocabulary for testing.
-   *
-   * @var \Drupal\taxonomy\VocabularyInterface
-   */
-  protected $vocabulary;
+  use DevelGenerateSetupTrait;
 
   /**
    * Modules to enable.
@@ -40,45 +28,7 @@ class DevelGenerateTest extends WebTestBase {
   public function setUp() {
     parent::setUp();
 
-    // Create Basic page and Article node types.
-    if ($this->profile != 'standard') {
-      $this->drupalCreateContentType(array('type' => 'page', 'name' => 'Basic Page'));
-      $this->drupalCreateContentType(array('type' => 'article', 'name' => 'Article'));
-      $this->addDefaultCommentField('node', 'article');
-    }
-
-    // Creating a vocabulary to associate taxonomy terms generated.
-    $this->vocabulary = entity_create('taxonomy_vocabulary', array(
-      'name' => $this->randomMachineName(),
-      'description' => $this->randomMachineName(),
-      'vid' => Unicode::strtolower($this->randomMachineName()),
-      'langcode' => Language::LANGCODE_NOT_SPECIFIED,
-      'weight' => mt_rand(0, 10),
-    ));
-    $this->vocabulary->save();
-
-    // Creates a field of an entity reference field storage on article.
-    $field_name = 'taxonomy_' . $this->vocabulary->id();
-
-    $handler_settings = array(
-      'target_bundles' => array(
-        $this->vocabulary->id() => $this->vocabulary->id(),
-      ),
-      'auto_create' => TRUE,
-    );
-    $this->createEntityReferenceField('node', 'article', $field_name, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
-
-    entity_get_form_display('node', 'article', 'default')
-      ->setComponent($field_name, array(
-        'type' => 'options_select',
-      ))
-      ->save();
-
-    entity_get_display('node', 'article', 'default')
-      ->setComponent($field_name, array(
-        'type' => 'entity_reference_label',
-      ))
-      ->save();
+    $this->setUpData();
 
     $admin_user = $this->drupalCreateUser(array('administer devel_generate'));
     $this->drupalLogin($admin_user);
@@ -118,9 +68,9 @@ class DevelGenerateTest extends WebTestBase {
       'add_alias' => 1,
     );
     $this->drupalPostForm('admin/config/development/generate/content', $edit, t('Generate'));
-    $this->assertText(t('Deleted 1 nodes.'));
-    $this->assertText(t('Finished creating 4 nodes'));
-    $this->assertText(t('Generate process complete.'));
+    $this->assertSession()->pageTextContains(t('Deleted 1 nodes.'));
+    $this->assertSession()->pageTextContains(t('Finished creating 4 nodes'));
+    $this->assertSession()->pageTextContains(t('Generate process complete.'));
 
     // Tests that nodes have been created in the generation process.
     $nodes = Node::loadMultiple();
@@ -130,8 +80,8 @@ class DevelGenerateTest extends WebTestBase {
     foreach ($nodes as $node) {
       $alias = 'node-' . $node->id() . '-' . $node->bundle();
       $this->drupalGet($alias);
-      $this->assertResponse('200');
-      $this->assertText($node->getTitle(), 'Generated url alias for the node works.');
+      $this->assertSession()->statusCodeEquals('200');
+      $this->assertSession()->pageTextContains($node->getTitle(), 'Generated url alias for the node works.');
     }
 
     // Creating terms.
@@ -141,8 +91,8 @@ class DevelGenerateTest extends WebTestBase {
       'title_length' => 12,
     );
     $this->drupalPostForm('admin/config/development/generate/term', $edit, t('Generate'));
-    $this->assertText(t('Created the following new terms: '));
-    $this->assertText(t('Generate process complete.'));
+    $this->assertSession()->pageTextContains(t('Created the following new terms: '));
+    $this->assertSession()->pageTextContains(t('Generate process complete.'));
 
     // Creating vocabularies.
     $edit = array(
@@ -151,8 +101,8 @@ class DevelGenerateTest extends WebTestBase {
       'kill' => TRUE,
     );
     $this->drupalPostForm('admin/config/development/generate/vocabs', $edit, t('Generate'));
-    $this->assertText(t('Created the following new vocabularies: '));
-    $this->assertText(t('Generate process complete.'));
+    $this->assertSession()->pageTextContains(t('Created the following new vocabularies: '));
+    $this->assertSession()->pageTextContains(t('Generate process complete.'));
 
     // Creating menus.
     $edit = array(
@@ -167,9 +117,9 @@ class DevelGenerateTest extends WebTestBase {
       'kill' => 1,
     );
     $this->drupalPostForm('admin/config/development/generate/menu', $edit, t('Generate'));
-    $this->assertText(t('Created the following new menus: '));
-    $this->assertText(t('Created 7 new menu links'));
-    $this->assertText(t('Generate process complete.'));
+    $this->assertSession()->pageTextContains(t('Created the following new menus: '));
+    $this->assertSession()->pageTextContains(t('Created 7 new menu links'));
+    $this->assertSession()->pageTextContains(t('Generate process complete.'));
   }
 
 }

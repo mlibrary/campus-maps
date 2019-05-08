@@ -78,6 +78,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $form['gmap_api_localization'] = [
       '#type' => 'select',
       '#default_value' => $config->get('gmap_api_localization') ?: 'default',
+      '#placeholder' => $this->t('Input a valid Gmap API Key'),
       '#title' => $this->t('Gmap Api Localization'),
       '#options' => [
         'default' => t('Default - Normal international Google Maps API load'),
@@ -91,9 +92,17 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Geofield Map Theming Settings'),
     ];
 
+    $markers_location_description = $this->t("This location will reside under public or private directories and is where the files available for custom Marker Theming will be stored and searched by the Geofield Map Theming system.<br><u>Don't use any start / end trailing slash.</u><br>
+Hint: To accomplish configuration sync management among your different deploy environments, <u>you might force this for Git versioning with the following rules lines in your .gitignore file</u> (in case of Geofield Map default config values public:://geofieldmap_icons):<br>
+<br><code># Ignore Drupal\'s file directory<br>
+[path_to_drupal_root]/sites/*/files/*<br>
+# but allow versioning of geofieldmap_icons contents<br>
+![path_to_drupal_root]/sites/default/files/geofieldmap_icons/</code>");
+
     $form['theming']['markers_location'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Markers Icons Storage location'),
+      '#description' => $markers_location_description,
       '#attributes' => [
         'class' => ['markers-location'],
       ],
@@ -115,8 +124,16 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $form['theming']['markers_location']['rel_path'] = [
       '#type' => 'textfield',
       '#title' => $this->t('- Relative Path'),
-      '#default_value' => !empty($config->get('theming.markers_location.rel_path')) ? $config->get('theming.markers_location.rel_path') : 'geofieldmap_markers',
-      '#placeholder' => $this->t("Don't use any start / end trailing slash"),
+      '#default_value' => !empty($config->get('theming.markers_location.rel_path')) ? $config->get('theming.markers_location.rel_path') : 'geofieldmap_icons',
+      '#placeholder' => 'geofieldmap_icons',
+    ];
+
+    $form['theming']['additional_markers_location'] = [
+      '#field_prefix' => Url::fromUri('base:', ['absolute' => TRUE])->toString(),
+      '#type' => 'textfield',
+      '#title' => $this->t('Additional Markers Icons Storage location'),
+      '#default_value' => !empty($config->get('theming.additional_markers_location')) ? $config->get('theming.additional_markers_location') : '',
+      '#description' => $this->t("Additional location where Markers Icon might be stored and would be found by the Geofield Map Theming system.<br><u>Note:</u>To accomplish configuration sync management, might point to a versioned folder into your code base."),
     ];
 
     $form['theming']['markers_extensions'] = [
@@ -194,7 +211,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $config->save();
 
     // Confirmation on form submission.
-    drupal_set_message($this->t('The Geofield Map configurations have been saved.'));
+    $this->messenger()->addMessage($this->t('The Geofield Map configurations have been saved.'));
   }
 
 }

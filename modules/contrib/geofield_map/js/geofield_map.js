@@ -6,33 +6,25 @@
     attach: function (context, drupalSettings) {
 
       // Init all maps in drupalSettings.
-      if (drupalSettings['geofield_map']) {
+      $.each(drupalSettings['geofield_map'], function (mapid, options) {
 
-        $.each(drupalSettings['geofield_map'], function (mapid, options) {
+        // Define the first map id, for a multivalue geofield map.
+        if (mapid.indexOf('0-value') !== -1) {
+          Drupal.geoFieldMap.firstMapId = mapid;
+        }
+        // Check if the Map container really exists and hasn't been yet initialized.
+        if ($('#' + mapid, context).length > 0 && !Drupal.geoFieldMap.map_data[mapid]) {
 
-          // Define the first map id, for a multivalue geofield map.
-          if (mapid.indexOf('0-value') !== -1) {
-            Drupal.geoFieldMap.firstMapId = mapid;
-          }
-          // Check if the Map container really exists and hasn't been yet initialized.
-          if ($('#' + mapid, context).length > 0 && !Drupal.geoFieldMap.map_data[mapid]) {
+          // Set the map_data[mapid] settings.
+          Drupal.geoFieldMap.map_data[mapid] = options;
 
-            // Set the map_data[mapid] settings.
-            Drupal.geoFieldMap.map_data[mapid] = options;
+          // Load before the Gmap Library, if needed, then initialize the Map.
+          Drupal.geoFieldMap.loadGoogle(mapid, options.gmap_api_key, function () {
+            Drupal.geoFieldMap.map_initialize(options);
+          });
+        }
+      });
 
-            // Load before the Gmap Library, if needed, then initialize the Map.
-            if (typeof google === 'undefined' && (options.gmap_api_key || options.map_library === 'gmap')) {
-              Drupal.geoFieldMap.loadGoogle(mapid, function () {
-                Drupal.geoFieldMap.map_initialize(options);
-              });
-            }
-            // Just initialize the Map, if Gmap Library not requested or already loaded.
-            else {
-              Drupal.geoFieldMap.map_initialize(options);
-            }
-          }
-        });
-      }
     }
   };
 
@@ -87,7 +79,7 @@
     },
 
     // Lead Google Maps library.
-    loadGoogle: function (mapid, callback) {
+    loadGoogle: function (mapid, gmap_api_key, callback) {
       var self = this;
       var html_language = $('html').attr("lang") ? $('html').attr("lang") : 'en';
 
@@ -107,8 +99,8 @@
         var scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language);
 
         // If a Google API key is set, use it.
-        if (self.map_data[mapid]['gmap_api_key']) {
-          scriptPath += '&key=' + self.map_data[mapid]['gmap_api_key'];
+        if (gmap_api_key) {
+          scriptPath += '&key=' + gmap_api_key;
         }
 
         $.getScript(scriptPath)
@@ -509,16 +501,16 @@
             self.map_data[params.mapid].search.autocomplete({
               // This bit uses the geocoder to fetch address values.
               source: function (request, response) {
-                  self.geocoder.geocode({address: request.term}, function (results, status) {
-                    response($.map(results, function (item) {
-                      return {
-                        // the value property is needed to be passed to the select.
-                        value: item.formatted_address,
-                        latitude: item.geometry.location.lat(),
-                        longitude: item.geometry.location.lng()
-                      };
-                    }));
-                  });
+                self.geocoder.geocode({address: request.term}, function (results, status) {
+                  response($.map(results, function (item) {
+                    return {
+                      // the value property is needed to be passed to the select.
+                      value: item.formatted_address,
+                      latitude: item.geometry.location.lat(),
+                      longitude: item.geometry.location.lng()
+                    };
+                  }));
+                });
               },
               // This bit is executed upon selection of an address.
               select: function (event, ui) {
