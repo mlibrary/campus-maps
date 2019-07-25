@@ -16,7 +16,7 @@
             Drupal.geoFieldMap.map_data[mapid] = map_settings;
 
             // Load before the Gmap Library, if needed.
-            Drupal.geoFieldMap.loadGoogle(mapid, map_settings.gmap_api_key, function () {
+            Drupal.geoFieldMap.loadGoogle(mapid, map_settings.gmap_api_key, map_settings.map_additional_libraries, function () {
               Drupal.geoFieldMap.map_initialize(mapid, map_settings, data, context);
             });
           }
@@ -80,7 +80,7 @@
     },
 
     // Lead Google Maps library.
-    loadGoogle: function (mapid, gmap_api_key, callback) {
+    loadGoogle: function (mapid, gmap_api_key, additional_libraries, callback) {
       var self = this;
       var html_language = $('html').attr("lang") ? $('html').attr("lang") : 'en';
 
@@ -104,6 +104,16 @@
           scriptPath += '&key=' + gmap_api_key;
         }
 
+        if(additional_libraries) {
+          var libraries = [];
+          for (var library in additional_libraries) {
+            if (additional_libraries[library]) {
+              libraries.push(library);
+            }
+          }
+          scriptPath += '&libraries=' + libraries.join();
+        }
+
         $.getScript(scriptPath)
           .done(function () {
             self.maps_api_loading = false;
@@ -117,13 +127,9 @@
       }
     },
 
-    place_feature: function(feature, icon_image, mapid) {
+    place_feature: function(feature, mapid) {
       var self = this;
-
-      // If the features are object of geofield map theming then remove custom url Icon Image
-      if (feature.geojsonProperties.theming) {
-        icon_image = null;
-      }
+      var icon_image = null;
 
       // Override and set icon image with geojsonProperties.icon, if set as not null/empty.
       if (feature.geojsonProperties.icon && feature.geojsonProperties.icon.length > 0) {
@@ -199,13 +205,11 @@
         feature.setOptions(feature_options);
         feature.setMap(map);
         var path = feature.getPath();
-        var path_bounds = new google.maps.LatLngBounds();
         path.forEach(function (element) {
           self.map_data[mapid].map_bounds.extend(element);
-          path_bounds.extend(element);
         });
-        google.maps.event.addListener(feature, 'click', function() {
-          self.infowindow_open(mapid, feature, path_bounds.getCenter());
+        google.maps.event.addListener(feature, 'click', function(event) {
+          self.infowindow_open(mapid, feature, event.latLng);
         });
       }
 
@@ -348,7 +352,7 @@
         // Parse the Geojson data into Google Maps Locations.
         var features = data.features && data.features.length > 0 ? GeoJSON(data) : null;
 
-        if (features && (!features.type || features.type !== 'Error')) {
+        if (features && features.length > 0 && (!features.type || features.type !== 'Error')) {
 
           /**
            * Implement  OverlappingMarkerSpiderfier if its control set true.
@@ -383,20 +387,17 @@
             }
           });
 
-          // Define the icon_image, if set.
-          var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
-
           if (features.setMap) {
-            self.place_feature(features, icon_image, mapid);
+            self.place_feature(features, mapid);
           }
           else {
             for (var i in features) {
               if (features[i].setMap) {
-                self.place_feature(features[i], icon_image, mapid);
+                self.place_feature(features[i], mapid);
               } else {
                 for (var j in features[i]) {
                   if (features[i][j].setMap) {
-                    self.place_feature(features[i][j], icon_image, mapid);
+                    self.place_feature(features[i][j], mapid);
                   }
                 }
               }
@@ -405,7 +406,7 @@
 
           // Implement Markeclustering, if more than 1 marker on the map,
           // and the markercluster option is set to true.
-          if (self.map_data[mapid].markers.constructor === Object && Object.keys(self.map_data[mapid].markers).length > 0 && typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
+          if (typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
 
             var markeclusterOption = {
               imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
@@ -421,15 +422,16 @@
             // Define a markerCluster property, so other code can interact with it.
             self.map_data[mapid].markerCluster = new MarkerClusterer(map, Object.values(self.map_data[mapid].markers), markeclusterOption);
           }
-        }
 
-        // If the Map Initial State is defined by MapBounds.
-        if (!self.mapBoundsAreNull(self.map_data[mapid].map_bounds) && !self.map_data[mapid].center_force) {
-          map.fitBounds(self.map_data[mapid].map_bounds);
-        }
-        // else if the Map Initial State is defined by just One marker.
-        else if (self.map_data[mapid].markers.constructor === Object && Object.keys(self.map_data[mapid].markers).length === 1 && !self.map_data[mapid].center_force) {
-          map.setCenter(self.map_data[mapid].markers[Object.keys(self.map_data[mapid].markers)[0]].getPosition());
+          // If the Map Initial State is defined by MapBounds.
+          if (!self.mapBoundsAreNull(self.map_data[mapid].map_bounds) && !self.map_data[mapid].center_force) {
+            map.fitBounds(self.map_data[mapid].map_bounds);
+          }
+          // else if the Map Initial State is defined by just One marker.
+          else if (self.map_data[mapid].markers.constructor === Object && Object.keys(self.map_data[mapid].markers).length === 1 && !self.map_data[mapid].center_force) {
+            map.setCenter(self.map_data[mapid].markers[Object.keys(self.map_data[mapid].markers)[0]].getPosition());
+          }
+
         }
 
         google.maps.event.addListenerOnce(map, 'bounds_changed', function() {

@@ -322,7 +322,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         ])),
       ]),
       '#default_value' => $this->getSetting('map_google_places')['places_additional_options'],
-      '#placeholder' => '{"placeIdOnly": "true", "strictBounds": "false"}',
+      '#placeholder' => '{"fields": ["place_id"], "strictBounds": "false"}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
       '#states' => [
         'visible' => [

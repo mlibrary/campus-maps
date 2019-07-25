@@ -99,7 +99,7 @@ class Geocoder implements GeocoderInterface {
    *   The message.
    */
   public static function log($message) {
-    \Drupal::logger('geocoder')->error($message);
+    \Drupal::logger('geocoder')->warning($message);
   }
 
 }

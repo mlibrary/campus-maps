@@ -14,3 +14,8 @@
   background-repeat: no-repeat;
   background-image: url("../assets/spin.gif");
 }
+
+/* line 16, ../sass/leaflet_general.scss */
+.leaflet-container {
+  z-index: 1;
+}

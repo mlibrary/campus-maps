@@ -14,6 +14,9 @@ form #map-theming-container {
       max-height: 800px;
       overflow-y: scroll;
     }
+    &.map-theming-options .deprecated {
+      opacity: 0.4;
+    }
   }
 }
 form .image-widget-data .file {

@@ -195,9 +195,9 @@ class AddressItem extends FieldItemBase implements AddressInterface {
         'override' => [
           '#type' => 'select',
           '#options' => [
-            FieldOverride::HIDDEN => t('Hidden'),
-            FieldOverride::OPTIONAL => t('Optional'),
-            FieldOverride::REQUIRED => t('Required'),
+            FieldOverride::HIDDEN => $this->t('Hidden'),
+            FieldOverride::OPTIONAL => $this->t('Optional'),
+            FieldOverride::REQUIRED => $this->t('Required'),
           ],
           '#default_value' => $override,
           '#empty_option' => $this->t('- No override -'),

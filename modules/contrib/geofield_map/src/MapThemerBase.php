@@ -9,7 +9,9 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
 use Drupal\geofield_map\Services\MarkerIconService;
+use Drupal\Core\Entity\EntityType as ViewEntityType;
 
 /**
  * A base class for MapThemer plugins.
@@ -223,6 +225,24 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
         'class' => ['notes'],
       ],
     ];
+  }
+
+  /**
+   * Gets the Map Themer Entity Bundles, based on the View Style Entity Type.
+   *
+   * @param \Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle $geofieldMapView
+   *   The Geofield Map View.
+   * @param string $entity_type
+   *   The entity type.
+   * @param array $entity_bundles
+   *   The entity bundles.
+   *
+   * @return array
+   *   The eventually filtered Entity Bundles for the the Map Themer.
+   */
+  protected function getMapThemerEntityBundles(GeofieldGoogleMapViewStyle $geofieldMapView, $entity_type, array $entity_bundles): array {
+    $view_bundles = $entity_type instanceof ViewEntityType && $geofieldMapView->getViewEntityType() == $entity_type->id() && !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($entity_bundles);
+    return $view_bundles;
   }
 
   /**

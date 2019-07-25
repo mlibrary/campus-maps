@@ -125,6 +125,7 @@ class GeocodeOrigin extends GeofieldProximitySourceBase implements ContainerFact
           'lon' => $coordinates->getLongitude(),
         ];
       }
+      $cache = $origin;
     }
     return $origin;
   }
@@ -213,9 +214,9 @@ class GeocodeOrigin extends GeofieldProximitySourceBase implements ContainerFact
    * {@inheritdoc}
    */
   public static function validatePluginsSettingsForm(array $element, FormStateInterface &$form_state) {
-    $plugins = array_filter($element['#value'], function ($value) {
+    $plugins = is_array($element['#value']) ? array_filter($element['#value'], function ($value) {
       return isset($value['checked']) && TRUE == $value['checked'];
-    });
+    }) : [];
 
     if (empty($plugins)) {
       $form_state->setError($element, t('The Geocode Origin option needs at least one geocoder plugin selected.'));

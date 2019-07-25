@@ -2,6 +2,8 @@
 
 namespace Drupal\leaflet_views\Controller;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Render\HtmlResponse;
@@ -75,15 +77,72 @@ class LeafletAjaxPopupController extends ControllerBase {
    * @param string $langcode
    *   The langcode to render the entity by.
    *
-   * @return \Drupal\Core\Render\HtmlResponse
+   * @return \Symfony\Component\HttpFoundation\Response
    *   The Response to return.
    */
   public function popupBuild(EntityInterface $entity, $view_mode, $langcode = NULL) {
     $entity_view_builder = $this->entityManager->getViewBuilder($entity->getEntityTypeId());
     $build = $entity_view_builder->view($entity, $view_mode, $langcode);
-    $response = new HtmlResponse();
-    $response->setContent($this->renderer->renderRoot($build));
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand($this->getPopupIdentifierSelector($entity->getEntityTypeId(), $entity->id(), $view_mode, $langcode), $build));
     return $response;
+  }
+
+  /**
+   * Get popup identifier.
+   *
+   * @param $entityType
+   *   The entity type.
+   * @param $entityId
+   *   The entity id.
+   * @param $viewMode
+   *   The view mode.
+   * @param $langcode
+   *   The langcode.
+   *
+   * @return string
+   *   The identifier.
+   */
+  public static function getPopupIdentifier($entityType, $entityId, $viewMode, $langcode): string {
+    return "$entityType-$entityId-$viewMode-$langcode";
+  }
+
+  /**
+   * Get popup identifier attribute.
+   *
+   * @param $entityType
+   *   The entity type.
+   * @param $entityId
+   *   The entity id.
+   * @param $viewMode
+   *   The view mode.
+   * @param $langcode
+   *   The langcode.
+   *
+   * @return string
+   *   The identifier selector.
+   */
+  public static function getPopupIdentifierAttribute($entityType, $entityId, $viewMode, $langcode) {
+    return sprintf('data-leaflet-popup-ajax-entity="%s"', self::getPopupIdentifier($entityType, $entityId, $viewMode, $langcode));
+  }
+
+  /**
+   * Get popup identifier selector.
+   *
+   * @param $entityType
+   *   The entity type.
+   * @param $entityId
+   *   The entity id.
+   * @param $viewMode
+   *   The view mode.
+   * @param $langcode
+   *   The langcode.
+   *
+   * @return string
+   *   The identifier selector.
+   */
+  public static function getPopupIdentifierSelector($entityType, $entityId, $viewMode, $langcode) {
+    return sprintf('[%s]', self::getPopupIdentifierAttribute($entityType, $entityId, $viewMode, $langcode));
   }
 
 }

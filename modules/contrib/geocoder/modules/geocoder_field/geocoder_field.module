@@ -133,6 +133,12 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
     return;
   }
 
+  $geocoder_config = \Drupal::configFactory()->get('geocoder.settings');
+  // Check geocoder_presave_disabled setting and do nothing if enabled.
+  if ($geocoder_config->get('geocoder_presave_disabled')) {
+    return;
+  }
+
   /** @var \Drupal\geocoder_field\PreprocessorPluginManager $preprocessor_manager */
   $preprocessor_manager = \Drupal::service('plugin.manager.geocoder.preprocessor');
   /** @var \Drupal\geocoder\DumperPluginManager $dumper_manager */

@@ -12,3 +12,7 @@
   background-repeat: no-repeat;
   background-image: url('../assets/spin.gif');
 }
+
+.leaflet-container {
+  z-index: 1;
+}

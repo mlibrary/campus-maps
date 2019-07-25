@@ -468,7 +468,7 @@
       if (typeof google !== 'undefined' && (params.gmap_api_key && params.gmap_api_key.length > 0) && params['gmap_places']) {
         self.map_data[params.mapid].gmap_places = params['gmap_places'];
         // Extend defaults placesAutocompleteServiceOptions.
-        self.map_data[params.mapid].gmap_places_options = params['gmap_places_options'].length > 0 ? $.extend({}, {placeIdOnly: true}, JSON.parse(params['gmap_places_options'])) : {placeIdOnly: true};
+        self.map_data[params.mapid].gmap_places_options = params['gmap_places_options'].length > 0 ? $.extend({}, {fields: ['place_id', 'name', 'types'], "strictBounds": 'false'}, JSON.parse(params['gmap_places_options'])) : {fields: ['place_id', 'name', 'types'], strictBounds: 'false'};
       }
 
       // Generate and Set/Place Marker Position.

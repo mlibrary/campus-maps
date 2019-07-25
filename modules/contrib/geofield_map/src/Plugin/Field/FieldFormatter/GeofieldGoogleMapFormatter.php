@@ -728,14 +728,30 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
     $geojson_data = $this->getGeoJsonData($items, $entity->id(), $description, $tooltip);
 
-    // Add Custom Icon File, if set.
+    // Add Custom Icon, if set.
     if (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
-      && $map_settings['map_marker_and_infowindow']['icon_image_mode'] == 'icon_file'
-    ) {
-      $image_style = isset($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style']) ? $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] : 'none';
-      $fid = (integer) !empty($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids']) ? $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'] : NULL;
+      && $map_settings['map_marker_and_infowindow']['icon_image_mode'] === 'icon_file') {
+      $image_style = 'none';
+      $fid = NULL;
+
+      if (isset($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'])) {
+        $image_style = $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'];
+      }
+
+      if ((integer) !empty($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'])) {
+        $fid = $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'];
+      }
+
       foreach ($geojson_data as $k => $datum) {
         $geojson_data[$k]['properties']['icon'] = $this->markerIcon->getFileManagedUrl($fid, $image_style);
+        // Flag the data with theming, for later rendering logic.
+        $geojson_data[$k]['properties']['theming'] = TRUE;
+      }
+    }
+    elseif (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
+      && $map_settings['map_marker_and_infowindow']['icon_image_mode'] === 'icon_image_path') {
+      foreach ($geojson_data as $k => $datum) {
+        $geojson_data[$k]['properties']['icon'] = $map_settings['map_marker_and_infowindow']['icon_image_path'];
         // Flag the data with theming, for later rendering logic.
         $geojson_data[$k]['properties']['theming'] = TRUE;
       }

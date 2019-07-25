@@ -22,21 +22,14 @@ Multipolygons, etc.), based on Google Maps Polygons APIs
 
 #### Geofield Map 2.x. What's New
 
-### **Dynamic Map Theming & Contextual Legends.**
+### **Dynamic Map Markers Theming & Contextual Legends.**
 
-The Geofield Map 2.x new version allows the Geofield Map View definition of Custom 
+The Geofield Map 2.x version allows the Geofield Map View definition of Custom 
 Markers & Icons Images based on dynamic values of the Map features.
 
-As an absolute novelty and uniqueness in the history of Drupal CMS (!), 
-moreover, a custom Geofield Map Legend Block is defined by the module and is 
-able to expose each Map Theming logics defined in the application in the form 
-of fully configurable and impressive Legends.
-
-<u>Compatibility:</u> This Geofield Map 2.x new version is fully compatible
- with the existing Geofield Map 1.x version (<u>Drupal cache needs to be 
- cleaned right after updating the code</u>).  
-You are (should be) free to upgrade cleanly, without loosing any of your 
-existing Geofield Map settings (!).
+Moreover, as an absolute novelty and uniqueness in the history of Drupal CMS (!), 
+a custom Geofield Map Legend Block is defined by the module and is 
+able to expose each Map Theming logics in the form of fully configurable and impressive Legends.
 
 ### **Technical Functionalities and specifications**
 
@@ -132,7 +125,7 @@ properties data;
 ### **Geofield Map 2.x Dynamic Markers Theming & Legends Specifications**
 
 Geofield Map 2.x introduces the MapThemer Plugin system that allows the 
-definition of MapThemer Plugins able to dinamically differentiate Map 
+definition of MapThemer Plugins able to dynamically differentiate Map 
 Features/Markers based on Contents Types, Taxonomy Terms, Values, etc. Each 
 Plugin Type provides the automatic definition of a related Legend Build, that 
 is able to fill the definition of a Custom GeofieldMapLegend block.
@@ -154,16 +147,16 @@ block system is fully extendable and overridable. You, as D8 developer, are
 free to override and extend the existing ones, or create your custom MapThemer 
 based on your specific needs and logics.
 
-#### How to use.
+##### How to use.
 
 In a Geofield Map View Display, just go into its settings and choose the wanted 
 MapThemer in the new Map Theming Options section/fieldset. It is possible to 
-associate a Drupal Managed File for each MapThemer plugin value and even the 
-Icon Image style the Icon should be rendered on the Map. The Value labels and 
+associate a Drupal File for each MapThemer plugin value and even the 
+Image style the Icon should be rendered on the Map with. The Value labels and 
 Icons might have an alias, might be reordered and might be hidden from the 
 correspondent Legend Block.
 
-Once defined and configured the Legend you are free t   o place it, once or 
+Once defined and configured the Legend you are free to place it, once or 
 several times, as a normal Drupal 8 block on the pages, with your logics and 
 contextual rules.
 

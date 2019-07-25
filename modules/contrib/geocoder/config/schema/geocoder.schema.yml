@@ -4,6 +4,10 @@ geocoder.settings:
   type: config_object
   label: 'Geocoder settings'
   mapping:
+    geocoder_presave_disabled:
+      type: boolean
+      label: 'Geocoder Presave Disabled'
+      description: 'Check to globally disable Geocoding and Reverse Geocoding operations when inserting and updating entities (useful, for example, to temporary prevent geocoding operations during content migration).'
     cache:
       type: boolean
       label: 'Should we cache the results ?'

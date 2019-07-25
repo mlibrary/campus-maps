@@ -5,6 +5,7 @@ namespace Drupal\geofield_map;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\geofield\Plugin\Field\FieldType\GeofieldItem;
 
 /**
  * Class GeofieldMapFieldTrait.
@@ -41,6 +42,27 @@ trait GeofieldMapFieldTrait {
   ];
 
   protected $customMapStylePlaceholder = '[{"elementType":"geometry","stylers":[{"color":"#1d2c4d"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#1a3646"}]},{"featureType":"administrative.country","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"administrative.province","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e1626"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#4e6d70"}]},{"featureType":"poi","stylers":[{"visibility":"off"}]}]';
+
+  /**
+   * The FieldDefinition.
+   *
+   * @var \Drupal\Core\Field\FieldDefinitionInterface
+   */
+  protected $fieldDefinition;
+
+  /**
+   * The geoPhpWrapper service.
+   *
+   * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
+   */
+  protected $geoPhpWrapper;
+
+  /**
+   * The Link generator Service.
+   *
+   * @var \Drupal\Core\Utility\LinkGeneratorInterface
+   */
+  protected $link;
 
   /**
    * Get the GMap Api Key from the geofield_map.google_maps service.
@@ -107,6 +129,7 @@ trait GeofieldMapFieldTrait {
           'icon_file' => '',
         ],
         'infowindow_field' => 'title',
+        'view_mode' => 'full',
         'multivalue_split' => 0,
         'force_open' => 0,
         'tooltip_field' => '',
@@ -116,6 +139,7 @@ trait GeofieldMapFieldTrait {
         'map_oms_options' => '{"markersWontMove": "true", "markersWontHide": "true", "basicFormatEvents": "true", "nearbyDistance": 3}',
       ],
       'map_additional_options' => '',
+      'map_additional_libraries' => [],
       'map_geometries_options' => '{"strokeColor":"black","strokeOpacity":"0.8","strokeWeight":2,"fillColor":"blue","fillOpacity":"0.1", "clickable": false}',
       'custom_style_map' => [
         'custom_style_control' => 0,
@@ -261,16 +285,18 @@ trait GeofieldMapFieldTrait {
    */
   protected function getGeoJsonData($items, $entity_id, $description = NULL, $tooltip = NULL, array $additional_data = NULL) {
     $data = [];
-    foreach ($items as $delta => $item) {
 
-      /* @var \Point $geometry */
-      if (is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') && isset($item->value)) {
-        $geometry = $this->geoPhpWrapper->load($item->value);
+    foreach ($items as $delta => $item) {
+      $value = ($item instanceof GeofieldItem) ? $item->value : $item;
+
+      try {
+        $geometry = $this->geoPhpWrapper->load($value);
       }
-      elseif (preg_match('/^(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION).*\(.*.*\)$/', $item)) {
-        $geometry = $this->geoPhpWrapper->load($item);
+      catch (\Exception $exception) {
+        $geometry = FALSE;
       }
-      if (isset($geometry)) {
+
+      if ($geometry instanceof \Geometry) {
         $datum = [
           "type" => "Feature",
           "geometry" => json_decode($geometry->out('json')),
@@ -287,6 +313,7 @@ trait GeofieldMapFieldTrait {
         $data[] = $datum;
       }
     }
+
     return $data;
   }
 
@@ -375,7 +402,7 @@ trait GeofieldMapFieldTrait {
   private function setMapEmptyElement(array $settings, array &$elements) {
     $elements['map_empty'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Which behaviour for the empty map?'),
+      '#title' => $this->t('Which behavior in case of empty results?'),
       '#description' => $this->t('If there are no entries on the map, what should be the output?'),
     ];
 
@@ -399,6 +426,7 @@ trait GeofieldMapFieldTrait {
       ];
     }
     else {
+      $elements['map_empty']['#description'] = $this->t('If there are no results from the View query, what should be the output?');
       $elements['map_empty']['empty_behaviour'] = [
         '#type' => 'select',
         '#title' => $this->t('Behaviour'),
@@ -665,8 +693,16 @@ trait GeofieldMapFieldTrait {
    */
   private function setMapMarkerAndInfowindowElement(array $form, array $settings, array &$elements) {
 
-    // Get the configurations of possible entity fields.
-    $fields_configurations = $this->entityFieldManager->getFieldStorageDefinitions('node');
+    $icon_image_path_description = $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash).');
+    $icon_image_path_description .= '<br>' . $this->t('Can be an absolute or relative URL.');
+    $twig_link = $this->link->generate('Twig', Url::fromUri('http://twig.sensiolabs.org/documentation', [
+      'absolute' => TRUE,
+      'attributes' => ['target' => 'blank'],
+    ])
+    );
+    $icon_image_path_description .= '<br>' . $this->t('You may include @twig_link.', [
+      '@twig_link' => $twig_link,
+    ]);
 
     $elements['map_marker_and_infowindow'] = [
       '#type' => 'fieldset',
@@ -678,7 +714,7 @@ trait GeofieldMapFieldTrait {
       '#type' => 'textfield',
       '#title' => $this->t('Icon Image Path'),
       '#size' => '120',
-      '#description' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash). If not set, or not found/loadable, the Default Google Marker will be used.'),
+      '#description' => $icon_image_path_description,
       '#default_value' => $settings['map_marker_and_infowindow']['icon_image_path'],
       '#placeholder' => 'modules/contrib/geofield_map/images/beachflag.png',
       '#element_validate' => [[get_class($this), 'urlValidate']],
@@ -700,8 +736,55 @@ trait GeofieldMapFieldTrait {
       $infowindow_fields_options = array_merge_recursive($infowindow_fields_options, $this->entityFieldManager->getFieldMapByFieldType($field_type));
     }
 
+    // Setup the tokens for views fields.
+    // Code is snatched from Drupal\views\Plugin\views\field\FieldPluginBase.
+    if (!isset($this->fieldDefinition)) {
+      $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= '<br>' . $this->t('You may enter data from this view as per the "Replacement patterns" below.');
+
+      $options = [];
+      $optgroup_fields = (string) t('Fields');
+      if (isset($this->displayHandler)) {
+        foreach ($this->displayHandler->getHandlers('field') as $id => $field) {
+          /* @var \Drupal\views\Plugin\views\field\EntityField $field */
+          $options[$optgroup_fields]["{{ $id }}"] = substr(strrchr($field->label(), ":"), 2);
+        }
+      }
+
+      $replacement_output = [];
+      if (!empty($options)) {
+        $replacement_output[] = [
+          '#markup' => '<p>' . $this->t("The following replacement tokens are available. Fields may be marked as <em>Exclude from display</em> if you prefer.") . '</p>',
+        ];
+        foreach (array_keys($options) as $type) {
+          if (!empty($options[$type])) {
+            $items = array();
+            foreach ($options[$type] as $key => $value) {
+              $items[] = $key;
+            }
+            $item_list = array(
+              '#theme' => 'item_list',
+              '#items' => $items,
+            );
+            $replacement_output[] = $item_list;
+          }
+        }
+      }
+
+      $elements['map_marker_and_infowindow']['help'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Replacement patterns'),
+        '#value' => $replacement_output,
+      ];
+    }
+
     // In case it is a Field Formatter.
     if (isset($this->fieldDefinition)) {
+
+      /* @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+      $entity = $this->fieldDefinition->getTargetEntityTypeId();
+      // Get the configurations of possible entity fields.
+      $fields_configurations = $this->entityFieldManager->getFieldStorageDefinitions($entity);
+
       $desc_options = [
         '0' => $this->t('- Any - No Infowindow'),
         'title' => $this->t('- Title -'),
@@ -711,7 +794,7 @@ trait GeofieldMapFieldTrait {
       $field_cardinality = $this->fieldDefinition->getFieldStorageDefinition()
         ->getCardinality();
 
-      foreach ($infowindow_fields_options[$form['#entity_type']] as $k => $field) {
+      foreach ($infowindow_fields_options[$this->fieldDefinition->getTargetEntityTypeId()] as $k => $field) {
         if (!empty(array_intersect($field['bundles'], [$form['#bundle']])) &&
           !in_array($k, ['title', 'revision_log'])) {
           $desc_options[$k] = $k;
@@ -722,13 +805,14 @@ trait GeofieldMapFieldTrait {
         }
       }
 
-      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', ['@entity' => $form['#entity_type']]);
+      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', ['@entity' => $this->fieldDefinition->getTargetEntityTypeId()]);
 
       $info_window_source_options = $desc_options;
       $info_window_source_description = $this->t('Choose an existing string/text type field from which populate the Marker Infowindow.');
     }
     // Else it is a Geofield View Style Format Settings.
     else {
+      $fields_configurations = $this->entityFieldManager->getFieldStorageDefinitions($this->entityType);
       $info_window_source_options = isset($settings['infowindow_content_options']) ? $settings['infowindow_content_options'] : [];
       $info_window_source_description = $this->t('Choose an existing field from which populate the Marker Infowindow.');
       foreach ($info_window_source_options as $k => $field) {
@@ -738,6 +822,8 @@ trait GeofieldMapFieldTrait {
         }
       }
     }
+
+    $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= '<br>' . $this->t('If not set, or not found/loadable, the Default Google Marker will be used..');
 
     if (!empty($info_window_source_options)) {
       $elements['map_marker_and_infowindow']['infowindow_field'] = [
@@ -774,10 +860,14 @@ trait GeofieldMapFieldTrait {
       ];
     }
 
+    // Assure the view_mode to eventually fallback into the (initially defined)
+    // $settings['view_mode'].
+    $default_view_mode = !empty($settings['view_mode']) ? $settings['view_mode'] : (!empty($settings['map_marker_and_infowindow']['view_mode']) ? $settings['map_marker_and_infowindow']['view_mode'] : NULL);
+
     if (isset($this->fieldDefinition)) {
       // Get the human readable labels for the entity view modes.
       $view_mode_options = [];
-      foreach ($this->entityDisplayRepository->getViewModes($form['#entity_type']) as $key => $view_mode) {
+      foreach ($this->entityDisplayRepository->getViewModes($this->fieldDefinition->getTargetEntityTypeId()) as $key => $view_mode) {
         $view_mode_options[$key] = $view_mode['label'];
       }
       // The View Mode drop-down is visible conditional on "#rendered_entity"
@@ -787,11 +877,37 @@ trait GeofieldMapFieldTrait {
         '#title' => $this->t('View mode'),
         '#description' => $this->t('View mode the entity will be displayed in the Infowindow.'),
         '#options' => $view_mode_options,
-        '#default_value' => !empty($settings['map_marker_and_infowindow']['view_mode']) ? $settings['map_marker_and_infowindow']['view_mode'] : NULL,
+        '#default_value' => $default_view_mode,
         '#states' => [
           'visible' => [
             ':input[name$="[settings][map_marker_and_infowindow][infowindow_field]"]' => [
               'value' => '#rendered_entity',
+            ],
+          ],
+        ],
+      ];
+    }
+
+    elseif ($this->entityType) {
+      // Get the human readable labels for the entity view modes.
+      $view_mode_options = [];
+      foreach ($this->entityDisplay->getViewModes($this->entityType) as $key => $view_mode) {
+        $view_mode_options[$key] = $view_mode['label'];
+      }
+      // The View Mode drop-down is visible conditional on "#rendered_entity"
+      // being selected in the Description drop-down above.
+      $elements['map_marker_and_infowindow']['view_mode'] = [
+        '#fieldset' => 'map_marker_and_infowindow',
+        '#type' => 'select',
+        '#title' => $this->t('View mode'),
+        '#description' => $this->t('View mode the entity will be displayed in the Infowindow.'),
+        '#options' => $view_mode_options,
+        '#default_value' => $default_view_mode,
+        '#states' => [
+          'visible' => [
+            ':input[name="style_options[map_marker_and_infowindow][infowindow_field]"]' => [
+              ['value' => '#rendered_entity'],
+              ['value' => '#rendered_entity_ajax'],
             ],
           ],
         ],
@@ -839,6 +955,25 @@ trait GeofieldMapFieldTrait {
 }',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
+
+    $elements['map_additional_libraries'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Map additional Libraries'),
+      '#description' => $this->t('Select the additional @libraries_link that should be included with the Google Maps library request.', [
+        '@libraries_link' => $this->link->generate('Google Map Libraries', Url::fromUri('https://developers.google.com/maps/documentation/javascript/drawinglayer', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+      '#default_value' => $settings['map_additional_libraries'],
+      '#options' => [
+        'places' => $this->t('Places'),
+        'drawing' => $this->t('Drawing'),
+        'geometry' => $this->t('Geometry'),
+        'visualization' => $this->t('Visualization'),
+      ],
+    ];
+
   }
 
   /**

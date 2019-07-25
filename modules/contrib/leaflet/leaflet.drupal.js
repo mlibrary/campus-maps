@@ -1,44 +1,48 @@
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.leaflet = {
-    attach: function (context, settings) {
+    attach: function(context, settings) {
 
       // Once the Leaflet Map is loaded with its features.
-      $(document).on('leaflet.map', function (e, settings, lMap, mapid) {
+      $(document).on('leaflet.map', function(e, settings, lMap, mapid) {
         // Set the start center and the start zoom, and initialize the reset_map control.
-        if(!Drupal.Leaflet[mapid].start_center && !Drupal.Leaflet[mapid].start_zoom ) {
-          Drupal.Leaflet[mapid].start_center = lMap.getCenter();
-          Drupal.Leaflet[mapid].start_zoom = lMap.getZoom();
-          if (settings.settings.reset_map && settings.settings.reset_map.control) {
-            // Create the DIV to hold the control and call the mapResetControl()
-            // constructor passing in this DIV.
-            var mapResetControlDiv = document.createElement('div');
-            Drupal.Leaflet.prototype.map_reset_control(mapResetControlDiv, mapid, settings.settings.reset_map.position).addTo(lMap);
-          }
+        if (!Drupal.Leaflet[mapid].start_center && !Drupal.Leaflet[mapid].start_zoom) {
+          Drupal.Leaflet[mapid].start_center = Drupal.Leaflet[mapid].lMap.getCenter();
+          Drupal.Leaflet[mapid].start_zoom = Drupal.Leaflet[mapid].lMap.getZoom();
+        }
+
+        if (settings.settings.reset_map && settings.settings.reset_map.control && !Drupal.Leaflet[mapid].reset_control) {
+          // Create the DIV to hold the control and call the mapResetControl()
+          // constructor passing in this DIV.
+          var mapResetControlDiv = document.createElement('div');
+          Drupal.Leaflet[mapid].reset_control = Drupal.Leaflet.prototype.map_reset_control(mapResetControlDiv, mapid, settings.settings.reset_map.position).addTo(Drupal.Leaflet[mapid].lMap);
         }
 
         // Attach leaflet ajax popup listeners.
-        lMap.on('popupopen', function (e) {
+        Drupal.Leaflet[mapid].lMap.on('popupopen', function(e) {
           var content = $('[data-leaflet-ajax-popup]', e.popup._contentNode);
           if (content.length) {
             var url = content.data('leaflet-ajax-popup');
-            $.get(url, function (response) {
-              if (response) {
-                e.popup.setContent(response)
-              }
-            });
+            Drupal.ajax({url: url}).execute();
           }
+        });
+
+        // Attach drupal behaviors on new content.
+        Drupal.Leaflet[mapid].lMap.on('popupopen', function(e) {
+          var element = e.popup._contentNode;
+          $(element).each(function () {
+            Drupal.attachBehaviors(this, drupalSettings);
+          })
         });
       });
 
-      $.each(settings.leaflet, function (m, data) {
-        $('#' + data.mapid, context).each(function () {
+      $.each(settings.leaflet, function(m, data) {
+        $('#' + data.mapid, context).each(function() {
           var $container = $(this);
           var mapid = data.mapid;
 
           // If the attached context contains any leaflet maps, make sure we have a Drupal.leaflet_widget object.
           if ($container.data('leaflet') === undefined) {
-
             $container.data('leaflet', new Drupal.Leaflet(L.DomUtil.get(mapid), mapid, data.map));
           if (data.features.length > 0) {
 
@@ -53,23 +57,25 @@
             $container.data('leaflet').add_features(mapid, data.features, true);
           }
 
-          // Set map position features.
-          $container.data('leaflet').fitbounds();
+            // Add the leaflet map to our settings object to make it accessible.
+            // @NOTE: This is used by the Leaflet Widget module.
+            data.lMap = $container.data('leaflet').lMap;
 
-          // Add the leaflet map to our settings object to make it accessible
-          data.lMap = $container.data('leaflet').lMap;
+            // Set map position features.
+            $container.data('leaflet').fitbounds(mapid);
           }
 
           else {
             // If we already had a map instance, add new features.
-            // @todo Does this work? Needs testing.
+            // @TODO Does this work? Needs testing.
             if (data.features !== undefined) {
               $container.data('leaflet').add_features(mapid, data.features);
             }
           }
-
           // After having initialized the Leaflet Map and added features,
           // allow other modules to get access to it via trigger.
+          // NOTE: don't change this trigger arguments print, for back porting
+          // compatibility.
           $(document).trigger('leaflet.map', [data.map, data.lMap, mapid]);
 
         });
@@ -77,7 +83,7 @@
     }
   };
 
-  Drupal.Leaflet = function (container, mapid, map_definition) {
+  Drupal.Leaflet = function(container, mapid, map_definition) {
     this.container = container;
     this.mapid = mapid;
     this.map_definition = map_definition;
@@ -95,17 +101,12 @@
     this.initialise(mapid);
   };
 
-  Drupal.Leaflet.prototype.initialise = function (mapid) {
+  Drupal.Leaflet.prototype.initialise = function(mapid) {
     var self = this;
     // Instantiate a new Leaflet map.
     self.lMap = new L.Map(self.mapid, self.settings);
 
-    // Set the public map object, to make it accessible from outside.
-    Drupal.Leaflet[mapid] = {
-      'lMap': self.lMap,
-    };
-
-    // add map layers (base and overlay layers)
+    // Add map layers (base and overlay layers).
     var layers = {}, overlays = {};
     var i = 0;
     for (var key in self.map_definition.layers) {
@@ -117,12 +118,15 @@
       switch (layer.layer_type) {
         case 'overlay':
           var overlay_layer = self.create_layer(layer, key);
-          var layer_hidden = (typeof layer.layer_hidden === "undefined") ? false : layer.layer_hidden ;
+          var layer_hidden = (typeof layer.layer_hidden === "undefined") ? false : layer.layer_hidden;
           self.add_overlay(key, overlay_layer, layer_hidden);
           break;
+
         default:
           self.add_base_layer(key, layer, i);
-          if (i === 0) {    //  Only the first base layer needs to be added to the map - all the others are accessed via the layer switcher
+          // Only the first base layer needs to be added to the map - all the
+          // others are accessed via the layer switcher.
+          if (i === 0) {
             i++;
           }
           break;
@@ -138,7 +142,7 @@
       self.lMap.fitWorld();
     }
 
-    // Add attribution
+    // Add attribution.
     if (self.settings.attributionControl && self.map_definition.attribution) {
       self.lMap.attributionControl.setPrefix(self.map_definition.attribution.prefix);
       self.attributionControl.addAttribution(self.map_definition.attribution.text);
@@ -148,12 +152,18 @@
     if (self.settings.fullscreen_control) {
       self.lMap.addControl(new L.Control.Fullscreen());
     }
+
+    // Set the public map object, to make it accessible from outside.
+    Drupal.Leaflet[mapid] = {
+      lMap: self.lMap,
+    };
+
   };
 
-  Drupal.Leaflet.prototype.initialise_layer_control = function () {
+  Drupal.Leaflet.prototype.initialise_layer_control = function() {
     var self = this;
-    var count_layers = function (obj) {
-      // Browser compatibility: Chrome, IE 9+, FF 4+, or Safari 5+
+    var count_layers = function(obj) {
+      // Browser compatibility: Chrome, IE 9+, FF 4+, or Safari 5+.
       // @see http://kangax.github.com/es5-compat-table/
       return Object.keys(obj).length;
     };
@@ -167,11 +177,12 @@
     }
   };
 
-  Drupal.Leaflet.prototype.add_base_layer = function (key, definition, i) {
+  Drupal.Leaflet.prototype.add_base_layer = function(key, definition, i) {
     var self = this;
     var map_layer = self.create_layer(definition, key);
     self.base_layers[key] = map_layer;
-    if (i === 0) {    //  Only the first base layer needs to be added to the map - all the others are accessed via the layer switcher
+    // Only the first base layer needs to be added to the map - all the others are accessed via the layer switcher.
+    if (i === 0) {
       self.lMap.addLayer(map_layer);
     }
     if (self.layer_control == null) {
@@ -183,7 +194,7 @@
     }
   };
 
-  Drupal.Leaflet.prototype.add_overlay = function (label, layer, layer_hidden) {
+  Drupal.Leaflet.prototype.add_overlay = function(label, layer, layer_hidden) {
     var self = this;
     self.overlays[label] = layer;
     if (!layer_hidden) {
@@ -199,7 +210,7 @@
     }
   };
 
-  Drupal.Leaflet.prototype.add_features = function (mapid, features, initial) {
+  Drupal.Leaflet.prototype.add_features = function(mapid, features, initial) {
     var self = this;
     for (var i = 0; i < features.length; i++) {
       var feature = features[i];
@@ -239,7 +250,7 @@
         }
       }
 
-      // Allow others to do something with the feature that was just added to the map
+      // Allow others to do something with the feature that was just added to the map.
       $(document).trigger('leaflet.feature', [lFeature, feature, self]);
     }
 
@@ -247,36 +258,43 @@
     $(document).trigger('leaflet.features', [initial || false, self])
   };
 
-  Drupal.Leaflet.prototype.create_feature_group = function (feature) {
+  Drupal.Leaflet.prototype.create_feature_group = function(feature) {
     return new L.LayerGroup();
   };
 
-  Drupal.Leaflet.prototype.create_feature = function (feature) {
+  Drupal.Leaflet.prototype.create_feature = function(feature) {
     var self = this;
     var lFeature;
     switch (feature.type) {
       case 'point':
         lFeature = self.create_point(feature);
         break;
+
       case 'linestring':
         lFeature = self.create_linestring(feature);
         break;
+
       case 'polygon':
         lFeature = self.create_polygon(feature);
-        break;
+        break
+
       case 'multipolygon':
         lFeature = self.create_multipolygon(feature);
         break;
+
       case 'multipolyline':
         lFeature = self.create_multipoly(feature);
         break;
+
       case 'json':
         lFeature = self.create_json(feature.json);
         break;
+
       case 'multipoint':
       case 'geometrycollection':
         lFeature = self.create_collection(feature);
         break;
+
       default:
         return; // Crash and burn.
     }
@@ -310,7 +328,7 @@
     return lFeature;
   };
 
-  Drupal.Leaflet.prototype.create_layer = function (layer, key) {
+  Drupal.Leaflet.prototype.create_layer = function(layer, key) {
     var self = this;
     var map_layer = new L.TileLayer(layer.urlTemplate);
     map_layer._leaflet_id = key;
@@ -321,10 +339,10 @@
       }
     }
 
-    // layers served from TileStream need this correction in the y coordinates
-    // TODO: Need to explore this more and find a more elegant solution
+    // Layers served from TileStream need this correction in the y coordinates.
+    // TODO: Need to explore this more and find a more elegant solution.
     if (layer.type === 'tilestream') {
-      map_layer.getTileUrl = function (tilePoint) {
+      map_layer.getTileUrl = function(tilePoint) {
         self._adjustTilePoint(tilePoint);
         var zoom = self._getZoomForUrl();
         return L.Util.template(self._url, L.Util.extend({
@@ -338,10 +356,10 @@
     return map_layer;
   };
 
-  Drupal.Leaflet.prototype.create_icon = function (options) {
+  Drupal.Leaflet.prototype.create_icon = function(options) {
     var icon = new L.Icon({iconUrl: options.iconUrl});
 
-    // override applicable marker defaults
+    // Override applicable marker defaults.
     if (options.iconSize) {
       icon.options.iconSize = new L.Point(parseInt(options.iconSize.x), parseInt(options.iconSize.y));
     }
@@ -367,7 +385,7 @@
     return icon;
   };
 
-  Drupal.Leaflet.prototype.create_point = function (marker) {
+  Drupal.Leaflet.prototype.create_point = function(marker) {
     var self = this;
     var latLng = new L.LatLng(marker.lat, marker.lon);
     self.bounds.push(latLng);
@@ -393,7 +411,7 @@
     if (marker.icon) {
       checkImage(marker.icon.iconUrl,
         // Success loading image.
-        function(){
+        function() {
           marker.icon.iconSize = marker.icon.iconSize || {};
           marker.icon.iconSize.x = marker.icon.iconSize.x || this.naturalWidth;
           marker.icon.iconSize.y = marker.icon.iconSize.y || this.naturalHeight;
@@ -406,7 +424,7 @@
           lMarker.setIcon(options.icon);
         },
         // Error loading image.
-        function(err){
+        function(err) {
           console.log("Leaflet: The Icon Image doesn't exist at the requested path: " + marker.icon.iconUrl);
         });
     }
@@ -414,7 +432,7 @@
     return lMarker;
   };
 
-  Drupal.Leaflet.prototype.create_linestring = function (polyline) {
+  Drupal.Leaflet.prototype.create_linestring = function(polyline) {
     var self = this;
     var latlngs = [];
     for (var i = 0; i < polyline.points.length; i++) {
@@ -425,7 +443,7 @@
     return new L.Polyline(latlngs);
   };
 
-  Drupal.Leaflet.prototype.create_collection = function (collection) {
+  Drupal.Leaflet.prototype.create_collection = function(collection) {
     var self = this;
     var layers = new L.featureGroup();
     for (var x = 0; x < collection.component.length; x++) {
@@ -434,7 +452,7 @@
     return layers;
   };
 
-  Drupal.Leaflet.prototype.create_polygon = function (polygon) {
+  Drupal.Leaflet.prototype.create_polygon = function(polygon) {
     var self = this;
     var latlngs = [];
     for (var i = 0; i < polygon.points.length; i++) {
@@ -445,7 +463,7 @@
     return new L.Polygon(latlngs);
   };
 
-  Drupal.Leaflet.prototype.create_multipolygon = function (multipolygon) {
+  Drupal.Leaflet.prototype.create_multipolygon = function(multipolygon) {
     var self = this;
     var polygons = [];
     for (var x = 0; x < multipolygon.component.length; x++) {
@@ -461,7 +479,7 @@
     return new L.Polygon(polygons);
   };
 
-  Drupal.Leaflet.prototype.create_multipoly = function (multipoly) {
+  Drupal.Leaflet.prototype.create_multipoly = function(multipoly) {
     var self = this;
     var polygons = [];
     for (var x = 0; x < multipoly.component.length; x++) {
@@ -482,10 +500,10 @@
     }
   };
 
-  Drupal.Leaflet.prototype.create_json = function (json) {
+  Drupal.Leaflet.prototype.create_json = function(json) {
     var lJSON = new L.GeoJSON();
 
-    lJSON.options.onEachFeature = function(feature, layer){
+    lJSON.options.onEachFeature = function(feature, layer) {
       for (var layer_id in layer._layers) {
         for (var i in layer._layers[layer_id]._latlngs) {
           Drupal.Leaflet.bounds.push(layer._layers[layer_id]._latlngs[i]);
@@ -506,22 +524,36 @@
     return lJSON;
   };
 
-  // Set Map position, fitting Bounds in case of more than one feature
+  // Set Map position, fitting Bounds in case of more than one feature.
   // @NOTE: This method used by Leaflet Markecluster module (don't remove/rename)
-  Drupal.Leaflet.prototype.fitbounds = function () {
+  Drupal.Leaflet.prototype.fitbounds = function(mapid) {
     var self = this;
     // Fit Bounds if both them and features exist, and the Map Position in not forced.
     if (!self.settings.map_position_force && self.bounds.length > 0) {
-      self.lMap.fitBounds(new L.LatLngBounds(self.bounds));
+      Drupal.Leaflet[mapid].lMap.fitBounds(new L.LatLngBounds(self.bounds));
 
       // In case of single result use the custom Map Zoom set.
       if (self.bounds.length === 1 && self.settings.zoom) {
-        self.lMap.setZoom(self.settings.zoom);
+        Drupal.Leaflet[mapid].lMap.setZoom(self.settings.zoom);
       }
+
+      var start_zoom = Drupal.Leaflet[mapid].lMap.getZoom();
+
+      // In case of map initial position not forced, and zooFiner not null/neutral,
+      // adapt the Map Zoom and the Start Zoom accordingly.
+      if (!self.settings.map_position_force && self.settings.zoomFiner && self.settings.zoomFiner !== 0) {
+        Drupal.Leaflet[mapid].lMap.setZoom(start_zoom);
+        start_zoom =+ self.settings.zoomFiner;
+      }
+
+      // Set the map start zoom and center.
+      Drupal.Leaflet[mapid].start_zoom = start_zoom;
+      Drupal.Leaflet[mapid].start_center = Drupal.Leaflet[mapid].lMap.getCenter();
     }
+
   };
 
-  Drupal.Leaflet.prototype.map_reset = function (mapid) {
+  Drupal.Leaflet.prototype.map_reset = function(mapid) {
     Drupal.Leaflet[mapid].lMap.setView(Drupal.Leaflet[mapid].start_center, Drupal.Leaflet[mapid].start_zoom);
   };
 

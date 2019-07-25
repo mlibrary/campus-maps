@@ -47,7 +47,7 @@ class TaxonomyTermThemer extends TaxonomyTermThemerUrl {
     // Get the existing (Default) Element settings.
     $default_element = $this->getDefaultThemerElement($defaults);
 
-    // Get the View Filtered entity bundles.
+    // Get the MapThemer Entity type.
     $entity_type = $geofieldMapView->getViewEntityType();
     $view_fields = $geofieldMapView->getViewFields();
 
@@ -66,8 +66,11 @@ class TaxonomyTermThemer extends TaxonomyTermThemerUrl {
       }
     }
 
+    // Get the MapThemer Entity bundles.
     $entity_bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
-    $view_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($entity_bundles);
+    // Filter the View Bundles based on the View Filtered Bundles,
+    // but only if the MapThemer is working on the View base table entity type.
+    $view_bundles = $this->getMapThemerEntityBundles($geofieldMapView, $entity_type, $entity_bundles);
 
     foreach ($taxonomy_ref_fields as $field_id => $data) {
       $taxonomy_ref_fields[$field_id]['target_bundles'] = [];

@@ -79,6 +79,7 @@ trait LeafletSettingsElementsTrait {
         'zoom' => 12,
         'minZoom' => 1,
         'maxZoom' => 18,
+        'zoomFiner' => 0,
       ],
       'icon' => [
         'iconUrl' => '',
@@ -265,6 +266,21 @@ trait LeafletSettingsElementsTrait {
       '#default_value' => $map_position_options['maxZoom'],
       '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
       '#required' => TRUE,
+    ];
+
+    $element['zoomFiner'] = [
+      '#title' => $this->t('Zoom Finer'),
+      '#type' => 'number',
+      '#max' => 5,
+      '#min' => -5,
+      '#step' => 0,
+      '#description' => $this->t('Value that might/will be added to default Fit Markers Bounds Zoom. (-5 / +5)'),
+      '#default_value' => $map_position_options['zoomFiner'] ?? $this->defaultSettings['map_position']['zoomFiner'],
+      '#states' => [
+        'invisible' => [
+          $force_checkbox_selector => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     return $element;
@@ -498,7 +514,8 @@ trait LeafletSettingsElementsTrait {
     // Add additional settings to the Map, with fallback on the
     // hook_leaflet_map_info ones.
     $map['settings']['map_position_force'] = isset($options['map_position']['force']) ? $options['map_position']['force'] : $default_settings['map_position']['force'];
-    $map['settings']['zoom'] = isset($options['map_position']['zoom']) ? (int) $options['map_position']['zoom'] : $default_settings['map_position']['force'];
+    $map['settings']['zoom'] = isset($options['map_position']['zoom']) ? (int) $options['map_position']['zoom'] : $default_settings['map_position']['zoom'];
+    $map['settings']['zoomFiner'] = isset($options['map_position']['zoomFiner']) ? (int) $options['map_position']['zoomFiner'] : $default_settings['map_position']['zoomFiner'];
     $map['settings']['minZoom'] = isset($options['map_position']['minZoom']) ? (int) $options['map_position']['minZoom'] : (isset($map['settings']['minZoom']) ? $map['settings']['minZoom'] : $default_settings['settings']['minZoom']);
     $map['settings']['maxZoom'] = isset($options['map_position']['maxZoom']) ? (int) $options['map_position']['maxZoom'] : (isset($map['settings']['maxZoom']) ? $map['settings']['maxZoom'] : $default_settings['settings']['maxZoom']);
     $map['settings']['center'] = (isset($options['map_position']['center']['lat']) && isset($options['map_position']['center']['lon'])) ? [

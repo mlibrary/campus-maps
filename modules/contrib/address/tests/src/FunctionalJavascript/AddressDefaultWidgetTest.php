@@ -32,7 +32,7 @@ class AddressDefaultWidgetTest extends WebDriverTestBase {
   ];
 
   /**
-   * User with permission to administer entites.
+   * User with permission to administer entities.
    *
    * @var \Drupal\user\UserInterface
    */
