@@ -5,10 +5,6 @@ add primary to primary patch
 Source: patches/primary_primary.patch
 
 
-https://www.drupal.org/node/736066 - modified due to https://github.com/cweagans/composer-patches/issues/43
-Source: patches/736066-335a.patch
-
-
 make sure the author exists
 Source: patches/author_name.patch
 
