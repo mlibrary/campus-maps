@@ -1,0 +1,12 @@
+name: Allow site to be iframed
+description: Watch out for clickjacking...
+type: module
+package: Security
+# version: 1.0
+# core: 8.x
+
+# Information added by Drupal.org packaging script on 2016-06-09
+version: '8.x-1.2'
+core: '8.x'
+project: 'allow_iframed_site'
+datestamp: 1465448942
