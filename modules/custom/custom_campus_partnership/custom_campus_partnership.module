@@ -7,6 +7,10 @@ use Drupal\taxonomy\Entity\Term;
 use Drupal\paragraphs\Entity\Paragraph;
 
 function _custom_campus_partnership_create_node($title, $bundle, $body = '', $fields = []) {
+  if (empty($title)) {
+    drupal_set_message('Could not create a '.$bundle.' as no title was provided.', 'error');
+    return;
+  }
   $node = Node::create([
     'type' => $bundle,
     'title' => $title,
@@ -113,6 +117,9 @@ function custom_campus_partnership_node_presave(NodeInterface $node) {
       if (!$unit_node) {
         $unit_node = _custom_campus_partnership_create_node($unit_name, 'cp_unit', '', ['field_unit_address' => $unit['field_unit_address'][0]['address'], 'field_unit_url' => $unit['field_unit_url']]);
       }
+      if (!$unit_node) {
+        continue;
+      }
       $node = _custom_campus_partnership_set_or_append_id('field_existing_unit_s_', $unit_node->id(), $node);
 
       $g_term = _custom_campus_partnership_lookup_term($unit_node->getTitle(), 'geodata');
@@ -170,6 +177,9 @@ function custom_campus_partnership_node_presave(NodeInterface $node) {
           'field_author_title' => $author['field_author_title']
         ]);
       }
+      if (!$author_node) {
+        continue;
+      }
       // Associate authors with units for geocoding purposes.
       if (!empty($unit_ids)) {
         foreach ($unit_ids as $key => $unit_id) {
@@ -204,7 +214,7 @@ function custom_campus_partnership_node_presave(NodeInterface $node) {
 
 // change the title of the "Company" field to "Sponsoring Unit Name"
 function custom_campus_partnership_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  if (in_array($form_id, array('node_campus_partnership_item_edit_form', 'node_campus_partnership_item_form'))) {
+  if (in_array($form_id, array('node_cp_title_edit_form', 'node_cp_title_form'))) {
     $form['field_new_unit_s_']['widget'][0]['subform']['field_unit_address']['widget'][0]['address']['#after_build'][] = 'custom_campus_partnership_address_label';
   }
 }

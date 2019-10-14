@@ -253,6 +253,10 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
     // Set Map Geometries Options Element.
     $this->setMapPathOptionsElement($elements, $settings);
 
+    // Set Map Geocoder Control Element, if the Geocoder Module exists,
+    // otherwise output a tip on Geocoder Module Integration.
+    $this->setGeocoderMapControl($elements, $settings);
+
     return $elements;
   }
 
@@ -262,7 +266,7 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
   public function settingsSummary() {
     $summary = [];
     $summary[] = $this->t('Leaflet Map: @map', ['@map' => $this->getSetting('leaflet_map')]);
-    $summary[] = $this->t('Map height: @height px', ['@height' => $this->getSetting('height')]);
+    $summary[] = $this->t('Map height: @height @height_unit', ['@height' => $this->getSetting('height'), '@height_unit' => $this->getSetting('height_unit')]);
     $summary[] = $this->t('Popup Infowindow: @popup', ['@popup' => $this->getSetting('popup') ? $this->t('Yes') : $this->t('No')]);
     if ($this->getSetting('popup') && $this->getSetting('popup_content')) {
       $summary[] = $this->t('Popup content: @popup_content', ['@popup_content' => $this->getSetting('popup_content')]);
@@ -364,8 +368,15 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
         $settings['icon'] = array_replace($map['icon'], $settings['icon']);
       }
 
-      // Eventually set the custom icon.
-      if (!empty($settings['icon']['iconUrl'])) {
+      $icon_type = isset($settings['icon']['iconType']) ? $settings['icon']['iconType'] : 'marker';
+
+      // Eventually set the custom icon as DivIcon or Icon Url.
+      if ($icon_type === 'html' && !empty($settings['icon']['html'])) {
+        $settings['icon']['html'] = $this->token->replace($settings['icon']['html'], $token_context);
+        $settings['icon']['html_class'] = isset($settings['icon']['html_class']) ? $settings['icon']['html_class'] : '';
+        $feature['icon'] = $settings['icon'];
+      }
+      elseif (!empty($settings['icon']['iconUrl'])) {
         $settings['icon']['iconUrl'] = !empty($settings['icon']['iconUrl']) > 0 ? $this->token->replace($settings['icon']['iconUrl'], $token_context) : '';
         $settings['icon']['shadowUrl'] = !empty($settings['icon']['shadowUrl']) > 0 ? $this->token->replace($settings['icon']['shadowUrl'], $token_context) : '';
         $feature['icon'] = $settings['icon'];
@@ -382,16 +393,18 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
     // Allow other modules to add/alter the map js settings.
     $this->moduleHandler->alter('leaflet_default_map_formatter', $js_settings, $items);
 
+    $map_height = !empty($settings['height']) ? $settings['height'] . $settings['height_unit'] : '';
+
     if (!empty($settings['multiple_map'])) {
       foreach ($js_settings['features'] as $k => $feature) {
         $map = $js_settings['map'];
         $map['id'] = $map['id'] . "-{$k}";
-        $results[] = $this->leafletService->leafletRenderMap($map, [$feature], $settings['height'] . 'px');
+        $results[] = $this->leafletService->leafletRenderMap($map, [$feature], $map_height);
       }
     }
     // Render the map, if we do have data or the hide option is unchecked.
     elseif (!empty($js_settings['features']) || empty($settings['hide_empty_map'])) {
-      $results[] = $this->leafletService->leafletRenderMap($js_settings['map'], $js_settings['features'], $settings['height'] . 'px');
+      $results[] = $this->leafletService->leafletRenderMap($js_settings['map'], $js_settings['features'], $map_height);
     }
 
     return $results;

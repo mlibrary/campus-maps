@@ -18,31 +18,16 @@ use Drupal\Component\Serialization\Json;
 trait LeafletSettingsElementsTrait {
 
   /**
-   * Google Map Types Options.
+   * Leaflet Controls Positions Options.
    *
    * @var array
    */
-  protected $gMapTypesOptions = [
-    'roadmap' => 'Roadmap',
-    'satellite' => 'Satellite',
-    'hybrid' => 'Hybrid',
-    'terrain' => 'Terrain',
+  protected $controlPositionsOptions = [
+    'topleft' => 'Top Left',
+    'topright' => 'Top Right',
+    'bottomleft' => 'Bottom Left',
+    'bottomright' => 'Bottom Right',
   ];
-
-  /**
-   * Google Map Types Options.
-   *
-   * @var array
-   */
-  protected $infowindowFieldTypesOptions = [
-    'string_long',
-    'string',
-    'text',
-    'text_long',
-    "text_with_summary",
-  ];
-
-  protected $customMapStylePlaceholder = '[{"elementType":"geometry","stylers":[{"color":"#1d2c4d"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#1a3646"}]},{"featureType":"administrative.country","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"administrative.province","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e1626"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#4e6d70"}]}]';
 
   /**
    * The Link generator Service.
@@ -61,6 +46,7 @@ trait LeafletSettingsElementsTrait {
       'multiple_map' => 0,
       'leaflet_map' => 'OSM Mapnik',
       'height' => 400,
+      'height_unit' => 'px',
       'hide_empty_map' => 0,
       'disable_wheel' => 0,
       'fullscreen_control' => 1,
@@ -82,6 +68,7 @@ trait LeafletSettingsElementsTrait {
         'zoomFiner' => 0,
       ],
       'icon' => [
+        'iconType' => 'marker',
         'iconUrl' => '',
         'iconSize' => ['x' => NULL, 'y' => NULL],
         'iconAnchor' => ['x' => NULL, 'y' => NULL],
@@ -89,12 +76,27 @@ trait LeafletSettingsElementsTrait {
         'shadowSize' => ['x' => NULL, 'y' => NULL],
         'shadowAnchor' => ['x' => NULL, 'y' => NULL],
         'popupAnchor' => ['x' => NULL, 'y' => NULL],
+        'iconHtml' => '<div></div>',
+        'html_class' => 'leaflet-map-divicon',
       ],
       'leaflet_markercluster' => [
         'control' => 0,
         'options' => '{"spiderfyOnMaxZoom":true,"showCoverageOnHover":true,"removeOutsideVisibleBounds": false}',
       ],
       'path' => '{"color":"#3388ff","opacity":"1.0","stroke":true,"weight":3,"fill":"depends","fillColor":"*","fillOpacity":"0.2"}',
+      'geocoder' => [
+        'control' => 0,
+        'settings' => [
+          'position' => 'topright',
+          'input_size' => 25,
+          'providers' => [],
+          'min_terms' => 4,
+          'delay' => 800,
+          'zoom' => 16,
+          'popup' => 0,
+          'options' => '',
+        ],
+      ],
     ];
   }
 
@@ -127,7 +129,18 @@ trait LeafletSettingsElementsTrait {
       '#title' => $this->t('Map Height'),
       '#type' => 'number',
       '#default_value' => $settings['height'],
-      '#field_suffix' => $this->t('px'),
+      '#description' => $this->t('Note: This can be left empty to make the Map fill its parent container height.'),
+    ];
+
+    $elements['height_unit'] = [
+      '#title' => t('Map height unit'),
+      '#type' => 'select',
+      '#options' => [
+        'px' => t('px'),
+        '%' => t('%'),
+      ],
+      '#default_value' => $settings['height_unit'],
+      '#description' => t("Whether height is absolute (pixels) or relative (percent).<br><strong>Note:</strong> In case of Percent the Leaflet Map should be wrapped in a container element with defined Height, otherwise won't show up."),
     ];
 
     $elements['hide_empty_map'] = [
@@ -239,7 +252,7 @@ trait LeafletSettingsElementsTrait {
       '#title' => $this->t('Zoom'),
       '#type' => 'number',
       '#min' => 1,
-      '#max' => 18,
+      '#max' => 22,
       '#default_value' => $map_position_options['zoom'],
       '#required' => TRUE,
       '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
@@ -253,7 +266,7 @@ trait LeafletSettingsElementsTrait {
       '#title' => $this->t('Min. Zoom'),
       '#type' => 'number',
       '#min' => 1,
-      '#max' => 18,
+      '#max' => 22,
       '#default_value' => $map_position_options['minZoom'],
       '#required' => TRUE,
     ];
@@ -262,7 +275,7 @@ trait LeafletSettingsElementsTrait {
       '#title' => $this->t('Max. Zoom'),
       '#type' => 'number',
       '#min' => 1,
-      '#max' => 18,
+      '#max' => 22,
       '#default_value' => $map_position_options['maxZoom'],
       '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
       '#required' => TRUE,
@@ -297,7 +310,17 @@ trait LeafletSettingsElementsTrait {
    */
   protected function generateIconFormElement(array $icon_options) {
 
-    $icon_url_description = $this->t('Can be an absolute or relative URL.<br><b>Note: </b> Using Tokens it is possible to dynamically define the Marker Icon output, with the composition of Marker Icon paths including entity properties or fields values.');
+    $token_replacement_disclaimer = $this->t('<b>Note: </b> Using Tokens/Replacement Patterns it is possible to dynamically define the Marker Icon output, with the composition of Marker Icon paths including entity properties or fields values.');
+    $icon_url_description = $this->t('Can be an absolute or relative URL. <b>If left empty the default Leaflet Marker will be used.</b><br>@token_replacement_disclaimer', [
+      '@token_replacement_disclaimer' => $token_replacement_disclaimer,
+    ]);
+
+    if (isset($this->fieldDefinition)) {
+      $icon_type = ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][icon][iconType]"]';
+    }
+    else {
+      $icon_type = ':input[name="style_options[icon][iconType]"]';
+    }
 
     $element = [
       '#type' => 'fieldset',
@@ -309,12 +332,27 @@ trait LeafletSettingsElementsTrait {
       ],
     ];
 
+    $element['iconType'] = [
+      '#type' => 'radios',
+      '#title' => t('Icon Source'),
+      '#default_value' => isset($icon_options['iconType']) ? $icon_options['iconType'] : 'marker',
+      '#options' => [
+        'marker' => 'Icon Image Url/Path',
+        'html' => 'Field (html DivIcon)',
+      ],
+    ];
+
     $element['iconUrl'] = [
       '#title' => $this->t('Icon URL'),
       '#description' => $icon_url_description,
       '#type' => 'textarea',
       '#rows' => 3,
       '#default_value' => isset($icon_options['iconUrl']) ? $icon_options['iconUrl'] : NULL,
+      '#states' => [
+        'visible' => [
+          $icon_type => ['value' => 'marker'],
+        ],
+      ],
     ];
 
     $element['shadowUrl'] = [
@@ -323,6 +361,41 @@ trait LeafletSettingsElementsTrait {
       '#type' => 'textarea',
       '#rows' => 3,
       '#default_value' => isset($icon_options['shadowUrl']) ? $icon_options['shadowUrl'] : NULL,
+      '#states' => [
+        'visible' => [
+          $icon_type => ['value' => 'marker'],
+        ],
+      ],
+    ];
+
+    $element['html'] = [
+      '#title' => $this->t('Html'),
+      '#type' => 'textarea',
+      '#description' => $this->t('Insert here the Html code that will be used as marker html markup. <b>If left empty the default Leaflet Marker will be used.</b><br>@token_replacement_disclaimer', [
+        '@token_replacement_disclaimer' => $token_replacement_disclaimer,
+      ]),
+      '#default_value' => isset($icon_options['html']) ? $icon_options['html'] : '<div></div>',
+      '#rows' => 3,
+      '#states' => [
+        'visible' => [
+          $icon_type => ['value' => 'html'],
+        ],
+        'required' => [
+          $icon_type => ['value' => 'html'],
+        ],
+      ],
+    ];
+
+    $element['html_class'] = [
+      '#type' => 'textfield',
+      '#title' => t('Marker HTML class'),
+      '#description' => t('Required class name for the div used to wrap field output. For multiple classes, separate with a space.'),
+      '#default_value' => isset($icon_options['html_class']) ? $icon_options['html_class'] : 'leaflet-map-divicon',
+      '#states' => [
+        'visible' => [
+          $icon_type => ['value' => 'html'],
+        ],
+      ],
     ];
 
     if (method_exists($this, 'getProvider') && $this->getProvider() == 'leaflet_views') {
@@ -359,24 +432,24 @@ trait LeafletSettingsElementsTrait {
         ];
         foreach (array_keys($options) as $type) {
           if (!empty($options[$type])) {
-            $items = array();
+            $items = [];
             foreach ($options[$type] as $key => $value) {
               $items[] = $key;
             }
-            $item_list = array(
+            $item_list = [
               '#theme' => 'item_list',
               '#items' => $items,
-            );
+            ];
             $output[] = $item_list;
           }
         }
       }
 
-      $element['help'] = array(
+      $element['help'] = [
         '#type' => 'details',
         '#title' => $this->t('Replacement patterns'),
         '#value' => $output,
-      );
+      ];
     }
 
     $element['iconSize'] = [
@@ -527,6 +600,7 @@ trait LeafletSettingsElementsTrait {
     $map['settings']['leaflet_markercluster'] = isset($options['leaflet_markercluster']) ? $options['leaflet_markercluster'] : NULL;
     $map['settings']['fullscreen_control'] = isset($options['fullscreen_control']) ? $options['fullscreen_control'] : $default_settings['fullscreen_control'];
     $map['settings']['reset_map'] = isset($options['reset_map']) ? $options['reset_map'] : $default_settings['reset_map'];
+    $map['settings']['geocoder'] = isset($options['geocoder']) ? $options['geocoder'] : $default_settings['geocoder'];
   }
 
   /**
@@ -621,12 +695,7 @@ trait LeafletSettingsElementsTrait {
     $element['reset_map']['position'] = [
       '#type' => 'select',
       '#title' => $this->t('Position'),
-      '#options' => [
-        'topleft' => 'Top Left',
-        'topright' => 'Top Right',
-        'bottomleft' => 'Bottom Left',
-        'bottomright' => 'Bottom Right',
-      ],
+      '#options' => $this->controlPositionsOptions,
       '#default_value' => isset($settings['reset_map']['position']) ? $settings['reset_map']['position'] : $default_settings['reset_map']['position'],
     ];
 
@@ -642,6 +711,150 @@ trait LeafletSettingsElementsTrait {
         'visible' => [
           ':input[name="style_options[reset_map][control]"]' => ['checked' => TRUE],
         ],
+      ];
+    }
+  }
+
+  /**
+   * Set Map Geocoder Control Element.
+   *
+   * @param array $element
+   *   The Form element to alter.
+   * @param array $settings
+   *   The Form Settings.
+   */
+  protected function setGeocoderMapControl(array &$element, array $settings) {
+    // Set Map Geocoder Control Element, if the Geocoder Module exists,
+    // otherwise output a tip on Geocoder Module Integration.
+    if ($this->moduleHandler->moduleExists('geocoder') && class_exists('\Drupal\geocoder\Controller\GeocoderApiEnpoints')) {
+      $default_settings = $this::getDefaultSettings();
+      $element['geocoder'] = [
+        '#type' => 'fieldset',
+        '#title' => $this->t('Map Control - Geocoder'),
+      ];
+
+      $element['geocoder']['control'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Enable Map Geocoder Control'),
+        '#description' => $this->t('This will add a Geocoder control element to the Leaflet Map'),
+        '#default_value' => isset($settings['geocoder']['control']) ? $settings['geocoder']['control'] : $default_settings['geocoder']['control'],
+      ];
+
+      $element['geocoder']['access_warning'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('<strong>Note: </strong>This will show to users with permissions to <u>Access Geocoder Api Url Enpoints.</u>'),
+        '#attributes' => [
+          'style' => 'color: red;',
+        ],
+      ];
+
+      $element['geocoder']['settings'] = [
+        '#type' => 'fieldset',
+        '#title' => $this->t('Geocoder Settings'),
+      ];
+
+      $element['geocoder']['settings']['position'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Position'),
+        '#options' => $this->controlPositionsOptions,
+        '#default_value' => isset($settings['geocoder']['settings']['position']) ? $settings['geocoder']['settings']['position'] : $default_settings['geocoder']['settings']['position'],
+      ];
+
+      $element['geocoder']['settings']['input_size'] = [
+        '#title' => $this->t('Input Size'),
+        '#type' => 'number',
+        '#min' => 10,
+        '#max' => 100,
+        '#default_value' => isset($settings['geocoder']['settings']['input_size']) ? $settings['geocoder']['settings']['input_size'] : $default_settings['geocoder']['settings']['input_size'],
+        '#description' => $this->t('The characters size/length of the Geocoder Input element.'),
+      ];
+
+      $providers_settings = isset($settings['geocoder']['settings']['providers']) ? $settings['geocoder']['settings']['providers'] : [];
+
+      // Get the enabled/selected providers.
+      $enabled_providers = [];
+      foreach ($providers_settings as $plugin_id => $plugin) {
+        if (!empty($plugin['checked'])) {
+          $enabled_providers[] = $plugin_id;
+        }
+      }
+
+      // Generates the Draggable Table of Selectable Geocoder Providers.
+      /** @var \Drupal\geocoder\ProviderPluginManager  $geocoder_provider */
+      $geocoder_provider = \Drupal::service('plugin.manager.geocoder.provider');
+      $element['geocoder']['settings']['providers'] = $geocoder_provider->providersPluginsTableList($enabled_providers);
+
+      // Set a validation for the providers selection.
+      $element['geocoder']['settings']['providers']['#element_validate'] = [[get_class($this), 'validateGeocoderProviders']];
+
+      $element['geocoder']['settings']['min_terms'] = [
+        '#type' => 'number',
+        '#default_value' => isset($settings['geocoder']['settings']['min_terms']) ? $settings['geocoder']['settings']['min_terms'] : $default_settings['geocoder']['settings']['min_terms'],
+        '#title' => $this->t('The (minimum) number of terms for the Geocoder to start processing.'),
+        '#description' => $this->t('Valid values ​​for the widget are between 2 and 10. A too low value (<= 3) will affect the application Geocode Quota usage.<br>Try to increase this value if you are experiencing Quota usage matters.'),
+        '#min' => 2,
+        '#max' => 10,
+        '#size' => 3,
+      ];
+
+      $element['geocoder']['settings']['delay'] = [
+        '#type' => 'number',
+        '#default_value' => isset($settings['geocoder']['settings']['delay']) ? $settings['geocoder']['settings']['delay'] : $default_settings['geocoder']['settings']['delay'],
+        '#title' => $this->t('The delay (in milliseconds) between pressing a key in the Address Input field and starting the Geocoder search.'),
+        '#description' => $this->t('Valid values ​​for the widget are multiples of 100, between 300 and 3000. A too low value (<= 300) will affect / increase the application Geocode Quota usage.<br>Try to increase this value if you are experiencing Quota usage matters.'),
+        '#min' => 300,
+        '#max' => 3000,
+        '#step' => 100,
+        '#size' => 4,
+      ];
+
+      $element['geocoder']['settings']['zoom'] = [
+        '#title' => $this->t('Zoom to Focus'),
+        '#type' => 'number',
+        '#min' => 1,
+        '#max' => 22,
+        '#default_value' => isset($settings['geocoder']['settings']['zoom']) ? $settings['geocoder']['settings']['zoom'] : $default_settings['geocoder']['settings']['zoom'],
+        '#description' => $this->t('Zoom level to Focus on the Map upon the Geocoder Address selection.'),
+      ];
+
+      $element['geocoder']['settings']['popup'] = [
+        '#title' => $this->t('Open Popup on Geocode Focus'),
+        '#type' => 'checkbox',
+        '#default_value' => isset($settings['geocoder']['settings']['popup']) ? $settings['geocoder']['settings']['popup'] : $default_settings['geocoder']['settings']['popup'],
+        '#description' => $this->t('Check this to open a Popup on the Map (with the found Address) upon the Geocode Focus.'),
+      ];
+
+
+      $element['geocoder']['settings']['options'] = [
+        '#type' => 'textarea',
+        '#rows' => 4,
+        '#title' => $this->t('Geocoder Control Specific Options'),
+        '#description' => $this->t('This settings would override general Geocoder Providers options. (<u>Note: This would work only for Geocoder 2.x branch/version.</u>)<br>An object literal of specific Geocoder options.The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+        '#default_value' => isset($settings['geocoder']['settings']['options']) ? $settings['geocoder']['settings']['options'] : $default_settings['geocoder']['settings']['options'],
+        '#placeholder' => '{"googlemaps":{"locale": "it", "region": "it"}, "nominatim":{"locale": "it"}}',
+        '#element_validate' => [[get_class($this), 'jsonValidate']],
+      ];
+      if (isset($this->fieldDefinition)) {
+        $element['geocoder']['settings']['#states'] = [
+          'visible' => [
+            ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geocoder][control]"]' => ['checked' => TRUE],
+          ],
+        ];
+      }
+      else {
+        $element['geocoder']['settings']['#states'] = [
+          'visible' => [
+            ':input[name="style_options[geocoder][control]"]' => ['checked' => TRUE],
+          ],
+        ];
+      }
+    }
+    else {
+      $element['geocoder'] = [
+        '#markup' => $this->t('<strong>Note: </strong>it is possible to enable a <u>Geocoder controller on the Leaflet Map</u> throughout the @geocoder_module_link integration (version higher than 8.x-2.3 and 8.x-3.0-alpha2).', [
+          '@geocoder_module_link' => $this->link->generate('Geocoder Module', Url::fromUri('https://www.drupal.org/project/geocoder', ['attributes' => ['target' => 'blank']])),
+        ]),
       ];
     }
   }
@@ -700,6 +913,33 @@ trait LeafletSettingsElementsTrait {
     }
     elseif (!empty($element['#value'])) {
       $form_state->setValueForElement($element, JSON::encode($element_values_array));
+    }
+  }
+
+  /**
+   * Validates the Geocoder Providers element.
+   *
+   * @param array $element
+   *   The form element to build.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public static function validateGeocoderProviders(array $element, FormStateInterface &$form_state) {
+    $form_state_input = $form_state->getUserInput();
+    if (isset($form_state_input['style_options'])) {
+      $geocoder_control = $form_state_input['style_options']['geocoder']['control'];
+    }
+    if (isset($form_state_input['fields'])) {
+      $geocoder_control = $form_state_input['fields'][$element['#array_parents'][1]]['settings_edit_form']['settings']['geocoder']['control'];
+    }
+    if (isset($geocoder_control) && $geocoder_control) {
+      $providers = is_array($element['#value']) ? array_filter($element['#value'], function ($value) {
+        return isset($value['checked']) && TRUE == $value['checked'];
+      }) : [];
+
+      if (empty($providers)) {
+        $form_state->setError($element, t('The Geocode Origin option needs at least one geocoder plugin selected.'));
+      }
     }
   }
 

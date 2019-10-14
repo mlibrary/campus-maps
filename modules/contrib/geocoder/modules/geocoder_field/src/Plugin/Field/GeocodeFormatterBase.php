@@ -83,7 +83,7 @@ abstract class GeocodeFormatterBase extends FormatterBase implements ContainerFa
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A config factory for retrieving required config objects.
    * @param \Drupal\geocoder\Geocoder $geocoder
-   *   The gecoder service.
+   *   The geocoder service.
    * @param \Drupal\geocoder\ProviderPluginManager $provider_plugin_manager
    *   The provider plugin manager service.
    * @param \Drupal\geocoder\DumperPluginManager $dumper_plugin_manager

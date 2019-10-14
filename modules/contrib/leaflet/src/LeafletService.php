@@ -2,17 +2,26 @@
 
 namespace Drupal\leaflet;
 
+use Drupal\Core\Session\AccountInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\Component\Serialization\Json;
 
 /**
  * Provides a  LeafletService class.
  */
 class LeafletService {
+
+  /**
+   * Current user service.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
 
   /**
    * The geoPhpWrapper service.
@@ -36,8 +45,10 @@ class LeafletService {
   protected $link;
 
   /**
-   * GeofieldMapWidget constructor.
+   * LeafletService constructor.
    *
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   Current user service.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
    *   The geoPhpWrapper.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
@@ -46,10 +57,12 @@ class LeafletService {
    *   The Link Generator service.
    */
   public function __construct(
+    AccountInterface $current_user,
     GeoPHPInterface $geophp_wrapper,
     ModuleHandlerInterface $module_handler,
     LinkGeneratorInterface $link_generator
   ) {
+    $this->currentUser = $current_user;
     $this->geoPhpWrapper = $geophp_wrapper;
     $this->moduleHandler = $module_handler;
     $this->link = $link_generator;
@@ -80,6 +93,29 @@ class LeafletService {
       $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster';
       $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster-drupal';
     }
+
+    // Add the Leaflet Geocoder library and functionalities, if requested,
+    // and the user has access to Geocoder Api Enpoints.
+    if ($this->moduleHandler->moduleExists('geocoder')
+      && class_exists('\Drupal\geocoder\Controller\GeocoderApiEnpoints')
+      && isset($map['settings']['geocoder'])
+      && $map['settings']['geocoder']['control']
+      && $this->currentUser->hasPermission('access geocoder api endpoints')) {
+      $attached_libraries[] = 'leaflet/leaflet.geocoder';
+
+      // Set the $map['settings']['geocoder']['providers'] as the enabled ones.
+      $enabled_providers = [];
+      foreach ($map['settings']['geocoder']['settings']['providers'] as $plugin_id => $plugin) {
+        if (!empty($plugin['checked'])) {
+          $enabled_providers[] = $plugin_id;
+        }
+      }
+      $map['settings']['geocoder']['settings']['providers'] = $enabled_providers;
+      $map['settings']['geocoder']['settings']['options'] = [
+        'options' => JSON::decode($map['settings']['geocoder']['settings']['options']),
+      ];
+    }
+
     $settings[$map_id] = [
       'mapid' => $map_id,
       'map' => $map,
@@ -180,15 +216,15 @@ class LeafletService {
    *   The return array.
    */
   private function leafletProcessGeometry(\Geometry $geom) {
-    $datum = array('type' => strtolower($geom->geometryType()));
+    $datum = ['type' => strtolower($geom->geometryType())];
 
     switch ($datum['type']) {
       case 'point':
-        $datum = array(
+        $datum = [
           'type' => 'point',
           'lat' => $geom->getY(),
           'lon' => $geom->getX(),
-        );
+        ];
         break;
 
       case 'linestring':
@@ -196,10 +232,10 @@ class LeafletService {
         $components = $geom->getComponents();
         /* @var \Geometry $component */
         foreach ($components as $component) {
-          $datum['points'][] = array(
+          $datum['points'][] = [
             'lat' => $component->getY(),
             'lon' => $component->getX(),
-          );
+          ];
         }
         break;
 
@@ -211,10 +247,10 @@ class LeafletService {
         $components = $geom->getComponents();
         /* @var \Geometry $component */
         foreach ($components as $component) {
-          $datum['points'][] = array(
+          $datum['points'][] = [
             'lat' => $component->getY(),
             'lon' => $component->getX(),
-          );
+          ];
         }
         break;
 
@@ -231,10 +267,10 @@ class LeafletService {
           $subcomponents = $component->getComponents();
           /* @var \Geometry $subcomponent */
           foreach ($subcomponents as $subcomponent) {
-            $datum['component'][$key]['points'][] = array(
+            $datum['component'][$key]['points'][] = [
               'lat' => $subcomponent->getY(),
               'lon' => $subcomponent->getX(),
-            );
+            ];
           }
           unset($subcomponent);
         }
@@ -255,10 +291,10 @@ class LeafletService {
           $subcomponents = $component->getComponents();
           /* @var \Geometry $subcomponent */
           foreach ($subcomponents as $subcomponent) {
-            $datum['component'][$key]['points'][] = array(
+            $datum['component'][$key]['points'][] = [
               'lat' => $subcomponent->getY(),
               'lon' => $subcomponent->getX(),
-            );
+            ];
           }
         }
         break;
@@ -324,7 +360,7 @@ class LeafletService {
   }
 
   /**
-   * Check if an array has all his values empty.
+   * Check if an array has all values empty.
    *
    * @param array $array
    *   The array to check.

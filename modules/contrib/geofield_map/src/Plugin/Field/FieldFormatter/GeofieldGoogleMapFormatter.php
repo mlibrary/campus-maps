@@ -55,6 +55,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   ];
 
   /**
+   * The Default Settings.
+   *
+   * @var array
+   */
+  protected $defaultSettings;
+
+  /**
    * The config factory service.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
@@ -186,6 +193,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     MarkerIconService $marker_icon_service
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
+    $this->defaultSettings = self::getDefaultSettings();
     $this->config = $config_factory;
     $this->link = $link_generator;
     $this->entityTypeManager = $entity_type_manager;
@@ -297,7 +305,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
       'image_style' => [
         '#type' => 'select',
-        '#title' => t('Image style'),
+        '#title' => $this->t('Image style'),
         '#options' => $this->markerIcon->getImageStyleOptions(),
         '#default_value' => isset($settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style']) ? $settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] : 'geofield_map_default_icon_style',
         '#states' => [

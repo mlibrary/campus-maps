@@ -267,7 +267,6 @@ class GeofieldMap extends GeofieldElementBase {
       'geofield_map' => $settings,
     ];
 
-
     return $element;
   }
 

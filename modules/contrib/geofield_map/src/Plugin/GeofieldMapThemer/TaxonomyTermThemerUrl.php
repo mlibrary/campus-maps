@@ -30,7 +30,8 @@ use Drupal\Core\Ajax\ReplaceCommand;
  * @MapThemer(
  *   id = "geofieldmap_taxonomy_term_url",
  *   name = @Translation("Taxonomy Term (geofield_map) - Image Select"),
- *   description = "This Geofield Map Themer allows the Image Selection of different Marker Icons based on Taxonomy Terms reference field in View.",
+ *   description = "This Geofield Map Themer allows the Image Selection of
+ * different Marker Icons based on Taxonomy Terms reference field in View.",
  *   context = {"ViewStyle"},
  *   weight = 4,
  *   markerIconSelection = {
@@ -299,7 +300,7 @@ class TaxonomyTermThemerUrl extends MapThemerBase {
             ],
             'icon_file_uri' => $icon_file_uri,
             'legend_exclude' => [
-              'value' => isset($default_row) && isset($default_row['legend_exclude']) ? $default_row['legend_exclude'] : (count($field['terms']) > 10 ? TRUE : FALSE) ,
+              'value' => isset($default_row) && isset($default_row['legend_exclude']) ? $default_row['legend_exclude'] : (count($field['terms']) > 10 ? TRUE : FALSE),
             ],
             'attributes' => ['class' => ['draggable']],
           ];

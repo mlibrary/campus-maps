@@ -9,6 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Component\Utility\Environment;
 
 /**
  * Implements the GeofieldMapSettingsForm controller.
@@ -61,13 +62,13 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#default_value' => $config->get('gmap_api_key'),
       '#title' => $this->t('Gmap Api Key (@gmap_api_link)', [
-        '@gmap_api_link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
+        '@gmap_api_link' => $this->link->generate($this->t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
       ]),
       '#description' => $this->t('A unique Gmap Api Key is required for both Google Mapping and Geocoding operations, all performed client-side by js.<br>@gmap_api_restrictions_link.', [
-        '@gmap_api_restrictions_link' => $this->link->generate(t('It might/should be restricted using the Website Domain / HTTP referrers method'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key#key-restrictions', [
+        '@gmap_api_restrictions_link' => $this->link->generate($this->t('It might/should be restricted using the Website Domain / HTTP referrers method'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key#key-restrictions', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
@@ -81,8 +82,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#placeholder' => $this->t('Input a valid Gmap API Key'),
       '#title' => $this->t('Gmap Api Localization'),
       '#options' => [
-        'default' => t('Default - Normal international Google Maps API load'),
-        'china' => t('Chinese - API Load for specific use in China'),
+        'default' => $this->t('Default - Normal international Google Maps API load'),
+        'china' => $this->t('Chinese - API Load for specific use in China'),
       ],
       '#description' => $this->t('Possible alternative logic for Google Maps Api load, in specific countries (i.e: China).'),
     ];
@@ -147,7 +148,7 @@ Hint: To accomplish configuration sync management among your different deploy en
       '#type' => 'textfield',
       '#title' => $this->t('Maximum file size'),
       '#default_value' => !empty($config->get('theming.markers_filesize')) ? $config->get('theming.markers_filesize') : '250 KB',
-      '#description' => t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', ['%limit' => format_size(file_upload_max_size())]),
+      '#description' => $this->t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', ['%limit' => format_size(Environment::getUploadMaxSize())]),
       '#size' => 10,
       '#element_validate' => ['\Drupal\file\Plugin\Field\FieldType\FileItem::validateMaxFilesize'],
     ];
@@ -173,7 +174,7 @@ Hint: To accomplish configuration sync management among your different deploy en
       '#title' => $this->t('Client Side WebStorage'),
       '#default_value' => !empty($config->get('geocoder.caching.clientside')) ? $config->get('geocoder.caching.clientside') : 'session_storage',
       '#description' => $this->t('The following option will activate caching of geocoding results on the client side, as far as possible at the moment (only Reverse Geocoding results).<br>This can highly reduce the amount of payload calls against the Google Maps Geocoder and Google Places webservices used by the module.<br>Please refer to official documentation on @html5_web_storage browsers capabilities and specifications.', [
-        '@html5_web_storage' => $this->link->generate(t('HTML5 Web Storage'), Url::fromUri('https://www.w3schools.com/htmL/html5_webstorage.asp', [
+        '@html5_web_storage' => $this->link->generate($this->t('HTML5 Web Storage'), Url::fromUri('https://www.w3schools.com/htmL/html5_webstorage.asp', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),

@@ -17,6 +17,15 @@ leaflet:
     component:
       js/leaflet/dist/leaflet.css: {}
 
+leaflet-drupal:
+  version: VERSION
+  js:
+    leaflet.drupal.js: {}
+  dependencies:
+    - leaflet/leaflet
+    - core/jquery
+    - core/drupal
+
 # Control Fullscreen
 leaflet.fullscreen:
   header: true
@@ -34,11 +43,13 @@ leaflet.fullscreen:
   dependencies:
     - leaflet/leaflet
 
-leaflet-drupal:
-    version: VERSION
-    js:
-      leaflet.drupal.js: {}
-    dependencies:
-      - leaflet/leaflet
-      - core/jquery
-      - core/drupal
+leaflet.geocoder:
+  version: 1.x
+  css:
+    component:
+      css/leaflet_geocoder.css: {}
+  js:
+    js/leaflet.geocoder.drupal.js: {}
+  dependencies:
+    - core/drupal.autocomplete
+    - leaflet/leaflet-drupal

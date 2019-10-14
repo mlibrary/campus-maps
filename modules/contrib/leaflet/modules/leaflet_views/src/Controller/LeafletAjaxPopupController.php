@@ -103,7 +103,7 @@ class LeafletAjaxPopupController extends ControllerBase {
    * @return string
    *   The identifier.
    */
-  public static function getPopupIdentifier($entityType, $entityId, $viewMode, $langcode): string {
+  public static function getPopupIdentifier($entityType, $entityId, $viewMode, $langcode) {
     return "$entityType-$entityId-$viewMode-$langcode";
   }
 

@@ -41,6 +41,11 @@ trait GeofieldMapFieldTrait {
     "text_with_summary",
   ];
 
+  /**
+   * Custom Map Style Placeholder.
+   *
+   * @var string
+   */
   protected $customMapStylePlaceholder = '[{"elementType":"geometry","stylers":[{"color":"#1d2c4d"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#1a3646"}]},{"featureType":"administrative.country","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"administrative.province","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e1626"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#4e6d70"}]},{"featureType":"poi","stylers":[{"visibility":"off"}]}]';
 
   /**
@@ -102,6 +107,7 @@ trait GeofieldMapFieldTrait {
           'force' => 0,
           'min' => 1,
           'max' => 22,
+          'finer' => 0,
         ],
         'scrollwheel' => 1,
         'draggable' => 1,
@@ -481,6 +487,13 @@ trait GeofieldMapFieldTrait {
       $force_center_selector = ':input[name="style_options[map_center][center_force]"]';
     }
 
+    if (isset($this->fieldDefinition)) {
+      $force_zoom_selector = ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_zoom_and_pan][zoom][force]"]';
+    }
+    else {
+      $force_zoom_selector = ':input[name="style_options[map_zoom_and_pan][zoom][force]"]';
+    }
+
     $elements['map_zoom_and_pan'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Map Zoom and Pan'),
@@ -524,6 +537,20 @@ trait GeofieldMapFieldTrait {
         '#description' => $this->t('The Maximum Zoom level for the Map.'),
         '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
       ],
+      'finer' => [
+        '#title' => $this->t('Zoom Finer'),
+        '#type' => 'number',
+        '#max' => 3,
+        '#min' => -3,
+        '#step' => 0,
+        '#description' => $this->t('Value that might/will be added to default Fit Markers Bounds Zoom. (-3 / +3)'),
+        '#default_value' => $settings['map_zoom_and_pan']['zoom']['finer'] ?? $this->defaultSettings['map_zoom_and_pan']['zoom']['finer'],
+        '#states' => [
+          'invisible' => [
+            $force_zoom_selector => ['checked' => TRUE],
+          ],
+        ],
+      ],
     ];
     $elements['map_zoom_and_pan']['gestureHandling'] = [
       '#type' => 'select',
@@ -531,7 +558,7 @@ trait GeofieldMapFieldTrait {
       '#options' => [
         'auto' => 'auto',
         'greedy' => 'greedy',
-        'cooperative' => 'cooperative' ,
+        'cooperative' => 'cooperative',
         'none' => 'none',
       ],
       '#default_value' => isset($settings['map_zoom_and_pan']['gestureHandling']) ? $settings['map_zoom_and_pan']['gestureHandling'] : 'auto',
@@ -721,14 +748,6 @@ trait GeofieldMapFieldTrait {
       '#weight' => -10,
     ];
 
-    // Add SVG UI file support.
-    $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= !$this->moduleHandler->moduleExists('svg_image') ? '<br>' . $this->t('SVG Files support is disabled. Enabled it with @svg_image_link', [
-      '@svg_image_link' => $this->link->generate('SVG Image Module', Url::fromUri('https://www.drupal.org/project/svg_image', [
-        'absolute' => TRUE,
-        'attributes' => ['target' => 'blank'],
-      ])),
-    ]) : '<br>' . $this->t('SVG Files support enabled.');
-
     $multivalue_fields_states = [];
 
     $infowindow_fields_options = [];
@@ -739,7 +758,12 @@ trait GeofieldMapFieldTrait {
     // Setup the tokens for views fields.
     // Code is snatched from Drupal\views\Plugin\views\field\FieldPluginBase.
     if (!isset($this->fieldDefinition)) {
-      $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= '<br>' . $this->t('You may enter data from this view as per the "Replacement patterns" below.');
+      $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= '<br>' . $this->t('You may enter dynamic data from this View Display Fields via "Replacement patterns" below. Note: Twig notation allows you to define per-row icons (@see this @icon_image_path_issue).', [
+        '@icon_image_path_issue' => $this->link->generate('Geofield Map drupal.org issue', Url::fromUri('https://www.drupal.org/project/geofield_map/issues/3074255', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]);
 
       $options = [];
       $optgroup_fields = (string) t('Fields');
@@ -757,14 +781,14 @@ trait GeofieldMapFieldTrait {
         ];
         foreach (array_keys($options) as $type) {
           if (!empty($options[$type])) {
-            $items = array();
+            $items = [];
             foreach ($options[$type] as $key => $value) {
               $items[] = $key;
             }
-            $item_list = array(
+            $item_list = [
               '#theme' => 'item_list',
               '#items' => $items,
-            );
+            ];
             $replacement_output[] = $item_list;
           }
         }
@@ -776,6 +800,14 @@ trait GeofieldMapFieldTrait {
         '#value' => $replacement_output,
       ];
     }
+
+    // Add SVG UI file support.
+    $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= !$this->moduleHandler->moduleExists('svg_image') ? '<br>' . $this->t('SVG Files support is disabled. Enabled it with @svg_image_link', [
+      '@svg_image_link' => $this->link->generate('SVG Image Module', Url::fromUri('https://www.drupal.org/project/svg_image', [
+        'absolute' => TRUE,
+        'attributes' => ['target' => 'blank'],
+      ])),
+    ]) : '<br>' . $this->t('SVG Files support enabled.');
 
     // In case it is a Field Formatter.
     if (isset($this->fieldDefinition)) {
@@ -1187,7 +1219,7 @@ trait GeofieldMapFieldTrait {
       '#rows' => 4,
       '#title' => $this->t('Marker Cluster Additional Options'),
       '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
-      '#default_value' => isset($settings['map_markercluster']['markercluster_additional_options']) ? $settings['map_markercluster']['markercluster_additional_options']: $default_settings['map_markercluster']['markercluster_additional_options'],
+      '#default_value' => isset($settings['map_markercluster']['markercluster_additional_options']) ? $settings['map_markercluster']['markercluster_additional_options'] : $default_settings['map_markercluster']['markercluster_additional_options'],
       '#placeholder' => '{"maxZoom":12,"gridSize":50}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];

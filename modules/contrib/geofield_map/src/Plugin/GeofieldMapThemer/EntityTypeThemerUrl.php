@@ -24,7 +24,8 @@ use Drupal\Core\Entity\EntityInterface;
  * @MapThemer(
  *   id = "geofieldmap_entity_type_url",
  *   name = @Translation("Entity Type (geofield_map) - Image Select"),
- *   description = "This Geofield Map Themer allows the Image Selection of different Marker Icons based on Entity Types/Bundles.",
+ *   description = "This Geofield Map Themer allows the Image Selection of
+ * different Marker Icons based on Entity Types/Bundles.",
  *   context = {"ViewStyle"},
  *   weight = 2,
  *   markerIconSelection = {

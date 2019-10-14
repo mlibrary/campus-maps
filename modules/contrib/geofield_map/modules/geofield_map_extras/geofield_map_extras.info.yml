@@ -1,0 +1,14 @@
+name: Geofield Map Extras
+description: 'This sub-module provides additional features to the main Geofield Map module.'
+package: Field types
+dependencies:
+  - geofield_map:geofield_map
+
+# core: 8.x
+type: module
+
+# Information added by Drupal.org packaging script on 2019-08-14
+version: '8.x-2.45'
+core: '8.x'
+project: 'geofield_map'
+datestamp: 1565813591

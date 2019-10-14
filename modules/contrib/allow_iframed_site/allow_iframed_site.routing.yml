@@ -1,0 +1,9 @@
+allow_iframed_site.settings:
+  path: '/admin/config/system/allow_iframed_site'
+  defaults:
+    _form: '\Drupal\allow_iframed_site\Form\AllowIframedSiteConfigForm'
+    _title: 'Allow Iframed Site'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE

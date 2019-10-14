@@ -11,11 +11,20 @@
           Drupal.Leaflet[mapid].start_zoom = Drupal.Leaflet[mapid].lMap.getZoom();
         }
 
+        // Add the Map Reset Control if requested.
         if (settings.settings.reset_map && settings.settings.reset_map.control && !Drupal.Leaflet[mapid].reset_control) {
           // Create the DIV to hold the control and call the mapResetControl()
           // constructor passing in this DIV.
           var mapResetControlDiv = document.createElement('div');
-          Drupal.Leaflet[mapid].reset_control = Drupal.Leaflet.prototype.map_reset_control(mapResetControlDiv, mapid, settings.settings.reset_map.position).addTo(Drupal.Leaflet[mapid].lMap);
+          Drupal.Leaflet[mapid].reset_control = Drupal.Leaflet.prototype.map_reset_control(mapResetControlDiv, mapid).addTo(Drupal.Leaflet[mapid].lMap);
+        }
+
+        // Add the Map Geocoder Control if requested.
+        if (Drupal.Leaflet.prototype.map_geocoder_control) {
+          var mapGeocoderControlDiv = document.createElement('div');
+          Drupal.Leaflet[mapid].geocoder_control = Drupal.Leaflet.prototype.map_geocoder_control(mapGeocoderControlDiv, mapid).addTo(Drupal.Leaflet[mapid].lMap);
+          var geocoder_settings = drupalSettings.leaflet[mapid].map.settings.geocoder.settings;
+          Drupal.Leaflet.prototype.map_geocoder_control.autocomplete(mapid, geocoder_settings);
         }
 
         // Attach leaflet ajax popup listeners.
@@ -106,6 +115,11 @@
     // Instantiate a new Leaflet map.
     self.lMap = new L.Map(self.mapid, self.settings);
 
+    // Set the public map object, to make it accessible from outside.
+    Drupal.Leaflet[mapid] = {
+      lMap: self.lMap,
+    };
+
     // Add map layers (base and overlay layers).
     var layers = {}, overlays = {};
     var i = 0;
@@ -119,11 +133,11 @@
         case 'overlay':
           var overlay_layer = self.create_layer(layer, key);
           var layer_hidden = (typeof layer.layer_hidden === "undefined") ? false : layer.layer_hidden;
-          self.add_overlay(key, overlay_layer, layer_hidden);
+          self.add_overlay(key, overlay_layer, layer_hidden, mapid);
           break;
 
         default:
-          self.add_base_layer(key, layer, i);
+          self.add_base_layer(key, layer, i, mapid);
           // Only the first base layer needs to be added to the map - all the
           // others are accessed via the layer switcher.
           if (i === 0) {
@@ -153,14 +167,9 @@
       self.lMap.addControl(new L.Control.Fullscreen());
     }
 
-    // Set the public map object, to make it accessible from outside.
-    Drupal.Leaflet[mapid] = {
-      lMap: self.lMap,
-    };
-
   };
 
-  Drupal.Leaflet.prototype.initialise_layer_control = function() {
+  Drupal.Leaflet.prototype.initialise_layer_control = function(mapid) {
     var self = this;
     var count_layers = function(obj) {
       // Browser compatibility: Chrome, IE 9+, FF 4+, or Safari 5+.
@@ -170,14 +179,14 @@
 
     // Only add a layer switcher if it is enabled in settings, and we have
     // at least two base layers or at least one overlay.
-    if (self.layer_control == null && self.settings.layerControl && (count_layers(self.base_layers) > 1 || count_layers(self.overlays) > 0)) {
+    if (Drupal.Leaflet[mapid].layer_control == null && self.settings.layerControl && (count_layers(self.base_layers) > 1 || count_layers(self.overlays) > 0)) {
       // Instantiate layer control, using settings.layerControl as settings.
-      self.layer_control = new L.Control.Layers(self.base_layers, self.overlays, self.settings.layerControlOptions);
-      self.lMap.addControl(self.layer_control);
+      Drupal.Leaflet[mapid].layer_control = new L.Control.Layers(self.base_layers, self.overlays, self.settings.layerControlOptions);
+      self.lMap.addControl(Drupal.Leaflet[mapid].layer_control);
     }
   };
 
-  Drupal.Leaflet.prototype.add_base_layer = function(key, definition, i) {
+  Drupal.Leaflet.prototype.add_base_layer = function(key, definition, i, mapid) {
     var self = this;
     var map_layer = self.create_layer(definition, key);
     self.base_layers[key] = map_layer;
@@ -185,29 +194,32 @@
     if (i === 0) {
       self.lMap.addLayer(map_layer);
     }
-    if (self.layer_control == null) {
-      self.initialise_layer_control();
+    if (Drupal.Leaflet[mapid].layer_control == null) {
+      self.initialise_layer_control(mapid);
     }
     else {
       // If we already have a layer control, add the new base layer to it.
-      self.layer_control.addBaseLayer(map_layer, key);
+      Drupal.Leaflet[mapid].layer_control.addBaseLayer(map_layer, key);
     }
+    Drupal.Leaflet[mapid].base_layers = self.base_layers;
   };
 
-  Drupal.Leaflet.prototype.add_overlay = function(label, layer, layer_hidden) {
+  Drupal.Leaflet.prototype.add_overlay = function(label, layer, layer_hidden, mapid) {
     var self = this;
     self.overlays[label] = layer;
     if (!layer_hidden) {
-      self.lMap.addLayer(layer);
+      Drupal.Leaflet[mapid].layer_control.lMap.addLayer(layer);
     }
 
-    if (self.layer_control == null) {
-      self.initialise_layer_control();
+    if (Drupal.Leaflet[mapid].layer_control == null) {
+      self.initialise_layer_control(mapid);
     }
     else {
       // If we already have a layer control, add the new overlay to it.
-      self.layer_control.addOverlay(layer, label);
+      Drupal.Leaflet[mapid].layer_control.addOverlay(layer, label);
     }
+    Drupal.Leaflet[mapid].overlays = self.overlays;
+
   };
 
   Drupal.Leaflet.prototype.add_features = function(mapid, features, initial) {
@@ -385,6 +397,21 @@
     return icon;
   };
 
+  Drupal.Leaflet.prototype.create_divicon = function (options) {
+    var html_class = options.html_class || '';
+    var icon = new L.DivIcon({html: options.html, className: html_class});
+
+    // override applicable marker defaults
+    if (options.iconSize) {
+      icon.options.iconSize = new L.Point(parseInt(options.iconSize.x, 10), parseInt(options.iconSize.y, 10));
+    }
+    if (options.iconAnchor) {
+      icon.options.iconAnchor = new L.Point(parseFloat(options.iconAnchor.x), parseFloat(options.iconAnchor.y));
+    }
+
+    return icon;
+  };
+
   Drupal.Leaflet.prototype.create_point = function(marker) {
     var self = this;
     var latLng = new L.LatLng(marker.lat, marker.lon);
@@ -409,24 +436,30 @@
     lMarker = new L.Marker(latLng, options);
 
     if (marker.icon) {
-      checkImage(marker.icon.iconUrl,
-        // Success loading image.
-        function() {
-          marker.icon.iconSize = marker.icon.iconSize || {};
-          marker.icon.iconSize.x = marker.icon.iconSize.x || this.naturalWidth;
-          marker.icon.iconSize.y = marker.icon.iconSize.y || this.naturalHeight;
-          if (marker.icon.shadowUrl) {
-            marker.icon.shadowSize = marker.icon.shadowSize || {};
-            marker.icon.shadowSize.x = marker.icon.shadowSize.x || this.naturalWidth;
-            marker.icon.shadowSize.y = marker.icon.shadowSize.y || this.naturalHeight;
-          }
-          options.icon = self.create_icon(marker.icon);
-          lMarker.setIcon(options.icon);
-        },
-        // Error loading image.
-        function(err) {
-          console.log("Leaflet: The Icon Image doesn't exist at the requested path: " + marker.icon.iconUrl);
-        });
+      if (marker.icon.iconType && marker.icon.iconType === 'html' && marker.icon.html) {
+        options.icon = self.create_divicon(marker.icon);
+        lMarker.setIcon(options.icon);
+      }
+      else if (marker.icon.iconUrl) {
+        checkImage(marker.icon.iconUrl,
+          // Success loading image.
+          function() {
+            marker.icon.iconSize = marker.icon.iconSize || {};
+            marker.icon.iconSize.x = marker.icon.iconSize.x || this.naturalWidth;
+            marker.icon.iconSize.y = marker.icon.iconSize.y || this.naturalHeight;
+            if (marker.icon.shadowUrl) {
+              marker.icon.shadowSize = marker.icon.shadowSize || {};
+              marker.icon.shadowSize.x = marker.icon.shadowSize.x || this.naturalWidth;
+              marker.icon.shadowSize.y = marker.icon.shadowSize.y || this.naturalHeight;
+            }
+            options.icon = self.create_icon(marker.icon);
+            lMarker.setIcon(options.icon);
+          },
+          // Error loading image.
+          function(err) {
+            console.log("Leaflet: The Icon Image doesn't exist at the requested path: " + marker.icon.iconUrl);
+          });
+      }
     }
 
     return lMarker;
@@ -541,9 +574,9 @@
 
       // In case of map initial position not forced, and zooFiner not null/neutral,
       // adapt the Map Zoom and the Start Zoom accordingly.
-      if (!self.settings.map_position_force && self.settings.zoomFiner && self.settings.zoomFiner !== 0) {
+      if (!self.settings.map_position_force && self.settings.hasOwnProperty('zoomFiner') && self.settings['zoomFiner'] !== 0) {
+        start_zoom += self.settings['zoomFiner'];
         Drupal.Leaflet[mapid].lMap.setZoom(start_zoom);
-        start_zoom =+ self.settings.zoomFiner;
       }
 
       // Set the map start zoom and center.
@@ -557,9 +590,10 @@
     Drupal.Leaflet[mapid].lMap.setView(Drupal.Leaflet[mapid].start_center, Drupal.Leaflet[mapid].start_zoom);
   };
 
-  Drupal.Leaflet.prototype.map_reset_control = function(controlDiv, mapid, reset_map_position) {
+  Drupal.Leaflet.prototype.map_reset_control = function(controlDiv, mapid) {
     var self = this;
-    var control = new L.Control({position: reset_map_position});
+    var reset_map_control_settings = drupalSettings.leaflet[mapid].map.settings.reset_map;
+    var control = new L.Control({position: reset_map_control_settings.position});
     control.onAdd = function() {
       // Set CSS for the control border.
       var controlUI = L.DomUtil.create('div','resetzoom')

@@ -33,6 +33,9 @@ a field for Title and Description (which will be rendered in the popup).
 [__Leaflet Markercluster Js library__](https://github.com/Leaflet/Leaflet.markercluster) functionalities and configurations, both 
 in the Leaflet Formatter and in the Leaflet Map View display.
 
+- Add, enable and configure ["Geoocoder" module for D8](https://www.drupal.org/project/geocoder) to enable Geocoder Control
+ (with Autocomplete) for quick Address search and Leaflet Map Pan & Zoom functionalities.
+
 As a more powerful alternative, you can use node view modes to be rendered in
 the popup. In the Description field, select "<entire node>" and then select a
 View mode.

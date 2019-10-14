@@ -165,7 +165,6 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
    */
   protected $fieldTypeManager;
 
-
   /**
    * Constructs a LeafletMap style instance.
    *
@@ -598,6 +597,10 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
 
     // Set Map Geometries Options Element.
     $this->setMapPathOptionsElement($form, $this->options);
+
+    // Set Map Geocoder Control Element, if the Geocoder Module exists,
+    // otherwise output a tip on Geocoder Module Integration.
+    $this->setGeocoderMapControl($form, $this->options);
   }
 
   /**
@@ -779,7 +782,6 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
                 $url = Url::fromRoute('leaflet_views.ajax_popup', $parameters, ['absolute' => TRUE]);
                 $description = sprintf('<div class="leaflet-ajax-popup" data-leaflet-ajax-popup="%s" %s></div>',
                   $url->toString(), LeafletAjaxPopupController::getPopupIdentifierAttribute($entity_type, $entity->id(), $this->options['view_mode'], $langcode));
-                $build_for_bubbleable_metadata['#attached']['library'][] = 'drupal/ajax';
                 break;
 
               default:
@@ -822,14 +824,23 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
               $this->options['icon'] = array_replace($map['icon'], $this->options['icon']);
             }
 
-            // Attach iconUrl properties to each point.
-            if (!empty($this->options['icon']) && !empty($this->options['icon']['iconUrl'])) {
+            $icon_type = isset($this->options['icon']['iconType']) ? $this->options['icon']['iconType'] : 'marker';
+
+            // Eventually set the custom icon as DivIcon or Icon Url.
+            if ($icon_type === 'marker' && !empty($this->options['icon']['iconUrl'])
+              || $icon_type === 'html' && !empty($this->options['icon']['html'])) {
               $tokens = [];
               foreach ($this->rendered_fields[$result->index] as $field_name => $field_value) {
                 $tokens[$field_name] = $field_value;
+                $tokens["{{ $field_name }}"] = $field_value;
               }
               foreach ($points as &$point) {
-                if (!empty($this->options['icon']['iconUrl'])) {
+                if ($icon_type === 'html' && !empty($this->options['icon']['html'])) {
+                  $point['icon'] = $this->options['icon'];
+                  $point['icon']['html'] = $this->viewsTokenReplace($this->options['icon']['html'], $tokens);
+                  $point['icon']['html_class'] = $this->options['icon']['html_class'];
+                }
+                elseif (!empty($this->options['icon']['iconUrl'])) {
                   $point['icon'] = $this->options['icon'];
                   $point['icon']['iconUrl'] = $this->viewsTokenReplace($this->options['icon']['iconUrl'], $tokens);
                   if (!empty($this->options['icon']['shadowUrl'])) {
@@ -841,8 +852,7 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
 
             foreach ($points as &$point) {
               // Allow modules to adjust the marker.
-              \Drupal::moduleHandler()
-                ->alter('leaflet_views_feature', $point, $result, $this->view->rowPlugin);
+              \Drupal::moduleHandler()->alter('leaflet_views_feature', $point, $result, $this->view->rowPlugin);
             }
             // Add new points to the whole basket.
             $data = array_merge($data, $points);
@@ -865,7 +875,8 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
     // Allow other modules to add/alter the map js settings.
     $this->moduleHandler->alter('leaflet_map_view_style', $js_settings, $this);
 
-    $build = $this->leafletService->leafletRenderMap($js_settings['map'], $js_settings['features'], $this->options['height'] . 'px');
+    $map_height = !empty($this->options['height']) ? $this->options['height'] . $this->options['height_unit'] : '';
+    $build = $this->leafletService->leafletRenderMap($js_settings['map'], $js_settings['features'], $map_height);
     BubbleableMetadata::createFromRenderArray($build)
       ->merge(BubbleableMetadata::createFromRenderArray($build_for_bubbleable_metadata))
       ->applyTo($build);

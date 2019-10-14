@@ -17,7 +17,9 @@ use Drupal\Core\Entity\EntityInterface;
  * @MapThemer(
  *   id = "geofieldmap_entity_type",
  *   name = @Translation("Entity Type (geofield_map) - Image Upload (deprecated)"),
- *   description = "This Geofield Map Themer allows the Image Upload of different Marker Icons based on Entity Types/Bundles.(<u>Note:</u> NOT compatible with D8 Consifguration Management)",
+ *   description = "This Geofield Map Themer allows the Image Upload of
+ * different Marker Icons based on Entity Types/Bundles.
+ * (<u>Note:</u> NOT compatible with D8 Consifguration Management)",
  *   context = {"ViewStyle"},
  *   weight = 3,
  *   markerIconSelection = {

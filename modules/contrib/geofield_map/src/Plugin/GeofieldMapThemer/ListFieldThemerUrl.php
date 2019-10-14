@@ -28,7 +28,8 @@ use Drupal\Core\Ajax\ReplaceCommand;
  * @MapThemer(
  *   id = "geofieldmap_list_fields_url",
  *   name = @Translation("List Type Field (geofield_map) - Image Select"),
- *   description = "This Geofield Map Themer allows the Image Selection of different Marker Icons based on List (Options) Type fields in View.",
+ *   description = "This Geofield Map Themer allows the Image Selection of
+ * different Marker Icons based on List (Options) Type fields in View.",
  *   context = {"ViewStyle"},
  *   weight = 6,
  *   markerIconSelection = {
@@ -268,7 +269,7 @@ class ListFieldThemerUrl extends MapThemerBase {
               'value' => isset($default_element['fields'][$k]['options'][$id]['image_style']) ? $default_element['fields'][$k]['options'][$id]['image_style'] : 'geofield_map_default_icon_style',
             ],
             'legend_exclude' => [
-              'value' => isset($default_element['fields'][$k]['options'][$id]['legend_exclude']) ? $default_element['fields'][$k]['options'][$id]['legend_exclude'] : (count($field['options']) > 10 ? TRUE : FALSE) ,
+              'value' => isset($default_element['fields'][$k]['options'][$id]['legend_exclude']) ? $default_element['fields'][$k]['options'][$id]['legend_exclude'] : (count($field['options']) > 10 ? TRUE : FALSE),
             ],
             'attributes' => ['class' => ['draggable']],
           ];
@@ -282,7 +283,6 @@ class ListFieldThemerUrl extends MapThemerBase {
         if ($k != $selected_list_field) {
           $element['fields'][$k]['#attributes']['class'] = ['hidden'];
         }
-
 
       }
     }

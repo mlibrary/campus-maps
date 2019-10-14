@@ -44,12 +44,6 @@ geofield_map_view_display_settings:
     component:
       css/geofield_map_view_display_settings.css: {}
 
-geofield_map_legend:
-  version: 1.x
-  css:
-    component:
-      css/geofield_map_legend.css: {}
-
 geolocation:
   version: 1.x
   js:
@@ -73,7 +67,6 @@ geojson:
   version: 1.x
   js:
     js/geojson.js: {}
-
 
 # External Marker Clusterer
 marker_cluster:

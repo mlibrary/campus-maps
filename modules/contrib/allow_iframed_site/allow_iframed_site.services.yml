@@ -1,5 +1,6 @@
 services:
   remove_x_frame_options_subscriber:
     class: Drupal\allow_iframed_site\EventSubscriber\RemoveXFrameOptionsSubscriber
+    arguments: ['@config.factory', '@plugin.manager.condition']
     tags:
       - { name: event_subscriber }

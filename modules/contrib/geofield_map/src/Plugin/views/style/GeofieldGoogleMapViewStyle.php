@@ -3,6 +3,7 @@
 namespace Drupal\geofield_map\Plugin\views\style;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\geofield_map\GeofieldMapFormElementsValidationTrait;
@@ -34,7 +35,6 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
-use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -65,6 +65,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     '0' => 'View No Results Behaviour',
     '1' => 'Empty Map Centered at the Default Center',
   ];
+
+  /**
+   * The Default Settings.
+   *
+   * @var array
+   */
+  protected $defaultSettings;
 
   /**
    * The config factory service.
@@ -158,6 +165,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $moduleHandler;
 
   /**
+   * Field type plugin manager.
+   *
+   * @var \Drupal\Core\Field\FieldTypePluginManagerInterface
+   */
+  protected $fieldTypeManager;
+
+  /**
    * The geofieldMapGoogleMaps service.
    *
    * @var \Drupal\geofield_map\Services\GoogleMapsService
@@ -214,6 +228,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   The Renderer service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Field\FieldTypePluginManagerInterface $field_type_manager
+   *   The field type plugin manager service.
    * @param \Drupal\geofield_map\Services\GoogleMapsService $google_maps_service
    *   The Google Maps service.
    * @param \Drupal\geofield_map\MapThemerPluginManager $map_themer_manager
@@ -233,11 +249,12 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     MessengerInterface $messenger,
     RendererInterface $renderer,
     ModuleHandlerInterface $module_handler,
+    FieldTypePluginManagerInterface $field_type_manager,
     GoogleMapsService $google_maps_service,
     MapThemerPluginManager $map_themer_manager
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
+    $this->defaultSettings = self::getDefaultSettings();
     $this->entityManager = $entity_manager;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityDisplay = $entity_display;
@@ -248,6 +265,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->messenger = $messenger;
     $this->renderer = $renderer;
     $this->moduleHandler = $module_handler;
+    $this->fieldTypeManager = $field_type_manager;
     $this->googleMapsService = $google_maps_service;
     $this->mapThemerManager = $map_themer_manager;
     $this->mapThemersList = $this->mapThemerManager->getMapThemersList();
@@ -271,6 +289,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $container->get('messenger'),
       $container->get('renderer'),
       $container->get('module_handler'),
+      $container->get('plugin.manager.field.field_type'),
       $container->get('geofield_map.google_maps'),
       $container->get('plugin.manager.geofield_map.themer')
     );
@@ -389,7 +408,9 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
         $field_storage_definitions = $this->entityFieldManager->getFieldStorageDefinitions($entity_type);
         $field_storage_definition = $field_storage_definitions[$handler->definition['field_name']];
 
-        if ($field_storage_definition->getType() == 'geofield') {
+        $type = $field_storage_definition->getType();
+        $definition = $this->fieldTypeManager->getDefinition($type);
+        if (is_a($definition['class'], '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem', TRUE)) {
           $fields_geo_data[$field_id] = $label;
         }
       }
@@ -463,7 +484,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           return $this->entityManager->getDefinition($table['table']['entity type']);
         }
         catch (\Exception $e) {
-          $entity_type = NULL;
+          watchdog_exception('geofield_map', $e);
         }
       }
     }
@@ -851,7 +872,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           if (isset($entity)) {
             // Get and set (if not set) the Geofield cardinality.
             /* @var \Drupal\Core\Field\FieldItemList $geofield_entity */
-            if (!isset($map['geofield_cardinality'])) {
+            if (!isset($js_settings['map_settings']['geofield_cardinality'])) {
               try {
                 $geofield_entity = $entity->get($geofield_name);
                 $js_settings['map_settings']['geofield_cardinality'] = $geofield_entity->getFieldDefinition()

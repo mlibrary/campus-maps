@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * Implements hook_uninstall().
+*/
+function allow_iframed_site_uninstall() {
+  /** @var \Drupal\Core\Config\ConfigFactory $configFactory */
+//  $configFactory = \Drupal::configFactory();
+  /** @var \Drupal\Core\Config\Config $config */
+  $config = \Drupal::configFactory()->getEditable('allow_iframed_site.settings');
+  $config->delete();
+  $logger = \Drupal::logger('allow_iframed_site');
+
+//  foreach ($config->getRawData() as $key => $conf) {
+//    $conf->delete();
+////    $configFactory->getEditable($configName)->delete();
+//  }
+
+}

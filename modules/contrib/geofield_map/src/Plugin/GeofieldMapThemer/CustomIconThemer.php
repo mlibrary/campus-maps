@@ -18,7 +18,8 @@ use Drupal\Core\Render\Markup;
  * @MapThemer(
  *   id = "geofieldmap_custom_icon",
  *   name = @Translation("Custom Icon Image File (geofield_map) - Image Upload (deprecated)"),
- *   description = "This Geofield Map Themer allows the definition of a unique custom Marker Icon, valid for all the Map Markers.",
+ *   description = "This Geofield Map Themer allows the definition of a unique
+ * custom Marker Icon, valid for all the Map Markers.",
  *   context = {"ViewStyle"},
  *   weight = 0,
  *   markerIconSelection = {

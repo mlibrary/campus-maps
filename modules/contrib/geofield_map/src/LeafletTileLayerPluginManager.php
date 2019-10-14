@@ -56,6 +56,7 @@ class LeafletTileLayerPluginManager extends DefaultPluginManager {
         'options' => $plugin['options'],
       ];
     }
+    ksort($leaflet_tile_layers);
     return $leaflet_tile_layers;
   }
 

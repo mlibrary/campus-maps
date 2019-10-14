@@ -274,7 +274,7 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
       if ($map_themer_plugin instanceof MapThemerInterface && $map_themer_plugin_definition['markerIconSelection']['type'] == 'managed_file') {
         $form['markers_image_style'] = [
           '#type' => 'select',
-          '#title' => t('Markers Image style'),
+          '#title' => $this->t('Markers Image style'),
           '#options' => $markers_image_style_options,
           '#default_value' => isset($this->configuration['markers_image_style']) ? $this->configuration['markers_image_style'] : 'geofield_map_default_icon_style',
           '#description' => $this->t('Choose the image style the markers icons will be rendered in the Legend with.'),
@@ -284,7 +284,7 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
       if ($map_themer_plugin instanceof MapThemerInterface && $map_themer_plugin_definition['markerIconSelection']['type'] == 'file_uri') {
         $form['markers_width'] = [
           '#type' => 'number',
-          '#title' => t('Markers Width (pixels)'),
+          '#title' => $this->t('Markers Width (pixels)'),
           '#default_value' => isset($this->configuration['markers_width']) ? $this->configuration['markers_width'] : 50,
           '#description' => $this->t('Choose the max image width for the marker in the legend.<br>(Empty value for natural image weight.)'),
           '#min' => 10,
@@ -294,21 +294,21 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
         ];
       }
 
-      $form['legend_caption'] = array(
+      $form['legend_caption'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Legend Caption'),
         '#description' => $this->t('Write here the Table Legend Caption).'),
         '#default_value' => isset($this->configuration['legend_caption']) ? $this->configuration['legend_caption'] : '',
         '#rows' => 1,
-      );
+      ];
 
-      $form['legend_notes'] = array(
+      $form['legend_notes'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Legend Notes'),
         '#description' => $this->t("Write here Notes to the Legend (Footer as default, might be altered in the Map Themer plugin)."),
         '#default_value' => isset($this->configuration['legend_notes']) ? $this->configuration['legend_notes'] : '',
         '#rows' => 3,
-      );
+      ];
     }
     else {
       $form['geofield_map_legend_warning'] = [
@@ -330,10 +330,6 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
    * {@inheritdoc}
    */
   public function build() {
-
-    // Attach Geofield Map Libraries.
-    $form['#attached']['library'][] = 'geofield_map/geofield_map_general';
-
     $legend = [];
     $build = [
       '#type' => 'container',
@@ -389,8 +385,9 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
    */
   protected function getGeofieldMapLegends() {
     $geofield_legends = [];
+    $enabled_views = Views::getEnabledViews();
     /* @var \Drupal\views\Entity\View $view */
-    foreach ($enabled_views = Views::getEnabledViews() as $view_id => $view) {
+    foreach ($enabled_views as $view_id => $view) {
       foreach ($this->config->get('views.view.' . $view_id)->get('display') as $id => $view_display) {
         if (isset($view_display['display_options']['style']) && $view_display['display_options']['style']['type'] == 'geofield_google_map') {
           $view_options = $view_display['display_options']['style']['options'];

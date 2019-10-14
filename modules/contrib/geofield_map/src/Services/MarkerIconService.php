@@ -2,6 +2,7 @@
 
 namespace Drupal\geofield_map\Services;
 
+use Drupal;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -13,7 +14,6 @@ use Drupal\file\FileInterface;
 use Drupal\file\Entity\File;
 use Symfony\Component\Yaml\Yaml;
 use Drupal\Core\Url;
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Config;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\Entity\EntityStorageException;
@@ -128,6 +128,7 @@ class MarkerIconService {
    *   The bool result.
    */
   protected function fileIsManageableSvg(FileInterface $file) {
+    /* @var \Drupal\file\Entity\file $file */
     return $this->moduleHandler->moduleExists('svg_image') && $file instanceof FileInterface && svg_image_is_file_svg($file);
   }
 
@@ -230,6 +231,7 @@ class MarkerIconService {
   public static function validateIconImageStatus(array $element, FormStateInterface $form_state) {
     $clicked_button = end($form_state->getTriggeringElement()['#parents']);
     if (!empty($element['#value']['fids'][0])) {
+      /* @var \Drupal\file\Entity\file $file */
       $file = File::load($element['#value']['fids'][0]);
       if (in_array($clicked_button, ['save_settings', 'submit'])) {
         $file->setPermanent();
@@ -253,7 +255,7 @@ class MarkerIconService {
       $file->save();
     }
     catch (EntityStorageException $e) {
-      \Drupal::logger('Geofield Map Themer')->log('warning', t("The file couldn't be saved: @message", [
+      Drupal::logger('Geofield Map Themer')->log('warning', t("The file couldn't be saved: @message", [
         '@message' => $e->getMessage(),
       ])
       );
@@ -284,7 +286,7 @@ class MarkerIconService {
     $element['#geofield_map_marker_icon_upload'] = TRUE;
     $element['#theme'] = 'image_widget';
     $element['#preview_image_style'] = 'geofield_map_default_icon_style';
-    $element['#title'] = t('Choose a Marker Icon file');
+    $element['#title'] = $this->t('Choose a Marker Icon file');
     $element['#title_display'] = 'invisible';
     $element['#default_value'] = !empty($fid) ? [$fid] : NULL;
     $element['#error_no_message'] = FALSE;
@@ -382,8 +384,9 @@ class MarkerIconService {
         }
       }
 
+      $image_styles = ImageStyle::loadMultiple();
       /* @var \Drupal\image\ImageStyleInterface $style */
-      foreach ($image_styles = ImageStyle::loadMultiple() as $k => $style) {
+      foreach ($image_styles as $k => $style) {
         $options[$k] = Unicode::truncate($style->label(), 20, TRUE, TRUE);
       };
     }
@@ -470,6 +473,7 @@ class MarkerIconService {
    *
    * @param int $fid
    *   The file identifier.
+   *   The file identifier.
    * @param string $image_style
    *   The image style identifier.
    *
@@ -478,33 +482,38 @@ class MarkerIconService {
    */
   public function getLegendIconFromFid($fid, $image_style = 'none') {
     $icon_element = [];
-    /* @var \Drupal\file\Entity\file $file */
-    $file = File::load($fid);
-    if ($file instanceof FileInterface) {
-      $this->defaultIconElement['#uri'] = $file->getFileUri();
-      switch ($image_style) {
-        case 'none':
-          $icon_element = [
-            '#weight' => -10,
-            '#theme' => 'image',
-            '#uri' => $file->getFileUri(),
-          ];
-          break;
+    try {
+      /* @var \Drupal\file\Entity\file $file */
+      $file = $this->entityManager->getStorage('file')->load($fid);
+      if ($file instanceof FileInterface) {
+        $this->defaultIconElement['#uri'] = $file->getFileUri();
+        switch ($image_style) {
+          case 'none':
+            $icon_element = [
+              '#weight' => -10,
+              '#theme' => 'image',
+              '#uri' => $file->getFileUri(),
+            ];
+            break;
 
-        default:
-          $icon_element = [
-            '#weight' => -10,
-            '#theme' => 'image_style',
-            '#uri' => $file->getFileUri(),
-            '#style_name' => '',
-          ];
-          if ($this->moduleHandler->moduleExists('image') && ImageStyle::load($image_style) && !$this->fileIsManageableSvg($file)) {
-            $icon_element['#style_name'] = $image_style;
-          }
-          else {
-            $icon_element = $this->defaultIconElement;
-          }
+          default:
+            $icon_element = [
+              '#weight' => -10,
+              '#theme' => 'image_style',
+              '#uri' => $file->getFileUri(),
+              '#style_name' => '',
+            ];
+            if ($this->moduleHandler->moduleExists('image') && ImageStyle::load($image_style) && !$this->fileIsManageableSvg($file)) {
+              $icon_element['#style_name'] = $image_style;
+            }
+            else {
+              $icon_element = $this->defaultIconElement;
+            }
+        }
       }
+    }
+    catch (\Exception $e) {
+      watchdog_exception('geofield_map', $e);
     }
     return $icon_element;
   }
@@ -541,8 +550,14 @@ class MarkerIconService {
    *   The icon preview element.
    */
   public function getUriFromFid($fid = NULL) {
-    if (isset($fid) && $file = File::load($fid)) {
-      return $file->getFileUri();
+    try {
+      /* @var \Drupal\file\Entity\file $file */
+      if (isset($fid) && $file = $this->entityManager->getStorage('file')->load($fid)) {
+        return $file->getFileUri();
+      }
+    }
+    catch (\Exception $e) {
+      watchdog_exception('geofield_map', $e);
     }
     return NULL;
   }
@@ -569,15 +584,21 @@ class MarkerIconService {
    *   The url path to the file id (image style).
    */
   public function getFileManagedUrl($fid = NULL, $image_style = 'none') {
-    if (isset($fid) && $file = File::load($fid)) {
-      $uri = $file->getFileUri();
-      if ($this->moduleHandler->moduleExists('image') && $image_style != 'none' && ImageStyle::load($image_style) && !$this->fileIsManageableSvg($file)) {
-        $url = ImageStyle::load($image_style)->buildUrl($uri);
+    try {
+      /* @var \Drupal\file\Entity\file $file */
+      if (isset($fid) && $file = $this->entityManager->getStorage('file')->load($fid)) {
+        $uri = $file->getFileUri();
+        if ($this->moduleHandler->moduleExists('image') && $image_style != 'none' && ImageStyle::load($image_style) && !$this->fileIsManageableSvg($file)) {
+          $url = ImageStyle::load($image_style)->buildUrl($uri);
+        }
+        else {
+          $url = file_create_url($uri);
+        }
+        return $url;
       }
-      else {
-        $url = file_create_url($uri);
-      }
-      return $url;
+    }
+    catch (\Exception $e) {
+      watchdog_exception('geofield_map', $e);
     }
     return NULL;
   }

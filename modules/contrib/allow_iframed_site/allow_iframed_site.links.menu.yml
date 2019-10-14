@@ -1,0 +1,5 @@
+allow_iframed_site.settings:
+  title: 'Allow IFramed Site'
+  description: 'Set config for Allow Iframed Site'
+  route_name: allow_iframed_site.settings
+  parent: system.admin_config_system
