@@ -1,0 +1,19 @@
+--- geofield_map.libraries.yml
++++ geofield_map.libraries.yml
+@@ -70,14 +70,14 @@ geojson:
+ 
+ # External Marker Clusterer
+ marker_cluster:
+-  remote: https://googlemaps.github.io/js-marker-clusterer/
++  remote: https://github.com/googlearchive/js-marker-clusterer
+   version: 1.0.0
+   license:
+     name: Apache 2.0
+     url: http://www.apache.org/licenses/LICENSE-2.0
+     gpl-compatible: true
+   js:
+-    https://googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js: { type: external }
++    js/markerclusterer.js: { }
+ 
+ # External OverlappingMarkerSpiderfier
+ 

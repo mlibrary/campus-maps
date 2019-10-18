@@ -162,6 +162,10 @@ add its new LeafletTileLayer Plugins;
 *   As default (configurable) option, eventual overlapping markers will be 
 Spiderfied, with the support of the 
 [Overlapping Marker Spiderfier Library (for Google Maps)](https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3 "Overlapping Marker Spiderfier Library (for Google Maps)");
+* Add, enable and configure 
+["Geoocoder" module for D8](https://www.drupal.org/project/geocoder) to enable 
+Geocoder Control (with Autocomplete) for quick Address search and Geofield Map 
+Pan & Zoom functionalities;
 *   The Geofield Map View style plugin will pass to the client js 
 (as drupalSettings.geofield_google_map[mapid] & Drupal.geoFieldMap[mapid] 
 variables) the un-hidden fields values of the View, as markers/features' 
@@ -192,7 +196,21 @@ block system is fully extendable and overridable. You, as D8 developer, are
 free to override and extend the existing ones, or create your custom MapThemer 
 based on your specific needs and logics.
 
-##### How to use.
+#### How to configure and use.
+
+You are advised to use Geofield Map Themers based on pre-defined file path 
+selection (insetad of file managed upload) so to make your local settings 
+part of the Drupal 8 configuration management, and thus compatible with its
+synchronization with stage and prod environments, and continuous integration.  
+
+In the Geofield Map configuration page ('/admin/config/system/geofield_map_settings') 
+it is possible to define the custom path location of the folder that the module
+would look for markers icons into (default: 'public://geofieldmap_icons').
+After defining it (confirming the default one or customizing your specific one)
+you need to initially fill (and integrate afterword) it with your custom 
+icons that would then be available as custom markers to the Map Theming engine. 
+**Hint:** The module stores some example custom markers icons in its 
+"marker_icons_samples" folder.
 
 In a Geofield Map View Display, just go into its settings and choose the wanted 
 MapThemer in the new Map Theming Options section/fieldset. It is possible to 

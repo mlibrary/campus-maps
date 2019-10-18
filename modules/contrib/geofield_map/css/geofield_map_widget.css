@@ -3,8 +3,7 @@
   z-index: 1;
 }
 /* line 4, ../sass/geofield_map_widget.scss */
-.geofield-map-widget.leaflet-container .leaflet-top,
-.geofield-map-widget.leaflet-container .leaflet-bottom {
+.geofield-map-widget.leaflet-container .leaflet-top, .geofield-map-widget.leaflet-container .leaflet-bottom {
   z-index: 400;
 }
 

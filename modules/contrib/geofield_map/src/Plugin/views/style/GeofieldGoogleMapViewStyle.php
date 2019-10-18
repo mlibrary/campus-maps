@@ -988,6 +988,12 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
             $tooltip_field = isset($map_settings['map_marker_and_infowindow']['tooltip_field']) ? $map_settings['map_marker_and_infowindow']['tooltip_field'] : NULL;
             $tooltip = isset($entity) && !empty($tooltip_field) ? trim(html_entity_decode(strip_tags($this->rendered_fields[$id][$tooltip_field]), ENT_QUOTES)) : NULL;
 
+            // Define possible tokens.
+            $tokens = [];
+            foreach ($this->rendered_fields[$result->index] as $field_name => $field_value) {
+              $tokens[$field_name] = $field_value;
+            }
+
             // Generate GeoJsonData.
             $geojson_data = $this->getGeoJsonData($geofield_value, $entity->id(), $description, $tooltip, $view_data);
 
@@ -1000,9 +1006,11 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
                 $map_themer = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
                 $map_theming = $theming[$map_themer->getPluginId()]['values'];
                 foreach ($geojson_data as $k => $datum) {
-                  $geojson_data[$k]['properties']['icon'] = $map_themer->getIcon($datum, $this, $entity, $map_theming);
-                  // Flag the data with theming, for later rendering logic.
-                  $geojson_data[$k]['properties']['theming'] = TRUE;
+                  if ($datum['geometry']->type === 'Point') {
+                    $geojson_data[$k]['properties']['icon'] = $map_themer->getIcon($datum, $this, $entity, $map_theming);
+                    // Flag the data with theming, for later rendering logic.
+                    $geojson_data[$k]['properties']['theming'] = TRUE;
+                  }
                 }
               }
               catch (PluginException $e) {
@@ -1010,14 +1018,21 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
               }
             }
             elseif ($map_settings['map_marker_and_infowindow']['icon_image_mode'] == 'icon_file' && strlen($map_settings['map_marker_and_infowindow']['icon_image_path']) > 0) {
-              $tokens = [];
-              foreach ($this->rendered_fields[$result->index] as $field_name => $field_value) {
-                $tokens[$field_name] = $field_value;
-              }
               foreach ($geojson_data as $k => $datum) {
-                $geojson_data[$k]['properties']['icon'] = $this->viewsTokenReplace($this->options['map_marker_and_infowindow']['icon_image_path'], $tokens);
+                if ($datum['geometry']->type === 'Point') {
+                  $geojson_data[$k]['properties']['icon'] = $this->viewsTokenReplace($this->options['map_marker_and_infowindow']['icon_image_path'], $tokens);
+                }
               }
             }
+
+            // Associate dynamic path properties (token based) to each feature,
+            // in case of not point.
+            foreach ($geojson_data as $k => $datum) {
+              if ($datum['geometry']->type !== 'Point') {
+                $geojson_data[$k]['properties']['path_options'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['map_geometries_options'], $tokens));
+              }
+            }
+
             // Generate incremental GeoJsonData.
             $data = array_merge($data, $geojson_data);
           }

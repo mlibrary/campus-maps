@@ -63,6 +63,17 @@ geofield_gmap:
       - core/drupal
       - core/drupalSettings
 
+geocoder:
+  version: 1.x
+  css:
+    component:
+      css/geofield_map_geocoder.css: {}
+  js:
+    js/geofield_map.geocoder.drupal.js: {}
+  dependencies:
+    - core/drupal.autocomplete
+    - geofield_gmap/geofield_gmap
+
 geojson:
   version: 1.x
   js:
@@ -70,14 +81,14 @@ geojson:
 
 # External Marker Clusterer
 marker_cluster:
-  remote: https://googlemaps.github.io/js-marker-clusterer/
+  remote: https://cdnjs.com/libraries/js-marker-clusterer
   version: 1.0.0
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0
     gpl-compatible: true
   js:
-    https://googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js: { type: external }
+    https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer_compiled.js: { type: external }
 
 # External OverlappingMarkerSpiderfier
 overlappingmarkerspiderfier:

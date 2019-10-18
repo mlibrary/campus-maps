@@ -29,7 +29,7 @@ trait GeofieldMapFieldTrait {
   ];
 
   /**
-   * Google Map Types Options.
+   * Infowindow Filed Types Options.
    *
    * @var array
    */
@@ -40,6 +40,19 @@ trait GeofieldMapFieldTrait {
     'text_long',
     "text_with_summary",
   ];
+
+  /**
+   * Geofield Map Controls Positions Options.
+   *
+   * @var array
+   */
+  protected $controlPositionsOptions = [
+    'TOP_LEFT' => 'Top Left',
+    'TOP_RIGHT' => 'Top Right',
+    'BOTTOM_LEFT' => 'Bottom Left',
+    'BOTTOM_RIGHT' => 'Bottom Right',
+  ];
+
 
   /**
    * Custom Map Style Placeholder.
@@ -112,6 +125,7 @@ trait GeofieldMapFieldTrait {
         'scrollwheel' => 1,
         'draggable' => 1,
         'map_reset' => 0,
+        'map_reset_position' => 'TOP_RIGHT',
       ],
       'map_controls' => [
         'disable_default_ui' => 0,
@@ -157,6 +171,20 @@ trait GeofieldMapFieldTrait {
         'markercluster_control' => 0,
         'markercluster_additional_options' => '{"maxZoom":12, "gridSize":50}',
       ],
+      'map_geocoder' => [
+        'control' => 0,
+        'settings' => [
+          'position' => 'topright',
+          'input_size' => 25,
+          'providers' => [],
+          'min_terms' => 4,
+          'delay' => 800,
+          'zoom' => 16,
+          'infowindow' => 0,
+          'options' => '',
+        ],
+      ],
+
     ];
   }
 
@@ -234,6 +262,10 @@ trait GeofieldMapFieldTrait {
     // Set Map Marker Cluster Element.
     $this->setMapMarkerclusterElement($settings, $elements);
 
+    // Set Map Geocoder Control Element, if the Geocoder Module exists,
+    // otherwise output a tip on Geocoder Module Integration.
+    $this->setGeocoderMapControl($elements, $settings);
+
     return $elements;
 
   }
@@ -265,8 +297,7 @@ trait GeofieldMapFieldTrait {
     // Generate Absolute icon_image_path, if it is not.
     $icon_image_path = $map_settings['map_marker_and_infowindow']['icon_image_path'];
     if (!empty($icon_image_path) && !UrlHelper::isExternal($map_settings['map_marker_and_infowindow']['icon_image_path'])) {
-      $map_settings['map_marker_and_infowindow']['icon_image_path'] = Url::fromUri('base:' . $icon_image_path, ['absolute' => TRUE])
-        ->toString();
+      $map_settings['map_marker_and_infowindow']['icon_image_path'] = Url::fromUri('base:', ['absolute' => TRUE])->toString() . $icon_image_path;
     }
   }
 
@@ -482,16 +513,13 @@ trait GeofieldMapFieldTrait {
 
     if (isset($this->fieldDefinition)) {
       $force_center_selector = ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_center][center_force]"]';
+      $force_zoom_selector = ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_zoom_and_pan][zoom][force]"]';
+      $map_reset_selector = ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_zoom_and_pan][map_reset]"]';
     }
     else {
       $force_center_selector = ':input[name="style_options[map_center][center_force]"]';
-    }
-
-    if (isset($this->fieldDefinition)) {
-      $force_zoom_selector = ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_zoom_and_pan][zoom][force]"]';
-    }
-    else {
       $force_zoom_selector = ':input[name="style_options[map_zoom_and_pan][zoom][force]"]';
+      $map_reset_selector = ':input[name="style_options[map_zoom_and_pan][map_reset]"]';
     }
 
     $elements['map_zoom_and_pan'] = [
@@ -582,9 +610,22 @@ trait GeofieldMapFieldTrait {
       '#type' => 'checkbox',
       '#title' => $this->t('Enable Map Reset Control'),
       '#description' => $this->t('This will show a "Reset Map" button to reset the Map to its initial center & zoom state'),
-      '#default_value' => isset($settings['map_zoom_and_pan']['map_reset']) ? $settings['map_zoom_and_pan']['map_reset'] : FALSE,
+      '#default_value' => isset($settings['map_zoom_and_pan']['map_reset']) ? $settings['map_zoom_and_pan']['map_reset'] : 0,
       '#return_value' => 1,
     ];
+
+    $elements['map_zoom_and_pan']['map_reset_position'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Map Reset Control Position'),
+      '#options' => $this->controlPositionsOptions,
+      '#default_value' => isset($settings['map_zoom_and_pan']['map_reset_position']) ? $settings['map_zoom_and_pan']['map_reset_position'] : 'TOP_RIGHT',
+      '#states' => [
+        'visible' => [
+          $map_reset_selector => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
   }
 
   /**
@@ -722,6 +763,8 @@ trait GeofieldMapFieldTrait {
 
     $icon_image_path_description = $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash).');
     $icon_image_path_description .= '<br>' . $this->t('Can be an absolute or relative URL.');
+    $token_replacement_disclaimer = $this->t('<b>Note: </b> Using <strong>Replacement Patterns</strong> it is possible to dynamically define the Marker Icon output, with the composition of Marker Icon paths including entity properties or fields values.');
+    $icon_image_path_description .= '<br>' . $token_replacement_disclaimer;
     $twig_link = $this->link->generate('Twig', Url::fromUri('http://twig.sensiolabs.org/documentation', [
       'absolute' => TRUE,
       'attributes' => ['target' => 'blank'],
@@ -758,7 +801,7 @@ trait GeofieldMapFieldTrait {
     // Setup the tokens for views fields.
     // Code is snatched from Drupal\views\Plugin\views\field\FieldPluginBase.
     if (!isset($this->fieldDefinition)) {
-      $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= '<br>' . $this->t('You may enter dynamic data from this View Display Fields via "Replacement patterns" below. Note: Twig notation allows you to define per-row icons (@see this @icon_image_path_issue).', [
+      $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= '<br>' . $this->t('Twig notation allows you to define per-row icons (@see this @icon_image_path_issue).', [
         '@icon_image_path_issue' => $this->link->generate('Geofield Map drupal.org issue', Url::fromUri('https://www.drupal.org/project/geofield_map/issues/3074255', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
@@ -1017,15 +1060,17 @@ trait GeofieldMapFieldTrait {
    *   The Form element to alter.
    */
   private function setGeometriesAdditionalOptionsElement(array $settings, array &$elements) {
+    $token_replacement_disclaimer = $this->t('<b>Note: </b> Using <strong>Replacement Patterns</strong> it is possible to dynamically define the Path geometries options, based on the entity properties or fields values.');
     $elements['map_geometries_options'] = [
       '#type' => 'textarea',
       '#rows' => 5,
       '#title' => $this->t('Map Geometries Options'),
-      '#description' => $this->t('Set here options that will be applied to the rendering of Map Geometries (Lines & Polylines, Polygons, Multipolygons, etc.).<br>Refer to the @polygons_documentation.', [
+      '#description' => $this->t('Set here options that will be applied to the rendering of Map Geometries (Lines & Polylines, Polygons, Multipolygons, etc.).<br>Refer to the @polygons_documentation.<br>@token_replacement_disclaimer', [
         '@polygons_documentation' => $this->link->generate($this->t('Google Maps Polygons Documentation'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/reference/polygon#PolylineOptions', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
+        '@token_replacement_disclaimer' => $token_replacement_disclaimer,
       ]),
       '#default_value' => $settings['map_geometries_options'],
       '#placeholder' => self::getDefaultSettings()['map_geometries_options'],
@@ -1270,6 +1315,177 @@ trait GeofieldMapFieldTrait {
           ':input[name="style_options[map_markercluster][markercluster_control]"]' => ['checked' => FALSE],
         ],
       ];
+    }
+  }
+
+  /**
+   * Set Map Geocoder Control Element.
+   *
+   * @param array $element
+   *   The Form element to alter.
+   * @param array $settings
+   *   The Form Settings.
+   */
+  protected function setGeocoderMapControl(array &$element, array $settings) {
+    // Set Map Geocoder Control Element, if the Geocoder Module exists,
+    // otherwise output a tip on Geocoder Module Integration.
+    if ($this->moduleHandler->moduleExists('geocoder') && class_exists('\Drupal\geocoder\Controller\GeocoderApiEnpoints')) {
+      $default_settings = $this::getDefaultSettings();
+      $element['map_geocoder'] = [
+        '#type' => 'fieldset',
+        '#title' => $this->t('Map Control - Geocoder'),
+      ];
+
+      $element['map_geocoder']['control'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Enable Map Geocoder Control'),
+        '#description' => $this->t('This will add a Geocoder control element to the Geofield Map'),
+        '#default_value' => isset($settings['map_geocoder']['control']) ? $settings['map_geocoder']['control'] : $default_settings['geocoder']['control'],
+      ];
+
+      $element['map_geocoder']['access_warning'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('<strong>Note: </strong>This will show to users with permissions to <u>Access Geocoder Api Url Enpoints.</u>'),
+        '#attributes' => [
+          'style' => 'color: red;',
+        ],
+      ];
+
+      $element['map_geocoder']['settings'] = [
+        '#type' => 'fieldset',
+        '#title' => $this->t('Geocoder Settings'),
+      ];
+
+      $element['map_geocoder']['settings']['position'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Position'),
+        '#options' => $this->controlPositionsOptions,
+        '#default_value' => isset($settings['map_geocoder']['settings']['position']) ? $settings['map_geocoder']['settings']['position'] : $default_settings['geocoder']['settings']['position'],
+      ];
+
+      $element['map_geocoder']['settings']['input_size'] = [
+        '#title' => $this->t('Input Size'),
+        '#type' => 'number',
+        '#min' => 10,
+        '#max' => 100,
+        '#default_value' => isset($settings['map_geocoder']['settings']['input_size']) ? $settings['map_geocoder']['settings']['input_size'] : $default_settings['geocoder']['settings']['input_size'],
+        '#description' => $this->t('The characters size/length of the Geocoder Input element.'),
+      ];
+
+      $providers_settings = isset($settings['map_geocoder']['settings']['providers']) ? $settings['map_geocoder']['settings']['providers'] : [];
+
+      // Get the enabled/selected providers.
+      $enabled_providers = [];
+      foreach ($providers_settings as $plugin_id => $plugin) {
+        if (!empty($plugin['checked'])) {
+          $enabled_providers[] = $plugin_id;
+        }
+      }
+
+      // Generates the Draggable Table of Selectable Geocoder Providers.
+      /** @var \Drupal\geocoder\ProviderPluginManager  $geocoder_provider */
+      $geocoder_provider = \Drupal::service('plugin.manager.geocoder.provider');
+      $element['map_geocoder']['settings']['providers'] = $geocoder_provider->providersPluginsTableList($enabled_providers);
+
+      // Set a validation for the providers selection.
+      $element['map_geocoder']['settings']['providers']['#element_validate'] = [[get_class($this), 'validateGeocoderProviders']];
+
+      $element['map_geocoder']['settings']['min_terms'] = [
+        '#type' => 'number',
+        '#default_value' => isset($settings['map_geocoder']['settings']['min_terms']) ? $settings['map_geocoder']['settings']['min_terms'] : $default_settings['geocoder']['settings']['min_terms'],
+        '#title' => $this->t('The (minimum) number of terms for the Geocoder to start processing.'),
+        '#description' => $this->t('Valid values ​​for the widget are between 2 and 10. A too low value (<= 3) will affect the application Geocode Quota usage.<br>Try to increase this value if you are experiencing Quota usage matters.'),
+        '#min' => 2,
+        '#max' => 10,
+        '#size' => 3,
+      ];
+
+      $element['map_geocoder']['settings']['delay'] = [
+        '#type' => 'number',
+        '#default_value' => isset($settings['map_geocoder']['settings']['delay']) ? $settings['map_geocoder']['settings']['delay'] : $default_settings['geocoder']['settings']['delay'],
+        '#title' => $this->t('The delay (in milliseconds) between pressing a key in the Address Input field and starting the Geocoder search.'),
+        '#description' => $this->t('Valid values ​​for the widget are multiples of 100, between 300 and 3000. A too low value (<= 300) will affect / increase the application Geocode Quota usage.<br>Try to increase this value if you are experiencing Quota usage matters.'),
+        '#min' => 300,
+        '#max' => 3000,
+        '#step' => 100,
+        '#size' => 4,
+      ];
+
+      $element['map_geocoder']['settings']['zoom'] = [
+        '#title' => $this->t('Zoom to Focus'),
+        '#type' => 'number',
+        '#min' => 1,
+        '#max' => 22,
+        '#default_value' => isset($settings['map_geocoder']['settings']['zoom']) ? $settings['map_geocoder']['settings']['zoom'] : $default_settings['geocoder']['settings']['zoom'],
+        '#description' => $this->t('Zoom level to Focus on the Map upon the Geocoder Address selection.'),
+      ];
+
+      $element['map_geocoder']['settings']['infowindow'] = [
+        '#title' => $this->t('Open infowindow on Geocode Focus'),
+        '#type' => 'checkbox',
+        '#default_value' => isset($settings['map_geocoder']['settings']['infowindow']) ? $settings['map_geocoder']['settings']['infowindow'] : $default_settings['geocoder']['settings']['infowindow'],
+        '#description' => $this->t('Check this to open an Infowindow on the Map (with the found Address) upon the Geocode Focus.'),
+      ];
+
+
+      $element['map_geocoder']['settings']['options'] = [
+        '#type' => 'textarea',
+        '#rows' => 4,
+        '#title' => $this->t('Geocoder Control Specific Options'),
+        '#description' => $this->t('This settings would override general Geocoder Providers options. (<u>Note: This would work only for Geocoder 2.x branch/version.</u>)<br>An object literal of specific Geocoder options.The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+        '#default_value' => isset($settings['map_geocoder']['settings']['options']) ? $settings['map_geocoder']['settings']['options'] : $default_settings['geocoder']['settings']['options'],
+        '#placeholder' => '{"googlemaps":{"locale": "it", "region": "it"}, "nominatim":{"locale": "it"}}',
+        '#element_validate' => [[get_class($this), 'jsonValidate']],
+      ];
+      if (isset($this->fieldDefinition)) {
+        $element['map_geocoder']['settings']['#states'] = [
+          'visible' => [
+            ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_geocoder][control]"]' => ['checked' => TRUE],
+          ],
+        ];
+      }
+      else {
+        $element['map_geocoder']['settings']['#states'] = [
+          'visible' => [
+            ':input[name="style_options[map_geocoder][control]"]' => ['checked' => TRUE],
+          ],
+        ];
+      }
+    }
+    else {
+      $element['map_geocoder'] = [
+        '#markup' => $this->t('<strong>Note: </strong>it is possible to enable a <u>Geocoder controller on the Leaflet Map</u> throughout the @geocoder_module_link integration (version higher than 8.x-2.3 and 8.x-3.0-alpha2).', [
+          '@geocoder_module_link' => $this->link->generate('Geocoder Module', Url::fromUri('https://www.drupal.org/project/geocoder', ['attributes' => ['target' => 'blank']])),
+        ]),
+      ];
+    }
+  }
+
+  /**
+   * Validates the Geocoder Providers element.
+   *
+   * @param array $element
+   *   The form element to build.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public static function validateGeocoderProviders(array $element, FormStateInterface &$form_state) {
+    $form_state_input = $form_state->getUserInput();
+    if (isset($form_state_input['style_options'])) {
+      $geocoder_control = $form_state_input['style_options']['map_geocoder']['control'];
+    }
+    if (isset($form_state_input['fields'])) {
+      $geocoder_control = $form_state_input['fields'][$element['#array_parents'][1]]['settings_edit_form']['settings']['map_geocoder']['control'];
+    }
+    if (isset($geocoder_control) && $geocoder_control) {
+      $providers = is_array($element['#value']) ? array_filter($element['#value'], function ($value) {
+        return isset($value['checked']) && TRUE == $value['checked'];
+      }) : [];
+
+      if (empty($providers)) {
+        $form_state->setError($element, t('The Geocode Origin option needs at least one geocoder plugin selected.'));
+      }
     }
   }
 
