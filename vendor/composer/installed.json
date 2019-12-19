@@ -1239,7 +1239,8 @@
             "MIT"
         ],
         "description": "Promoting the interoperability of container objects (DIC, SL, etc.)",
-        "homepage": "https://github.com/container-interop/container-interop"
+        "homepage": "https://github.com/container-interop/container-interop",
+        "abandoned": "psr/container"
     },
     {
         "name": "cweagans/composer-patches",
@@ -2591,17 +2592,17 @@
     },
     {
         "name": "drupal/core",
-        "version": "8.7.8",
-        "version_normalized": "8.7.8.0",
+        "version": "8.7.11",
+        "version_normalized": "8.7.11.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core.git",
-            "reference": "476f491b85306c09101106d9b66a5dbe73c21bf0"
+            "reference": "a691876294fadc2795a8add96359b5ffc109d7f2"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/drupal/core/zipball/476f491b85306c09101106d9b66a5dbe73c21bf0",
-            "reference": "476f491b85306c09101106d9b66a5dbe73c21bf0",
+            "url": "https://api.github.com/repos/drupal/core/zipball/a691876294fadc2795a8add96359b5ffc109d7f2",
+            "reference": "a691876294fadc2795a8add96359b5ffc109d7f2",
             "shasum": ""
         },
         "require": {
@@ -2627,7 +2628,7 @@
             "guzzlehttp/guzzle": "^6.2.1",
             "masterminds/html5": "^2.1",
             "paragonie/random_compat": "^1.0|^2.0|^9.99.99",
-            "pear/archive_tar": "^1.4",
+            "pear/archive_tar": "^1.4.9",
             "php": "^5.5.9|>=7.0.8",
             "stack/builder": "^1.0",
             "symfony-cmf/routing": "^1.4",
@@ -2779,7 +2780,7 @@
             "symfony/debug": "^3.4.0",
             "symfony/phpunit-bridge": "^3.4.3"
         },
-        "time": "2019-10-02T18:41:30+00:00",
+        "time": "2019-12-18T08:55:29+00:00",
         "type": "drupal-core",
         "extra": {
             "merge-plugin": {
@@ -4737,17 +4738,17 @@
     },
     {
         "name": "pear/archive_tar",
-        "version": "1.4.7",
-        "version_normalized": "1.4.7.0",
+        "version": "1.4.9",
+        "version_normalized": "1.4.9.0",
         "source": {
             "type": "git",
             "url": "https://github.com/pear/Archive_Tar.git",
-            "reference": "7e48add6f8edc3027dd98ad15964b1a28fd0c845"
+            "reference": "c5b00053770e1d72128252c62c2c1a12c26639f0"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/pear/Archive_Tar/zipball/7e48add6f8edc3027dd98ad15964b1a28fd0c845",
-            "reference": "7e48add6f8edc3027dd98ad15964b1a28fd0c845",
+            "url": "https://api.github.com/repos/pear/Archive_Tar/zipball/c5b00053770e1d72128252c62c2c1a12c26639f0",
+            "reference": "c5b00053770e1d72128252c62c2c1a12c26639f0",
             "shasum": ""
         },
         "require": {
@@ -4762,7 +4763,7 @@
             "ext-xz": "Lzma2 compression support.",
             "ext-zlib": "Gzip compression support."
         },
-        "time": "2019-04-08T13:15:55+00:00",
+        "time": "2019-12-04T10:17:28+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
