@@ -688,7 +688,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       catch (PluginException $e) {
         $form['map_marker_and_infowindow']['theming']['plugin_id']['#default_value'] = $map_themers_options['none'];
       }
-
     }
 
     $form['map_marker_and_infowindow']['theming']['plugins_descriptions'] = [

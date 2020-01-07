@@ -80,7 +80,10 @@ class GeofieldMap extends GeofieldElementBase {
       '#weight' => 0,
     ];
 
-    if (strlen($element['#gmap_api_key']) > 0) {
+    $gmap_geocoder_enabled = \Drupal::moduleHandler()->moduleExists('geocoder') && $element['#gmap_geocoder'];
+
+    $message_recipient = t("(Note: This message is only shown to the Geofield Map module administrator ('Configure Geofield Map' permission).");
+    if (strlen($element['#gmap_api_key']) > 0 || $gmap_geocoder_enabled) {
       $element['map']['geocode'] = [
         '#title' => t("Geocode address"),
         '#type' => 'textfield',
@@ -94,29 +97,38 @@ class GeofieldMap extends GeofieldElementBase {
       ];
 
       if (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
-        $element['map']['geocode']['#description'] .= '<div class="geofield-map-message">' . t('@google_places_autocomplete_message<br>@message_recipient', [
-          '@google_places_autocomplete_message' => !$element['#gmap_places'] ? 'Google Places Autocomplete Service disabled. Might be enabled in the Geofield Widget configuration.' : 'Google Places Autocomplete Service enabled.',
-          '@message_recipient' => t('(This message is only shown to the Geofield Map module administrator).'),
-        ]) . '</div>';
+        $element['map']['geocode']['#description'] .= '<div class="geofield-map-message">' . t('Search Address Functionalities based on:') . ' ';
+        if ($element['#gmap_geocoder']) {
+          $element['map']['geocode']['#description'] .= t('Geocoder Module Providers.');
+        }
+        else {
+          $element['map']['geocode']['#description'] .= t('Geofield Map GMaps API Key Geocoder.');
+          $element['map']['geocode']['#description'] .= '<br>' . t('@google_places_autocomplete_message', [
+            '@google_places_autocomplete_message' => !$element['#gmap_places'] ? 'Google Places Autocomplete Service disabled. Might be enabled in the Geofield Widget configuration.' : 'Google Places Autocomplete Service enabled.',
+          ]);
+        }
+        $element['map']['geocode']['#description'] .= '<br>' . $message_recipient . '</div>';
       }
-
     }
     elseif (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
+      $geocoder_module_link = !\Drupal::moduleHandler()->moduleExists('geocoder') ? \Drupal::service('link_generator')->generate('Geocoder Module', Url::fromUri('https://www.drupal.org/project/geocoder', ['attributes' => ['target' => 'blank']])) : 'Geocoder Module';
       $element['map']['geocode_missing'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => t("Gmap Api Key missing | The Geocode & ReverseGeocode functionalities are not available. <br>@settings_page_link", [
-          '@settings_page_link' => \Drupal::linkGenerator()->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
+        '#value' => t("Gmap Api Key missing (@settings_page_link) and @geocoder_module_link integration not enabled in this Geofield Widget configuration.<br>The Geocode & ReverseGeocode functionalities are not available.", [
+          '@settings_page_link' => \Drupal::linkGenerator()->generate(t('in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
             'query' => [
               'destination' => Url::fromRoute('<current>')
                 ->toString(),
             ],
           ])),
+          '@geocoder_module_link' => $geocoder_module_link,
         ]),
         '#attributes' => [
           'class' => ['geofield-map-message'],
         ],
       ];
+      $element['map']['geocode_missing']['#value'] .= '<br>' . $message_recipient;
     }
 
     $element['map']['geofield_map'] = [
@@ -217,9 +229,9 @@ class GeofieldMap extends GeofieldElementBase {
     $element['#attached']['library'][] = 'geofield_map/geofield_map_widget';
 
     // The Entity Form.
-    /* @var \Drupal\Core\Entity\ContentEntityFormInterface $entityForm */
-    $entityForm = $form_state->getBuildInfo()['callback_object'];
-    $entity_operation = method_exists($entityForm, 'getOperation') ? $entityForm->getOperation() : 'any';
+    /* @var \Drupal\Core\Entity\ContentEntityFormInterface $entity_form */
+    $entity_form = $form_state->getBuildInfo()['callback_object'];
+    $entity_operation = method_exists($entity_form, 'getOperation') ? $entity_form->getOperation() : 'any';
 
     $map_settings = [
       'entity_operation' => $entity_operation,
@@ -239,6 +251,8 @@ class GeofieldMap extends GeofieldElementBase {
       'widget' => TRUE,
       'gmap_places' => $element['#gmap_places'],
       'gmap_places_options' => $element['#gmap_places_options'],
+      'gmap_geocoder' => 0,
+      'gmap_geocoder_settings' => [],
       'map_library' => $element['#map_library'],
       'map_type' => $element['#map_type'],
       'map_type_selector' => $element['#map_type_selector'] ? TRUE : FALSE,
@@ -256,6 +270,17 @@ class GeofieldMap extends GeofieldElementBase {
         'clientside' => !empty($geofield_map_settings->get('geocoder.caching.clientside')) ? $geofield_map_settings->get('geocoder.caching.clientside') : 'session_storage',
       ],
     ];
+
+    // Add the Geofield Map Geocoder settings and library if Geocoder Search is
+    // Enabled and Accessible.
+    if (\Drupal::service('module_handler')->moduleExists('geocoder')
+      && class_exists('\Drupal\geocoder\Controller\GeocoderApiEnpoints')
+      && $element['#gmap_geocoder']
+      && \Drupal::service('current_user')->hasPermission('access geocoder api endpoints')) {
+      $map_settings['gmap_geocoder'] = $element['#gmap_geocoder'];
+      $map_settings['gmap_geocoder_settings'] = $element['#gmap_geocoder_settings'];
+      $element['#attached']['library'][] = 'geofield_map/geocoder';
+    }
 
     // Allow other modules to add/alter the geofield map element settings.
     \Drupal::moduleHandler()->alter('geofield_map_latlon_element', $map_settings, $complete_form, $form_state->getValues());

@@ -14,3 +14,6 @@ services:
   geofield_map.google_maps:
     class: Drupal\geofield_map\Services\GoogleMapsService
     arguments: ['@config.factory', '@language_manager', '@request_stack']
+
+  geofield_map.geocoder:
+    class: Drupal\geofield_map\Services\GeocoderService

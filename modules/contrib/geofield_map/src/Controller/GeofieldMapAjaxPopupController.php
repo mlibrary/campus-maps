@@ -66,7 +66,7 @@ class GeofieldMapAjaxPopupController extends ControllerBase {
   }
 
   /**
-   * Leaflet Ajax Popup build callback..
+   * Geofield Map Ajax Popup build callback.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity whose build to return.
@@ -82,6 +82,7 @@ class GeofieldMapAjaxPopupController extends ControllerBase {
     $entity_view_builder = $this->entityManager->getViewBuilder($entity->getEntityTypeId());
     $build = $entity_view_builder->view($entity, $view_mode, $langcode);
     $response = new HtmlResponse();
+    $response->addCacheableDependency($entity);
     $response->setContent($this->renderer->renderPlain($build));
     return $response;
   }

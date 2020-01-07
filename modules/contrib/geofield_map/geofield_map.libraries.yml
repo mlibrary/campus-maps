@@ -29,7 +29,7 @@ geofield_map_widget:
     component:
       css/geofield_map_widget.css: {}
   js:
-    js/geofield_map.js: {}
+    js/geofield_map_widget.js: {}
   dependencies:
       - core/underscore
       - core/jquery
@@ -49,13 +49,13 @@ geolocation:
   js:
     js/geolocation.js: {}
 
-geofield_gmap:
+geofield_google_map:
   version: 1.x
   css:
     component:
-      css/geofield_google_map.css: {}
+      css/geofield_map_gmap_formatter.css: {}
   js:
-    js/geofield_google_map.js: {}
+    js/geofield_map_gmap_formatter.js: {}
   dependencies:
       - core/underscore
       - core/jquery
@@ -69,10 +69,9 @@ geocoder:
     component:
       css/geofield_map_geocoder.css: {}
   js:
-    js/geofield_map.geocoder.drupal.js: {}
+    js/geofield_map.geocoder.js: {}
   dependencies:
     - core/drupal.autocomplete
-    - geofield_gmap/geofield_gmap
 
 geojson:
   version: 1.x
@@ -89,6 +88,8 @@ marker_cluster:
     gpl-compatible: true
   js:
     https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer_compiled.js: { type: external }
+  dependencies:
+    - geofield_map/geofield_map_gmap_formatter
 
 # External OverlappingMarkerSpiderfier
 overlappingmarkerspiderfier:
@@ -100,3 +101,5 @@ overlappingmarkerspiderfier:
     gpl-compatible: true
   js:
     https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js: { type: external }
+  dependencies:
+    - geofield_map/geofield_map_gmap_formatter

@@ -236,6 +236,12 @@ to consume for performing Geocode and Reverse Geocode operations respectively.
   fallback in case of not existing id): the output format of the specific 
   @GeocoderProvider plugin able to process the Geocode operation.
   
+  - **address_format** (optional): The specific geocoder address formatter 
+  plugin (@GeocoderFormatter) that should be used to output the 
+  "formatted_address" property (present when no specific output 
+  format/@GeocoderDumper is requested). This fallback to default (bundled)) 
+  "default_formatted_address" @GeocoderFormatter 
+
   - **options** (optional): Possible overriding geocoders options written 
   in the form of multi-dimensional arrays query-string (such as a[b][c]=d). 
   For instance to override the google maps locale parameter (into italian):

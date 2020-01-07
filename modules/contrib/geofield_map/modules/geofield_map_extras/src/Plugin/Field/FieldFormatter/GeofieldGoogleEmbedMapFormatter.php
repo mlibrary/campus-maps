@@ -135,7 +135,8 @@ class GeofieldGoogleEmbedMapFormatter extends FormatterBase implements Container
       '#value' => $this->getFormatterIntro(),
     ];
 
-    $this->setMapGoogleApiKeyElement($elements);
+    // Set Google Api Key Element.
+    $elements['map_google_api_key'] = $this->setMapGoogleApiKeyElement();
 
     $elements['width'] = [
       '#type' => 'number',
@@ -176,42 +177,27 @@ class GeofieldGoogleEmbedMapFormatter extends FormatterBase implements Container
    * {@inheritdoc}
    */
   public function settingsSummary() {
-    $summary = [];
     $settings = $this->getSettings();
+    $summary = [
+      'formatter_intro' => $this->getFormatterIntro(),
+      'map_google_api_key' => $this->setMapGoogleApiKeyElement(),
+      'map_dimensions' => $this->t('Map dimensions: @width x @height', [
+        '@width' => $settings['width'],
+        '@height' => $settings['height'],
+      ]),
+      'optionals_parameters' => $this->t('Optionals Parameters: @options', [
+        '@options' => $settings['optionals_parameters'],
+      ]),
+    ];
 
-    $gmap_api_key = $this->getGmapApiKey();
-    // Define the Google Maps API Key value message string.
-    if (!empty($gmap_api_key)) {
-      $state = $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')
-            ->toString(),
+    // Attach Geofield Map Library.
+    $summary['library'] = [
+      '#attached' => [
+        'library' => [
+          'geofield_map/geofield_map_general',
         ],
-      ]));
-    }
-    else {
-      $state = $this->t("<span class='geofield-map-warning'>missing - @settings_page_link<br>Google Maps functionalities not available.</span>", [
-        '@settings_page_link' => $this->link->generate($this->t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-    $summary[] = $this->getFormatterIntro();
-    $summary[] = $this->t('Google Maps API Key: @state', [
-      '@state' => $state,
-    ]);
-
-    $summary[] = $this->t('Map dimensions: @width x @height', [
-      '@width' => $settings['width'],
-      '@height' => $settings['height'],
-    ]);
-
-    $summary[] = $this->t('Optionals Parameters: @options', [
-      '@options' => $settings['optionals_parameters'],
-    ]);
+      ],
+    ];
 
     return $summary;
   }

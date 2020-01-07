@@ -26,25 +26,49 @@ function geocoder_field_form_alter(array &$form, FormStateInterface $form_state,
     /* @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $entity_form->getEntity();
 
-    foreach ($entity->getFields() as $field_name => $field) {
-      /** @var \Drupal\Core\Field\FieldConfigInterface $field_config */
-      if (!($field_config = $field->getFieldDefinition()) instanceof FieldConfigInterface) {
-        // Only configurable fields are subject of geocoding.
-        continue;
+    _geocoder_field_alter_form_fields($entity, $form);
+  }
+}
+
+/**
+ * Implements hook_inline_entity_form_entity_form_alter().
+ *
+ * Eventually Disable or Hide Geocode Fields.
+ */
+function geocoder_field_inline_entity_form_entity_form_alter(&$entity_form, FormStateInterface &$form_state) {
+
+  /* @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+  $entity = $entity_form['#entity'];
+
+  _geocoder_field_alter_form_fields($entity, $entity_form);
+}
+
+/**
+ * Helper function for disable or hide geocode fields.
+ *
+ * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+ *   Entity.
+ * @param array $form
+ *   Form.
+ */
+function _geocoder_field_alter_form_fields(ContentEntityInterface $entity, array &$form) {
+  foreach ($entity->getFields() as $field_name => $field) {
+    /** @var \Drupal\Core\Field\FieldConfigInterface $field_config */
+    if (!($field_config = $field->getFieldDefinition()) instanceof FieldConfigInterface) {
+      // Only configurable fields are subject of geocoding.
+      continue;
+    }
+
+    // Eventually Disable the Geocoded Field.
+    $geocoder = $field_config->getThirdPartySettings('geocoder_field');
+    if (isset($geocoder['method']) && $geocoder['method'] !== 'none') {
+      if (isset($geocoder['disabled']) && $geocoder['disabled'] == TRUE) {
+        $form[$field_name]['#disabled'] = TRUE;
       }
 
-      // Eventually Disable the Geocoded Field.
-      $geocoder = $field_config->getThirdPartySettings('geocoder_field');
-
-      if (isset($geocoder['method']) && $geocoder['method'] !== 'none') {
-        if (isset($geocoder['disabled']) && $geocoder['disabled'] == TRUE) {
-          $form[$field_name]['#disabled'] = TRUE;
-        }
-
-        // Eventually Hide the Geocoded Field.
-        if (isset($geocoder['hidden']) && $geocoder['hidden'] == TRUE) {
-          $form[$field_name]['#access'] = FALSE;
-        }
+      // Eventually Hide the Geocoded Field.
+      if (isset($geocoder['hidden']) && $geocoder['hidden'] == TRUE) {
+        $form[$field_name]['#access'] = FALSE;
       }
     }
   }
@@ -203,8 +227,13 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
       $result = [];
       $failure_status_message = '';
 
-      foreach ($remote_field->getValue() as $delta => $value) {
+      // Skip the Geocode/Reverse Geocode operation is so requested for not
+      // empty coordinates.
+      if (isset($geocoder['skip_not_empty_value']) && $geocoder['skip_not_empty_value'] && !$default_values->isEmpty()) {
+        return;
+      }
 
+      foreach ($remote_field->getValue() as $delta => $value) {
         if ($remote_field->getFieldDefinition()->getType() == 'address_country') {
           $value['value'] = CountryManager::getStandardList()[$value['value']];
         }
@@ -297,7 +326,7 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
         }
         // Display a status message.
         if ($geocoder['failure']['status_message']) {
-          drupal_set_message($failure_status_message, 'warning');
+          \Drupal::messenger()->addMessage($failure_status_message, 'warning');
         }
         // Log the failure.
         if ($geocoder['failure']['log']) {

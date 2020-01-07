@@ -1,13 +1,14 @@
 /* line 1, ../sass/geofield_map_general.scss */
 .geofield-map-message {
+  margin: 8px 0;
   color: darkgray;
 }
-/* line 3, ../sass/geofield_map_general.scss */
+/* line 4, ../sass/geofield_map_general.scss */
 .geofield-map-message a {
   color: gray;
 }
 
-/* line 8, ../sass/geofield_map_general.scss */
+/* line 9, ../sass/geofield_map_general.scss */
 .geofield-map-warning {
   color: orangered;
 }

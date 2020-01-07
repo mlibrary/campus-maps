@@ -410,34 +410,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     // eventually set previously to its select introduction.
     $default_icon_image_mode = !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? 'icon_image_path' : $default_settings['map_marker_and_infowindow']['icon_image_mode'];
 
-    $gmap_api_key = $this->getGmapApiKey();
-
-    // Define the Google Maps API Key value message string.
-    if (!empty($gmap_api_key)) {
-      $state = $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')
-            ->toString(),
-        ],
-      ]));
-    }
-    else {
-      $state = $this->t("<span class='geofield-map-warning'>missing - @settings_page_link<br>Google Maps functionalities not available.</span>", [
-        '@settings_page_link' => $this->link->generate($this->t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-
-    $map_gmap_api_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', [
-        '@state' => $state,
-      ]),
-    ];
-
     $map_dimensions = [
       '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
     ];
@@ -675,7 +647,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
 
     $summary = [
-      'map_gmap_api_key' => $map_gmap_api_key,
+      'map_google_api_key' => $this->setMapGoogleApiKeyElement(),
       'map_dimensions' => $map_dimensions,
       'map_empty' => $map_empty,
       'map_center' => $map_center,

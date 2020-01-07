@@ -84,6 +84,12 @@ class LeafletService {
   public function leafletRenderMap(array $map, array $features = [], $height = '400px') {
     $map_id = isset($map['id']) ? $map['id'] : Html::getUniqueId('leaflet_map');
     $attached_libraries = ['leaflet/leaflet-drupal', 'leaflet/general'];
+
+    // Add the Core Drupal Ajax library for Ajax Popups.
+    if (isset($map['settings']['ajaxPoup']) && $map['settings']['ajaxPoup'] == TRUE) {
+      array_unshift($attached_libraries, 'core/drupal.ajax');
+    }
+
     // Add the Leaflet Fullscreen library, if requested.
     if (isset($map['settings']['fullscreen_control'])) {
       $attached_libraries[] = 'leaflet/leaflet.fullscreen';

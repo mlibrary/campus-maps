@@ -126,7 +126,9 @@ class GeofieldGoogleStaticMapFormatter extends FormatterBase implements Containe
       '#value' => $this->getFormatterIntro(),
     ];
 
-    $this->setMapGoogleApiKeyElement($elements);
+    // Set Google Api Key Element.
+    $elements['map_google_api_key'] = $this->setMapGoogleApiKeyElement();
+
     $elements['gmaps_api_link_markup'] = [
       '#markup' => $this->t('The following settings comply with the @gmaps_api_link.', [
         '@gmaps_api_link' => $this->link->generate($this->t('Google Maps Static API'), Url::fromUri('https://developers.google.com/maps/documentation/maps-static/dev-guide#introduction', [
@@ -249,55 +251,28 @@ class GeofieldGoogleStaticMapFormatter extends FormatterBase implements Containe
    * {@inheritdoc}
    */
   public function settingsSummary() {
-    $summary = [];
     $settings = $this->getSettings();
     $map_types = $this->getStaticMapOptions();
-
-    $gmap_api_key = $this->getGmapApiKey();
-    // Define the Google Maps API Key value message string.
-    if (!empty($gmap_api_key)) {
-      $state = $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')
-            ->toString(),
-        ],
-      ]));
-    }
-    else {
-      $state = $this->t("<span class='geofield-map-warning'>missing - @settings_page_link<br>Google Maps functionalities not available.</span>", [
-        '@settings_page_link' => $this->link->generate($this->t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-    $summary[] = $this->getFormatterIntro();
-    $summary[] = $this->t('Google Maps API Key: @state', [
-      '@state' => $state,
-    ]);
-
-    $summary[] = $this->t('Map dimensions: @width x @height', [
-      '@width' => $settings['width'] * $settings['scale'],
-      '@height' => $settings['height'] * $settings['scale'],
-    ]);
-
-    $summary[] = $this->t('Zoom level: @zoom', [
-      '@zoom' => $settings['zoom'],
-    ]);
-
-    $summary[] = $this->t('Map type: <em>@type</em>', [
-      '@type' => $map_types[$settings['static_map_type']],
-    ]);
-
-    $summary[] = $this->t('Marker Color: @marker_color', [
-      '@marker_color' => $settings['marker_color'],
-    ]);
-
-    $summary[] = $this->t('Markers Size: @marker_size', [
-      '@marker_size' => $settings['marker_size'],
-    ]);
+    $summary = [
+      'formatter_intro' => $this->getFormatterIntro(),
+      'map_google_api_key' => $this->setMapGoogleApiKeyElement(),
+      'map_dimensions' => $this->t('Map dimensions: @width x @height', [
+        '@width' => $settings['width'],
+        '@height' => $settings['height'],
+      ]),
+      'zoom_level' => $this->t('Zoom level: @zoom', [
+        '@zoom' => $settings['zoom'],
+      ]),
+      'map_type' => $this->t('Map type: <em>@type</em>', [
+        '@type' => $map_types[$settings['static_map_type']],
+      ]),
+      'marker_color' => $this->t('Markers Size: @marker_size', [
+        '@marker_size' => $settings['marker_size'],
+      ]),
+      'marker_size' => $this->t('Markers Size: @marker_size', [
+        '@marker_size' => $settings['marker_size'],
+      ]),
+    ];
 
     // Attach Geofield Map Library.
     $summary['library'] = [
@@ -315,7 +290,6 @@ class GeofieldGoogleStaticMapFormatter extends FormatterBase implements Containe
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    $elements = [];
     $locations = [];
     $settings = $this->getSettings();
     $language = ($langcode !== Language::LANGCODE_NOT_SPECIFIED) ? $langcode : 'en';
@@ -328,23 +302,21 @@ class GeofieldGoogleStaticMapFormatter extends FormatterBase implements Containe
         continue;
       }
       $locations[] = urlencode($value['latlon']);
-
-      $elements[$delta] = [
-        '#theme' => 'geofield_static_google_map',
-        '#width' => $settings['width'],
-        '#height' => $settings['height'],
-        '#scale' => $settings['scale'],
-        '#locations' => $locations,
-        '#zoom' => $settings['zoom'],
-        '#langcode' => $language,
-        '#static_map_type' => $settings['static_map_type'],
-        '#apikey' => (string) $this->getGmapApiKey(),
-        '#marker_color' => $settings['marker_color'],
-        '#marker_size' => $settings['marker_size'],
-      ];
     }
 
-    return $elements;
+    return [
+      '#theme' => 'geofield_static_google_map',
+      '#width' => $settings['width'],
+      '#height' => $settings['height'],
+      '#scale' => $settings['scale'],
+      '#locations' => $locations,
+      '#zoom' => $settings['zoom'],
+      '#langcode' => $language,
+      '#static_map_type' => $settings['static_map_type'],
+      '#apikey' => (string) $this->getGmapApiKey(),
+      '#marker_color' => $settings['marker_color'],
+      '#marker_size' => $settings['marker_size'],
+    ];
   }
 
 }

@@ -8,12 +8,18 @@ use Drupal\geocoder\Annotation\GeocoderDumper;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Provides a plugin manager for geocoder dumpers.
  */
 class DumperPluginManager extends GeocoderPluginManagerBase {
 
+  /**
+   * The maxLengthFieldTypes property.
+   *
+   * @var array
+   */
   private $maxLengthFieldTypes = [
     "text",
     "string",
@@ -27,13 +33,21 @@ class DumperPluginManager extends GeocoderPluginManagerBase {
   protected $logger;
 
   /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, LoggerChannelFactoryInterface $logger_factory, MessengerInterface $messenger) {
     parent::__construct('Plugin/Geocoder/Dumper', $namespaces, $module_handler, DumperInterface::class, GeocoderDumper::class);
     $this->alterInfo('geocoder_dumper_info');
     $this->setCacheBackend($cache_backend, 'geocoder_dumper_plugins');
     $this->logger = $logger_factory;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -122,7 +136,7 @@ class DumperPluginManager extends GeocoderPluginManagerBase {
       $dumper_result = substr($dumper_result, 0, $field_config->getFieldStorageDefinition()->getSetting('max_length'));
 
       // Display a max-length incompatibility warning message.
-      drupal_set_message($incompatibility_warning_message, 'warning');
+      $this->messenger->addMessage($incompatibility_warning_message, 'warning');
 
       // Log the max-length incompatibility.
       $this->logger->get('geocoder')->warning($incompatibility_warning_message);

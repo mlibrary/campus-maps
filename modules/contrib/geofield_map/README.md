@@ -84,9 +84,11 @@ map on which to perform localization and input of geographic coordinates
 throughout:
 
 *   MULTIPOINTS Geofield mapping support;
-*   Google Geocoding and 
-[Google Maps Places Autocomplete Service](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete);
-*   Google Map or Leaflet Map JS libraries and interfaces;
+*   Search Address Geocoding throughout [Google Maps Geocoder service](https://developers.google.com/maps/documentation/javascript/geocoding) and 
+[Google Maps Places Autocomplete Service](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete)
+or throughout other Geocoder providers provided by the 
+[Geocoder module](https://www.drupal.org/project/geocoder) integration ;
+*   Google Map or Leaflet Map JS libraries and Mapping UXs;
 *   Map click and marker dragging, with instant reverse geocoding;
 *   HTML5 Geolocation of the user position;
 *   the possibility to permanently store the Geocoded address into the Entity 

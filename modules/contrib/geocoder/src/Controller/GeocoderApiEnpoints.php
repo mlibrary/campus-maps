@@ -59,8 +59,8 @@ class GeocoderApiEnpoints extends ControllerBase {
   /**
    * Get the Address Formatter.
    */
-  protected function getAddressFormatter() {
-    return 'default_formatted_address';
+  protected function getAddressFormatter($address_format = NULL) {
+    return $address_format ?: 'default_formatted_address';
   }
 
   /**
@@ -125,8 +125,10 @@ class GeocoderApiEnpoints extends ControllerBase {
    *   The Address Collection.
    * @param \Drupal\geocoder\DumperInterface|null $dumper
    *   The Dumper or null.
+   * @param string|null $address_format
+   *   The specific @GeocoderFormatter id to be used.
    */
-  protected function getAddressCollectionResponse(AddressCollection $geo_collection, $dumper = NULL): void {
+  protected function getAddressCollectionResponse(AddressCollection $geo_collection, $dumper = NULL, $address_format = NULL): void {
     $result = [];
     /** @var \Geocoder\Model\Address $geo_address **/
     foreach ($geo_collection->all() as $k => $geo_address) {
@@ -140,7 +142,7 @@ class GeocoderApiEnpoints extends ControllerBase {
         if (!isset($result[$k]['formatted_address'])) {
 
           try {
-            $result[$k]['formatted_address'] = $this->geocoderFormatterPluginManager->createInstance($this->getAddressFormatter())
+            $result[$k]['formatted_address'] = $this->geocoderFormatterPluginManager->createInstance($this->getAddressFormatter($address_format))
               ->format($geo_address);
           }
           catch (\Exception $e) {
@@ -226,8 +228,10 @@ class GeocoderApiEnpoints extends ControllerBase {
 
     $address = $request->get('address');
     $geocoders_ids = $request->get('geocoder');
-    $geocoders = explode(',', $geocoders_ids);
+    $geocoders = explode(',', str_replace(' ', '', $geocoders_ids));
     $format = $request->get('format');
+
+    $address_format = $request->get('address_format');
 
     if (isset($address)) {
 
@@ -237,7 +241,7 @@ class GeocoderApiEnpoints extends ControllerBase {
       $geo_collection = $this->geocoder->geocode($address, $geocoders, $options);
 
       if ($geo_collection && $geo_collection instanceof AddressCollection) {
-        $this->getAddressCollectionResponse($geo_collection, $dumper);
+        $this->getAddressCollectionResponse($geo_collection, $dumper, $address_format);
       }
     }
     return $this->response;
