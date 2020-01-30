@@ -23,10 +23,19 @@
           // Set the map_data[mapid] settings.
           Drupal.geoFieldMap.map_data[mapid] = options;
 
-          // Load before the Gmap Library, if needed, then initialize the Map.
-          Drupal.geoFieldMap.loadGoogle(mapid, options.gmap_api_key, function () {
+          // Google maps library shouldn't be requested if the following
+          // conditions apply:
+          // - leaflet js is the chosen map library;
+          // - geocoder integration is enabled;
+          if (options.map_library === 'leaflet' && options.gmap_geocoder) {
             Drupal.geoFieldMap.map_initialize(options);
-          });
+          }
+          else {
+            // Load before the Gmap Library, if needed, then initialize the Map.
+            Drupal.geoFieldMap.loadGoogle(mapid, options.gmap_api_key, function () {
+              Drupal.geoFieldMap.map_initialize(options);
+            });
+          }
         }
       });
 

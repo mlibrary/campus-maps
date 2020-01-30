@@ -21,13 +21,17 @@ CONFIGURATION
 -------------
  * After installation of module Clear all cache first (Important to do this).
  * Go to admin/structure/types/manage/<any-content-type>/fields.
- * Edit any field, and click Field Settings tab then you can enable option "Disable field"
+ * Edit any field, and click Field Settings tab then you can enable option
+  "Disable field"
  * Select where to disable (add/edit) and add roles.
+ * For base fields (e.g. title) visit
+  /admin/structure/types/manage/<any-content-type>/fields/base-field-override.
 
 
 MAINTAINER
 -----------
 Current maintainers:
- * A AjayKumar Reddy (ajaykumarreddy1392) - https://www.drupal.org/user/3261994
- * Viraj Rajankar (virajrajankar) https://www.drupal.org/user/3164807
- * Eugene Ilyin (eugene.ilyin) https://www.drupal.org/user/1767626
+ * A AjayKumar Reddy (ajaykumarreddy1392) - https://www.drupal.org/u/virajrajankar
+ * Viraj Rajankar (virajrajankar) - https://www.drupal.org/u/virajrajankar
+ * Eugene Ilyin (eugene.ilyin) - https://www.drupal.org/u/eugeneilyin
+ * Jeroen Tubex (JeroenT) - https://www.drupal.org/u/jeroent

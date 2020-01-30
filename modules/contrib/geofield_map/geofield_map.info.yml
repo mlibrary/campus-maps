@@ -8,7 +8,7 @@ core: 8.x
 type: module
 configure: geofield_map.settings
 
-# Information added by Drupal.org packaging script on 2020-01-01
-version: '8.x-2.54'
+# Information added by Drupal.org packaging script on 2020-01-15
+version: '8.x-2.57'
 project: 'geofield_map'
-datestamp: 1577915588
+datestamp: 1579063418

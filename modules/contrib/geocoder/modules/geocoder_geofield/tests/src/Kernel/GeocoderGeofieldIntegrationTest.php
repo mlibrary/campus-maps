@@ -18,7 +18,6 @@ class GeocoderGeofieldIntegrationTest extends KernelTestBase {
    * {@inheritdoc}
    */
   public static $modules = [
-    'geophp',
     'geofield',
     'field',
     'geocoder_geofield',
@@ -33,6 +32,8 @@ class GeocoderGeofieldIntegrationTest extends KernelTestBase {
 
   /**
    * Tests the geocoding on Geofield field type.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function testGeofield() {
     $this->installEntitySchema('entity_test');
@@ -62,7 +63,7 @@ class GeocoderGeofieldIntegrationTest extends KernelTestBase {
       'third_party_settings' => [
         'geocoder_field' => [
           'method' => 'source',
-          'field' => 'foo',
+          'geocode_field' => 'foo',
           'plugins' => ['test_provider'],
           'dumper' => 'wkt',
           'delta_handling' => 'default',
@@ -99,6 +100,8 @@ class GeocoderGeofieldIntegrationTest extends KernelTestBase {
     ])->save();
     // Re-load and re-save to geo-code again.
     $entity = EntityTest::load($entity->id());
+    // Re-write the remote filed, otherwise may not re-geocode.
+    $entity->foo->value = 'SOME NEW MESS';
     $entity->save();
 
     // Check that the target field has been emptied.

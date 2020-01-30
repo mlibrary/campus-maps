@@ -1,0 +1,38 @@
+{
+    "name": "drupal/disable_field",
+    "description": "Allows to disable field of entities on the forms.",
+    "type": "drupal-module",
+    "homepage": "https://drupal.org/project/disable_field",
+    "license": "GPL-2.0+",
+    "minimum-stability": "dev",
+    "require-dev": {
+        "drupal/base_field_override_ui": "^1.0@beta",
+        "drupal/paragraphs": "^1.10"
+    },
+    "authors": [
+        {
+            "name": "A AjayKumar Reddy (ajaykumarreddy1392)",
+            "homepage": "https://www.drupal.org/u/ajay_reddy",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Viraj Rajankar (virajrajankar)",
+            "homepage": "https://www.drupal.org/u/virajrajankar",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Eugene Ilyin (eugene.ilyin)",
+            "homepage": "https://www.drupal.org/u/eugeneilyin",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Jeroen Tubex (JeroenT)",
+            "homepage": "https://www.drupal.org/u/jeroent",
+            "role": "Maintainer"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/disable_field",
+        "source": "https://git.drupalcode.org/project/disable_field"
+    }
+}

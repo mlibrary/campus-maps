@@ -10,6 +10,7 @@ use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder\FormatterPluginManager;
 use Geocoder\Model\AddressCollection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Component\Serialization\Json;
 
 /**
  * Defines 'Geocode Origin (with Autocomplete option)' proximity source plugin.
@@ -360,6 +361,22 @@ class GeocodeOrigin extends GeofieldProximitySourceBase implements ContainerFact
 
     if (empty($plugins)) {
       $form_state->setError($element, t('The Geocode Origin option needs at least one geocoder plugin selected.'));
+    }
+  }
+
+  /**
+   * Form element json format validation handler.
+   *
+   * {@inheritdoc}
+   */
+  public static function jsonValidate($element, FormStateInterface &$form_state) {
+    $element_values_array = JSON::decode($element['#value']);
+    // Check the jsonValue.
+    if (!empty($element['#value']) && $element_values_array == NULL) {
+      $form_state->setError($element, t('The @field field is not valid Json Format.', ['@field' => $element['#title']]));
+    }
+    elseif (!empty($element['#value'])) {
+      $form_state->setValueForElement($element, ['options' => $element_values_array]);
     }
   }
 

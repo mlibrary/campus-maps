@@ -1,0 +1,4 @@
+services:
+  disable_field.config_form_builder:
+    class: Drupal\disable_field\ConfigFormBuilder
+    arguments: ['@current_user', '@entity_type.manager']

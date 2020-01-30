@@ -887,11 +887,15 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
     $this->moduleHandler->alter('leaflet_map_view_style', $js_settings, $this);
 
     $map_height = !empty($this->options['height']) ? $this->options['height'] . $this->options['height_unit'] : '';
-    $build = $this->leafletService->leafletRenderMap($js_settings['map'], $js_settings['features'], $map_height);
-    BubbleableMetadata::createFromRenderArray($build)
+    $element = $this->leafletService->leafletRenderMap($js_settings['map'], $js_settings['features'], $map_height);
+    // Add the Core Drupal Ajax library for Ajax Popups.
+    if (isset($map['settings']['ajaxPoup']) && $map['settings']['ajaxPoup'] == TRUE) {
+      $build_for_bubbleable_metadata['#attached']['library'][] = 'core/drupal.ajax';
+    }
+    BubbleableMetadata::createFromRenderArray($element)
       ->merge(BubbleableMetadata::createFromRenderArray($build_for_bubbleable_metadata))
-      ->applyTo($build);
-    return $build;
+      ->applyTo($element);
+    return $element;
   }
 
   /**

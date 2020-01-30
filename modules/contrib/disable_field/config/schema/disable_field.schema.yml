@@ -1,22 +1,45 @@
-field.widget.third_party.disable_field:
+field.field.*.*.*.third_party.disable_field:
   type: mapping
-  label: 'Per-content type disable_field settings'
+  label: 'Per-field disable_field settings'
   mapping:
     add_disable:
-        type: sequence
-        label: 'Option for disable field on add content form'
-    add_disable_roles:
+      type: string
+      label: 'Option to disable field on the content add form'
+    add_roles:
       type: sequence
-      label: 'Roles for disable field on add content form'
-    add_disable_roles_enable:
-      type: sequence
-      label: 'Roles for enable field on add content form'
+      label: 'Enable or disable the field for the given roles on the content add form.'
+      sequence:
+        type: string
+        label: 'Role'
     edit_disable:
+      type: string
+      label: 'Option to disable field on the content edit form'
+    edit_roles:
       type: sequence
-      label: 'Option for disable field on edit content form'
-    edit_disable_roles:
+      label: 'Enable or disable the field for the given roles on the content edit form.'
+      sequence:
+        type: string
+        label: 'Role'
+
+core.base_field_override.*.*.*.third_party.disable_field:
+  type: mapping
+  label: 'Per-field disable_field settings'
+  mapping:
+    add_disable:
+      type: string
+      label: 'Option to disable field on the content add form'
+    add_roles:
       type: sequence
-      label: 'Roles for disable field on edit content form'
-    edit_disable_roles_enable:
+      label: 'Enable or disable the field for the given roles on the content add form.'
+      sequence:
+        type: string
+        label: 'Role'
+    edit_disable:
+      type: string
+      label: 'Option to disable field on the content edit form'
+    edit_roles:
       type: sequence
-      label: 'Roles for disable field on edit content form'
+      label: 'Enable or disable the field for the given roles on the content edit form.'
+      sequence:
+        type: string
+        label: 'Role'

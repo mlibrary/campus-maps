@@ -4,7 +4,10 @@ namespace Drupal\geofield_map\Plugin\views\style;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\RenderContext;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\geofield_map\Controller\GeofieldMapAjaxPopupController;
 use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\geofield_map\GeofieldMapFormElementsValidationTrait;
 use Drupal\Component\Utility\Html;
@@ -816,6 +819,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     ];
 
     $data = [];
+    // Collect bubbleable metadata when doing early rendering.
+    $build_for_bubbleable_metadata = [];
 
     // Get the Geofield field.
     $geofield_name = $map_settings['data_source'];
@@ -930,27 +935,26 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
                 case '#rendered_entity':
                   $build = $this->entityManager->getViewBuilder($entity->getEntityTypeId())
                     ->view($entity, $default_view_mode, $langcode);
-                  $description[] = $this->renderer->renderPlain($build);
+                  $render_context = new RenderContext();
+                  $description[] = $this->renderer->executeInRenderContext($render_context, function () use (&$build) {
+                    return $this->renderer->render($build, TRUE);
+                  });
+                  if (!$render_context->isEmpty()) {
+                    $render_context->update($build_for_bubbleable_metadata);
+                  }
                   break;
 
                 case '#rendered_entity_ajax':
                   $parameters = [
-                    'entity_type' => $entity->getEntityTypeId(),
+                    'entity_type' => $entity_type,
                     'entity' => $entity->id(),
                     'view_mode' => $default_view_mode,
                     'langcode' => $langcode,
                   ];
                   $url = Url::fromRoute('geofield_map.ajax_popup', $parameters, ['absolute' => TRUE]);
-                  $build = [
-                    '#type' => 'html_tag',
-                    '#tag' => 'div',
-                    '#value' => '',
-                    '#attributes' => [
-                      'class' => ['geofield-google-map-ajax-popup'],
-                      'data-geofield-google-map-ajax-popup' => $url->toString(),
-                    ],
-                  ];
-                  $description[] = $this->renderer->renderPlain($build);
+                  $description[] = sprintf('<div class="geofield-google-map-ajax-popup" data-geofield-google-map-ajax-popup="%s" %s></div>',
+                    $url->toString(), GeofieldMapAjaxPopupController::getPopupIdentifierAttribute($entity_type, $entity->id(), $default_view_mode, $langcode));
+                  $js_settings['map_settings']['ajaxPoup'] = TRUE;
                   break;
 
                 default:
@@ -1047,7 +1051,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $this->moduleHandler->alter('geofield_map_googlemap_view_style', $js_settings, $this);
 
       $element = geofield_map_googlemap_render($js_settings);
-
+      // Add the Core Drupal Ajax library for Ajax Popups.
+      if (isset($js_settings['map_settings']['ajaxPoup']) && $js_settings['map_settings']['ajaxPoup'] == TRUE) {
+        $build_for_bubbleable_metadata['#attached']['library'][] = 'core/drupal.ajax';
+      }
+      BubbleableMetadata::createFromRenderArray($element)
+        ->merge(BubbleableMetadata::createFromRenderArray($build_for_bubbleable_metadata))
+        ->applyTo($element);
     }
     return $element;
   }

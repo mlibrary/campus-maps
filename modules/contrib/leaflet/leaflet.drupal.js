@@ -29,16 +29,13 @@
 
         // Attach leaflet ajax popup listeners.
         Drupal.Leaflet[mapid].lMap.on('popupopen', function(e) {
-          var content = $('[data-leaflet-ajax-popup]', e.popup._contentNode);
+          var element = e.popup._contentNode;
+          var content = $('[data-leaflet-ajax-popup]', element);
           if (content.length) {
             var url = content.data('leaflet-ajax-popup');
             Drupal.ajax({url: url}).execute();
           }
-        });
-
-        // Attach drupal behaviors on new content.
-        Drupal.Leaflet[mapid].lMap.on('popupopen', function(e) {
-          var element = e.popup._contentNode;
+          // Attach drupal behaviors on new content.
           $(element).each(function () {
             Drupal.attachBehaviors(this, drupalSettings);
           })

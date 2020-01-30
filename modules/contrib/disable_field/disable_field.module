@@ -2,347 +2,72 @@
 
 /**
  * @file
+ * Allows to disable field of entities on the forms.
  */
+
+use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Entity\FieldConfig;
 
 /**
- * Implements hook_form_BASE_FORM_ID_alter().
+ * Implements hook_form_BASE_FORM_ID_alter() for 'field_config_edit_form'.
  */
 function disable_field_form_field_config_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  if (\Drupal::currentUser()->hasPermission('disable textfield module')) {
-    // Fetch Roles.
-    $roles = [];
-    foreach (user_roles() as $role) {
-      $roles[$role->id()] = $role->label();
-    }
-    // Load third party settings.
-    $settings = $form_state->getFormObject()
-      ->getEntity()
-      ->getThirdPartySettings('disable_field');
-    // Prepare group with fields for settings.
-    $form['disable_field'] = array(
-      '#type' => 'details',
-      '#title' => t('Disable Field Settings'),
-      '#open' => TRUE,
-      '#weight' => 20,
-      'add' => [
-        '#type' => 'fieldset',
-        '#title' => t('Disable this field on add content form?'),
-      ],
-      'edit' => [
-        '#type' => 'fieldset',
-        '#title' => t('Disable this field on edit content form?'),
-      ]
-    );
-    $form['disable_field']['add']['add_disable'] = array(
-      '#type' => 'select',
-      '#options' => [
-        'none' => t('Enable for all users'),
-        'all' => t('Disable for all users'),
-        'roles' => t('Disable for certain roles'),
-        'roles_enable' => t('Enable for certain roles'),
-      ],
-      '#default_value' => !empty($settings['add_disable']) ? $settings['add_disable'] : 'none',
-    );
-    $form['disable_field']['add']['add_enable_roles'] = array(
-      '#type' => 'select',
-      '#options' => $roles,
-      '#title' => t('Enable field on the add content form for next roles:'),
-      '#multiple' => TRUE,
-      '#states' => array(
-        'visible' => array(
-          ':input[name="add_disable"]' => ['value' => 'roles_enable'],
-        ),
-      ),
-      '#default_value' => !empty($settings['add_enable_roles']) ? $settings['add_enable_roles'] : [],
-    );
-    $form['disable_field']['add']['add_disable_roles'] = array(
-      '#type' => 'select',
-      '#options' => $roles,
-      '#title' => t('Disable field on the add content form for next roles:'),
-      '#multiple' => TRUE,
-      '#states' => array(
-        'visible' => array(
-          ':input[name="add_disable"]' => ['value' => 'roles'],
-        ),
-      ),
-      '#default_value' => !empty($settings['add_disable_roles']) ? $settings['add_disable_roles'] : [],
-    );
-    $form['disable_field']['edit']['edit_disable'] = array(
-      '#type' => 'select',
-      '#options' => [
-        'none' => t('Enable for all users'),
-        'all' => t('Disable for all users'),
-        'roles' => t('Disable for certain roles'),
-        'roles_enable' => t('Enable for certain roles'),
-      ],
-      '#default_value' => !empty($settings['edit_disable']) ? $settings['edit_disable'] : 'none',
-    );
-    $form['disable_field']['edit_disable_roles'] = array(
-      '#type' => 'select',
-      '#options' => $roles,
-      '#title' => t('Disable field on the edit content form for next roles:'),
-      '#multiple' => TRUE,
-      '#weight' => 4,
-      '#states' => array(
-        'visible' => array(
-          ':input[name="edit_disable"]' => ['value' => 'roles'],
-        ),
-      ),
-      '#default_value' => !empty($settings['edit_disable_roles']) ? $settings['edit_disable_roles'] : [],
-    );
-    $form['disable_field']['edit_enable_roles'] = array(
-      '#type' => 'select',
-      '#options' => $roles,
-      '#title' => t('Enable field on the edit content form for next roles:'),
-      '#multiple' => TRUE,
-      '#weight' => 4,
-      '#states' => array(
-        'visible' => array(
-          ':input[name="edit_disable"]' => ['value' => 'roles_enable'],
-        ),
-      ),
-      '#default_value' => !empty($settings['edit_enable_roles']) ? $settings['edit_enable_roles'] : [],
-    );
-    $form['#attached']['library'][] = 'disable_field/disable_field';
-    // Add validate and submit handlers.
-    array_unshift($form['#validate'], 'disable_field_disable_validate');
-    $form['#entity_builders'][] = 'disable_field_form_field_config_form_builder';
-  }
+  \Drupal::service('disable_field.config_form_builder')->addDisableFieldConfigFormToEntityForm($form, $form_state, $form_id);
 }
 
 /**
- * Form builder to save the settings for images.
+ * Implements hook_form_BASE_FORM_ID_alter() for 'base_field_override_edit_form'.
  */
-function disable_field_form_field_config_form_builder($entity_type, FieldConfig $type, &$form, FormStateInterface $form_state) {
-  // Save settings for "add disable".
-  $roles = $form_state->getValue('add_disable') == 'roles' ? $form_state->getValue('add_disable_roles') : [];
-  $type->setThirdPartySetting(
-    'disable_field', 'add_disable', $form_state->getValue('add_disable')
-  );
-  $type->setThirdPartySetting(
-    'disable_field', 'add_disable_roles', $roles
-  );
-  // Save settings for "edit disable".
-  $roles = $form_state->getValue('edit_disable') == 'roles' ? $form_state->getValue('edit_disable_roles') : [];
-  $type->setThirdPartySetting(
-    'disable_field', 'edit_disable', $form_state->getValue('edit_disable')
-  );
-  $type->setThirdPartySetting('disable_field', 'edit_disable_roles', $roles);
-
-  // Save settings for "add enable".
-  $roles_enable = $form_state->getValue('add_disable') == 'roles_enable' ? $form_state->getValue('add_enable_roles') : [];
-  $type->setThirdPartySetting(
-    'disable_field', 'add_disable', $form_state->getValue('add_disable')
-  );
-  $type->setThirdPartySetting(
-    'disable_field', 'add_enable_roles', $roles_enable
-  );
-  // Save settings for "edit disable".
-  $roles_enable = $form_state->getValue('edit_disable') == 'roles_enable' ? $form_state->getValue('edit_enable_roles') : [];
-  $type->setThirdPartySetting(
-    'disable_field', 'edit_disable', $form_state->getValue('edit_disable')
-  );
-  $type->setThirdPartySetting('disable_field', 'edit_enable_roles', $roles_enable);
-
+function disable_field_form_base_field_override_edit_form_alter(&$form, &$form_state, $form_id) {
+  \Drupal::service('disable_field.config_form_builder')->addDisableFieldConfigFormToEntityForm($form, $form_state, $form_id);
 }
 
 /**
- * Implements validate function.
+ * Implements hook_field_widget_multivalue_form_alter().
  */
-function disable_field_disable_validate(array &$form, FormStateInterface $form_state) {
-  $values = $form_state->getValues();
-  $add_disable = $values['add_disable'];
-  $edit_disable = $values['edit_disable'];
-  // For add checkbox;
-  if ($add_disable == 'roles') {
-    if (empty($values['add_disable_roles'])) {
-      $form_state->setErrorByName('roles_add', t('Please, choose at least one role.'));
-    }
-  }
-  // For Edit checkbox.
-  if ($edit_disable == 'roles') {
-    if (empty($values['edit_disable_roles'])) {
-      $form_state->setErrorByName('roles_edit', t('Please, choose at least one role.'));
-    }
+function disable_field_field_widget_multivalue_form_alter(&$elements, FormStateInterface $form_state, array $context) {
+  // Don't disable fields on the field config edit form.
+  if ($form_state->getFormObject()->getFormId() === 'field_config_edit_form') {
+    return;
   }
 
-  $add_enable = $values['add_enable'];
-  $edit_enable = $values['edit_enable'];
-  // For add checkbox;
-  if ($add_enable == 'roles_enable') {
-    if (empty($values['add_enable_roles'])) {
-      $form_state->setErrorByName('roles_add', t('Please, choose at least one role.'));
-    }
+  // Don't disable fields when we're not on an entity form.
+  if (!$form_state->getFormObject() instanceof EntityFormInterface) {
+    return;
   }
-  // For Edit checkbox.
-  if ($edit_enable == 'roles_enable') {
-    if (empty($values['edit_enable_roles'])) {
-      $form_state->setErrorByName('roles_edit', t('Please, choose at least one role.'));
-    }
+
+  // Check if we can get the third party settings.
+  if (!$context['items']->getFieldDefinition() instanceof ThirdPartySettingsInterface) {
+    return;
   }
-}
 
-/**
- * Implements hook_form_alter().
- */
-function disable_field_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  list($form_entity_type_id, $bundle, $operation) = disable_field_get_entity_data($form_state);
+  $user_roles = \Drupal::currentUser()->getRoles();
+  $disable_field = $context['items']->getFieldDefinition()->getThirdPartySettings('disable_field');
+  $entity = $form_state->getFormObject()->getEntity();
+  $operation = $entity->id() ? 'edit' : 'add';
 
-  // Disable Field.
-  if (!empty($form_entity_type_id) && !empty($bundle)) {
-    $entity_type = \Drupal::service('entity_type.manager')->getDefinition($form_entity_type_id);
-    // Check that current entity is fieldable before process it's fields.
-    if ($entity_type->isSubclassOf(\Drupal\Core\Entity\FieldableEntityInterface::class)) {
-      $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($form_entity_type_id, $bundle);
-      $user_roles = \Drupal::currentUser()->getRoles();
-      foreach ($fields as $field_name => $field_definition) {
-        if (method_exists($field_definition, 'getThirdPartySettings')) {
-          if ($settings = $field_definition->getThirdPartySettings('disable_field')) {
-            if ($field_definition->getType() == 'field_collection') {
-              $bundle_fields = \Drupal::entityManager()->getFieldDefinitions('field_collection_item', $field_name);
-              foreach ($bundle_fields as $field_collection_name => $field_collection_definition) {
-                if (strpos($field_collection_name, 'field_') !== FALSE && $field_collection_name != 'field_name') {
-                  $field_collection_settings = $field_collection_definition->getThirdPartySettings('disable_field');
-                  if (!empty($field_collection_settings["{$operation}_disable"])) {
-                    // Field is disabled for all roles.
-                    if ($field_collection_settings["{$operation}_disable"] == 'all') {
-                      $form[$field_name]['widget'][0][$field_collection_name]['#disabled'] = TRUE;
-                    }
-                    // Field is disabled for some roles.
-                    else if ($field_collection_settings["{$operation}_disable"] == 'roles') {
-                      // @todo seems it's not the best way to check permission. What if user has several roles?
-                      $disable_check = array_diff($field_collection_settings["{$operation}_disable_roles"], $user_roles);
-                      if (count($disable_check) < count($field_collection_settings["{$operation}_disable_roles"])) {
-                        $form[$field_name]['widget'][0][$field_collection_name]['#disabled'] = TRUE;
-                      }
-                    }
-                    else if ($field_collection_settings["{$operation}_disable"] == 'roles_enable') {
-                      $enable_check = array_intersect($field_collection_settings["{$operation}_enable_roles"], $user_roles);
-                      if (empty($enable_check)) {
-                        $form[$field_name]['widget'][0][$field_collection_name]['#disabled'] = TRUE;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            // If field is disabled on the page with current type.
-            if (!empty($settings["{$operation}_disable"])) {
-              // Field is disabled for all roles.
-              if ($settings["{$operation}_disable"] == 'all') {
-                $form[$field_name]['#disabled'] = TRUE;
-                disable_field_add_validator($form, $field_name);
-              }
-              // Field is disabled for some roles.
-              else if ($settings["{$operation}_disable"] == 'roles') {
-                // @todo seems it's not the best way to check permission. What if user has several roles?
-                $disable_check = array_diff($settings["{$operation}_disable_roles"], $user_roles);
-                if (count($disable_check) < count($settings["{$operation}_disable_roles"])) {
-                  $form[$field_name]['#disabled'] = TRUE;
-                  disable_field_add_validator($form, $field_name);
-                }
-              }
-              else if ($settings["{$operation}_disable"] == 'roles_enable') {
-                $enable_check = array_intersect($settings["{$operation}_enable_roles"], $user_roles);
-                if (empty($enable_check)) {
-                  $form[$field_name]['#disabled'] = TRUE;
-                  disable_field_add_validator($form, $field_name);
-                }
-              }
-            }
-          }
-        }
+  if (empty($disable_field["{$operation}_disable"])) {
+    return;
+  }
+
+  switch ($disable_field["{$operation}_disable"]) {
+    case 'all':
+      $elements['#disabled'] = TRUE;
+      break;
+
+    case 'roles':
+      $disable_check = array_diff($disable_field["{$operation}_roles"], $user_roles);
+      if (count($disable_check) < count($disable_field["{$operation}_roles"])) {
+        $elements['#disabled'] = TRUE;
       }
-    }
-  }
-}
+      break;
 
-/**
- * Returns data about entity by form state.
- */
-function disable_field_get_entity_data($form_state) {
-  $form_entity_type_id = FALSE;
-  // Get Entity type ID.
-  if ($callback_object = $form_state->getBuildInfo()['callback_object']) {
-    if (method_exists($callback_object, 'getEntity')) {
-      $form_entity_type_id = $callback_object->getEntity()->getEntityTypeId();
-    }
-  }
-
-  $bundle = FALSE;
-  $operation = FALSE;
-  // Get bundle and page operation(add/edit).
-  if ($form_object = $form_state->getFormObject()) {
-    // If it's form of the content entity.
-    if ($form_object instanceof Drupal\Core\Entity\ContentEntityForm) {
-      $bundle = $form_object->getEntity()->bundle();
-      if ($entity = $form_object->getEntity()) {
-        $operation = $entity->id() ? 'edit' : 'add';
+    case 'roles_enable':
+      $enable_check = array_intersect($disable_field["{$operation}_roles"], $user_roles);
+      if (empty($enable_check)) {
+        $elements['#disabled'] = TRUE;
+        break;
       }
-    }
-  }
-
-  return [
-    $form_entity_type_id,
-    $bundle,
-    $operation
-  ];
-}
-
-/**
- * Adds data validator to fields, which are disabled.
- */
-function disable_field_add_validator(&$form, $field_name) {
-  $form[$field_name]['#element_validate'] = !empty($form[$field_name]['#element_validate'])
-    ? $form[$field_name]['#element_validate']
-    : [];
-
-  array_unshift($form[$field_name]['#element_validate'], 'disable_field_form_fill_value');
-}
-
-/**
- * This functions fills default value for fields which are disabled, to avoid
- * problem with saving invalid data.
- */
-function disable_field_form_fill_value(&$element, FormStateInterface $form_state, $form) {
-  list($form_entity_type_id, $bundle, $operation) = disable_field_get_entity_data($form_state);
-
-  // We should set default value only when we add the new content or if we edit
-  // an existing entity, because some field could be added when we will already
-  // have entity entries.
-  if (in_array($operation, ['add', 'edit'])) {
-    // We should fill value only if we have widget for field.
-    if (!empty($element['widget'])) {
-      $field_name = $element['widget']['#field_name'];
-
-      // If value for the field is not set.
-      $field_value = $form_state->getValue($field_name);
-      if (isset($field_value['value']) && $field_value['value'] === FALSE) {
-        // We need to set default value only when user adds an entity.
-        if ($operation === 'add') {
-          if ($form_entity_type_id) {
-            $entity_type = \Drupal::service('entity_type.manager')
-              ->getDefinition($form_entity_type_id);
-            // Check that current entity is fieldable before process it's fields.
-            if ($entity_type->isSubclassOf(\Drupal\Core\Entity\FieldableEntityInterface::class)) {
-              $fields = \Drupal::service('entity_field.manager')
-                ->getFieldDefinitions($form_entity_type_id, $bundle);
-              if ($fields[$field_name]) {
-                // If the field has a default value.
-                if ($dv = $fields[$field_name]->get('default_value')) {
-                  // If the default value is not FALSE.
-                  if ($dv[0]['value'] !== FALSE) {
-                    // Set value by default.
-                    $form_state->setValue($field_name, $dv);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
   }
 }

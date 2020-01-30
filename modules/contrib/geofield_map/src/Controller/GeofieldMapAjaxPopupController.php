@@ -2,9 +2,10 @@
 
 namespace Drupal\geofield_map\Controller;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Render\HtmlResponse;;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -53,7 +54,7 @@ class GeofieldMapAjaxPopupController extends ControllerBase {
   }
 
   /**
-   * User LeafletAjaxPopup page access checker.
+   * User GeofieldMapAjaxPopup page access checker.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to check the permission for view.
@@ -75,16 +76,72 @@ class GeofieldMapAjaxPopupController extends ControllerBase {
    * @param string $langcode
    *   The langcode to render the entity by.
    *
-   * @return \Drupal\Core\Render\HtmlResponse
+   * @return \Symfony\Component\HttpFoundation\Response
    *   The Response to return.
    */
   public function popupBuild(EntityInterface $entity, $view_mode, $langcode = NULL) {
     $entity_view_builder = $this->entityManager->getViewBuilder($entity->getEntityTypeId());
     $build = $entity_view_builder->view($entity, $view_mode, $langcode);
-    $response = new HtmlResponse();
-    $response->addCacheableDependency($entity);
-    $response->setContent($this->renderer->renderPlain($build));
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand($this->getPopupIdentifierSelector($entity->getEntityTypeId(), $entity->id(), $view_mode, $langcode), $build));
     return $response;
+  }
+
+  /**
+   * Get popup identifier.
+   *
+   * @param string $entityType
+   *   The entity type.
+   * @param int $entityId
+   *   The entity id.
+   * @param string $viewMode
+   *   The view mode.
+   * @param string $langcode
+   *   The langcode.
+   *
+   * @return string
+   *   The identifier.
+   */
+  public static function getPopupIdentifier($entityType, $entityId, $viewMode, $langcode) {
+    return "$entityType-$entityId-$viewMode-$langcode";
+  }
+
+  /**
+   * Get popup identifier attribute.
+   *
+   * @param string $entityType
+   *   The entity type.
+   * @param int $entityId
+   *   The entity id.
+   * @param string $viewMode
+   *   The view mode.
+   * @param string $langcode
+   *   The langcode.
+   *
+   * @return string
+   *   The identifier selector.
+   */
+  public static function getPopupIdentifierAttribute($entityType, $entityId, $viewMode, $langcode) {
+    return sprintf('data-geofield-map-popup-ajax-entity="%s"', self::getPopupIdentifier($entityType, $entityId, $viewMode, $langcode));
+  }
+
+  /**
+   * Get popup identifier selector.
+   *
+   * @param string $entityType
+   *   The entity type.
+   * @param int $entityId
+   *   The entity id.
+   * @param string $viewMode
+   *   The view mode.
+   * @param string $langcode
+   *   The langcode.
+   *
+   * @return string
+   *   The identifier selector.
+   */
+  public static function getPopupIdentifierSelector($entityType, $entityId, $viewMode, $langcode) {
+    return sprintf('[%s]', self::getPopupIdentifierAttribute($entityType, $entityId, $viewMode, $langcode));
   }
 
 }

@@ -1,5 +1,4 @@
-disable textfield module:
-  title: 'Disable TextField'
-  description: 'Perform administration tasks for disable Textfield.'
+administer disable field settings:
+  title: 'Administer disable field settings'
+  description: 'Allow to access disable field settings on the field config edit page.'
   restrict access: TRUE
-
