@@ -100,6 +100,7 @@
             "custom access denied page": "patches/change_access_denied-2.patch",
             "https://www.drupal.org/node/2822460": "https://www.drupal.org/files/issues/no_hook_to_edit-2822460-12.patch",
             "https://www.drupal.org/node/2559961": "https://www.drupal.org/files/issues/manytoonehelper_ignores-2559961-29-8.3.x.patch",
+            "https://www.drupal.org/node/3120494": "https://www.drupal.org/files/issues/2020-03-18/3120494.patch",
             "https://www.drupal.org/node/2838391": "patches/allow_administer_content.patch"
           },
           "drupal/publishing_dropbutton": {

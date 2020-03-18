@@ -2825,17 +2825,17 @@
     },
     {
         "name": "drupal/core",
-        "version": "8.8.1",
-        "version_normalized": "8.8.1.0",
+        "version": "8.8.4",
+        "version_normalized": "8.8.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core.git",
-            "reference": "d339279f4c4b89477e0f4a8b775eb5dcb86b3087"
+            "reference": "34e59fcf702c1b3c497bbd6e92e68e546c5d15b8"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/drupal/core/zipball/d339279f4c4b89477e0f4a8b775eb5dcb86b3087",
-            "reference": "d339279f4c4b89477e0f4a8b775eb5dcb86b3087",
+            "url": "https://api.github.com/repos/drupal/core/zipball/34e59fcf702c1b3c497bbd6e92e68e546c5d15b8",
+            "reference": "34e59fcf702c1b3c497bbd6e92e68e546c5d15b8",
             "shasum": ""
         },
         "require": {
@@ -3001,7 +3001,7 @@
             "drupal/workflows": "self.version",
             "drupal/workspaces": "self.version"
         },
-        "time": "2019-12-18T10:34:03+00:00",
+        "time": "2020-03-18T16:26:33+00:00",
         "type": "drupal-core",
         "extra": {
             "drupal-scaffold": {
@@ -3038,6 +3038,7 @@
                 "custom access denied page": "patches/change_access_denied-2.patch",
                 "https://www.drupal.org/node/2822460": "https://www.drupal.org/files/issues/no_hook_to_edit-2822460-12.patch",
                 "https://www.drupal.org/node/2559961": "https://www.drupal.org/files/issues/manytoonehelper_ignores-2559961-29-8.3.x.patch",
+                "https://www.drupal.org/node/3120494": "https://www.drupal.org/files/issues/2020-03-18/3120494.patch",
                 "https://www.drupal.org/node/2838391": "patches/allow_administer_content.patch"
             }
         },
