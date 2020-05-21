@@ -11,7 +11,7 @@ use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Entity\ContentEntityFormInterface;
-use Drupal\Core\Locale\CountryManager;
+use Drupal\Component\Plugin\Exception\PluginException;
 use Geocoder\Model\AddressCollection;
 
 /**
@@ -212,7 +212,7 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
       // remote value is null and the field value should be preserved
       // geofield has value and remote field value has not changed.
       if ((empty($remote_field->getValue()) && $geocoder['failure']['handling'] == 'preserve') ||
-      (isset($original_field) && !$entity->get($field_name)->isEmpty() && $preprocessor_manager->sourceFieldIsSameOfOriginal($remote_field, $original_field))) {
+        (isset($original_field) && !$entity->get($field_name)->isEmpty() && $preprocessor_manager->sourceFieldIsSameOfOriginal($remote_field, $original_field))) {
         continue;
       }
 
@@ -221,21 +221,28 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
       // value as formatted address.
       $preprocessor_manager->preprocess($remote_field);
 
-      /** @var \Drupal\geocoder\DumperInterface|\Drupal\Component\Plugin\PluginInspectionInterface $dumper */
-      $dumper = $dumper_manager->createInstance($geocoder['dumper']);
+      try {
+        /** @var \Drupal\geocoder\DumperInterface|\Drupal\Component\Plugin\PluginInspectionInterface $dumper */
+        $dumper = $dumper_manager->createInstance($geocoder['dumper']);
+      }
+      catch (PluginException $e) {
+        \Drupal::logger('geocoder')->error('No Dumper has been set');
+      }
       $default_values = $entity->get($field_name);
       $result = [];
-      $failure_status_message = '';
+      $failure_status_message = NULL;
 
       // Skip the Geocode/Reverse Geocode operation is so requested for not
       // empty coordinates.
-      if (isset($geocoder['skip_not_empty_value']) && $geocoder['skip_not_empty_value'] && !$default_values->isEmpty()) {
+      if (isset($geocoder['skip_not_empty_value']) && $geocoder['skip_not_empty_value'] && isset($default_values) && !$default_values->isEmpty()) {
         return;
       }
 
       foreach ($remote_field->getValue() as $delta => $value) {
         if ($remote_field->getFieldDefinition()->getType() == 'address_country') {
-          $value['value'] = CountryManager::getStandardList()[$value['value']];
+          /** @var \Drupal\Core\Locale\CountryManager $country_manager */
+          $country_manager = \Drupal::service('country_manager');
+          $value['value'] = $country_manager->getList()[$value['value']];
         }
 
         /* @var \Geocoder\Model\AddressCollection|\Geometry $geo_collection */
@@ -318,18 +325,24 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
             continue;
           }
         }
-        if ($geocoder['failure']['handling'] == 'preserve') {
-          $result[$delta] = isset($default_values[$delta]) ? $default_values[$delta]->getValue() : NULL;
+
+        switch ($geocoder['failure']['handling']) {
+          case 'preserve':
+            $result[$delta] = isset($default_values[$delta]) ?
+              $default_values[$delta]->getValue() : NULL;
+            break;
+
+          case 'empty':
+            $result[$delta] = NULL;
+            break;
         }
-        elseif ($geocoder['failure']['handling'] == 'empty') {
-          $result[$delta] = NULL;
-        }
+
         // Display a status message.
-        if ($geocoder['failure']['status_message']) {
+        if ($failure_status_message !== NULL && $geocoder['failure']['status_message']) {
           \Drupal::messenger()->addMessage($failure_status_message, 'warning');
         }
         // Log the failure.
-        if ($geocoder['failure']['log']) {
+        if ($failure_status_message !== NULL && $geocoder['failure']['log']) {
           \Drupal::logger('geocoder')->warning($failure_status_message);
         }
       }

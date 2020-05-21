@@ -43,6 +43,23 @@ leaflet.fullscreen:
   dependencies:
     - leaflet/leaflet
 
+# Gesture Handling Leaflet Library
+leaflet.gesture_handling:
+  header: true
+  remote: https://github.com/elmarquis/Leaflet.GestureHandling
+  version: '1.0.1'
+  license:
+    name: MIT License
+    url: https://raw.githubusercontent.com/elmarquis/Leaflet.GestureHandling/master/LICENSE
+    gpl-compatible: no
+  css:
+    component:
+      'https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css': { type: external}
+  js:
+    'https://unpkg.com/leaflet-gesture-handling': { type: external, minified: true }
+  dependencies:
+    - leaflet/leaflet
+
 leaflet.geocoder:
   version: 1.x
   css:

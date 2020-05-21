@@ -50,9 +50,9 @@ class ManualOriginDefault extends GeofieldProximitySourceBase {
     $lon = isset($this->configuration['origin']['lon']) ? $this->configuration['origin']['lon'] : $this->origin['lon'];
 
     $form["origin"] = [
-      '#title' => t('Origin Coordinates'),
+      '#title' => $this->t('Origin Coordinates'),
       '#type' => 'geofield_latlon',
-      '#description' => t('Value in decimal degrees. Use dot (.) as decimal separator.'),
+      '#description' => $this->t('Value in decimal degrees. Use dot (.) as decimal separator.'),
       '#default_value' => [
         'lat' => $lat,
         'lon' => $lon,
@@ -64,7 +64,7 @@ class ManualOriginDefault extends GeofieldProximitySourceBase {
     if ($this->viewHandler->configuration['id'] == 'geofield_proximity_filter' && !$is_exposed) {
       $form['origin_hidden_flag'] = [
         '#type' => 'checkbox',
-        '#title' => t('Hide the Origin Input elements from the Exposed Form'),
+        '#title' => $this->t('Hide the Origin Input elements from the Exposed Form'),
         '#default_value' => isset($this->configuration['origin_hidden_flag']) ? $this->configuration['origin_hidden_flag'] : FALSE,
         '#states' => [
           'visible' => [
@@ -75,7 +75,7 @@ class ManualOriginDefault extends GeofieldProximitySourceBase {
 
       $form['origin_summary_flag'] = [
         '#type' => 'checkbox',
-        '#title' => t('Show (anyway) the Origin coordinates as summary in the Exposed Form'),
+        '#title' => $this->t('Show (anyway) the Origin coordinates as summary in the Exposed Form'),
         '#default_value' => isset($this->configuration['origin_summary_flag']) ? $this->configuration['origin_summary_flag'] : TRUE,
         '#states' => [
           'visible' => [

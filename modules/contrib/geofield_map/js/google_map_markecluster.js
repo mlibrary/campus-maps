@@ -20,14 +20,14 @@
 
       if (drupalSettings['geofield_google_map']) {
         $(context).find('.geofield-google-map').once('geofield-processed').each(function (index, element) {
-          var mapid = $(element).attr('id');
+          let mapid = $(element).attr('id');
 
           // Check if the Map container really exists and hasn't been yet
           // initialized.
           if (drupalSettings['geofield_google_map'][mapid] && !Drupal.geoFieldMap.map_data[mapid]) {
 
-            var map_settings = drupalSettings['geofield_google_map'][mapid]['map_settings'];
-            var data = drupalSettings['geofield_google_map'][mapid]['data'];
+            let map_settings = drupalSettings['geofield_google_map'][mapid]['map_settings'];
+            let data = drupalSettings['geofield_google_map'][mapid]['data'];
 
             // Set the map_data[mapid] settings.
             Drupal.geoFieldMap.map_data[mapid] = map_settings;
@@ -81,10 +81,12 @@
      * Provides the callback that is called when maps loads.
      */
     googleCallback: function () {
-      var self = this;
+      let self = this;
       // Wait until the window load event to try to use the maps library.
       $(document).ready(function (e) {
-        _.invoke(self.googleCallbacks, 'callback');
+        _.each(self.googleCallbacks, function(callback) {
+          callback.callback();
+        });
         self.googleCallbacks = [];
       });
     },
@@ -95,7 +97,7 @@
      * @param {string} callback - The callback
      */
     addCallback: function (callback) {
-      var self = this;
+      let self = this;
       // Ensure callbacks array.
       self.googleCallbacks = self.googleCallbacks || [];
       self.googleCallbacks.push({callback: callback});
@@ -110,8 +112,8 @@
      * @param {string} callback - the Callback function  name
      */
     loadGoogle: function (mapid, gmap_api_key, additional_libraries, callback) {
-      var self = this;
-      var html_language = $('html').attr('lang') || 'en';
+      let self = this;
+      let html_language = $('html').attr('lang') || 'en';
 
       // Add the callback.
       self.addCallback(callback);
@@ -125,7 +127,7 @@
         self.maps_api_loading = true;
         // Google maps isn't loaded so lazy load google maps.
         // Default script path.
-        var scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&language=' + self.googleMapsLanguage(html_language);
+        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&language=' + self.googleMapsLanguage(html_language);
 
         // If a Google API key is set, use it.
         if (gmap_api_key) {
@@ -133,8 +135,8 @@
         }
 
         if (additional_libraries) {
-          var libraries = [];
-          for (var library in additional_libraries) {
+          let libraries = [];
+          for (let library in additional_libraries) {
             if (additional_libraries.hasOwnProperty(library)) {
               libraries.push(library);
             }
@@ -156,15 +158,15 @@
     },
 
     checkImage: function (imageSrc, setIcon, logError) {
-      var img = new Image();
+      let img = new Image();
       img.src = imageSrc;
       img.onload = setIcon;
       img.onerror = logError;
     },
 
     place_feature: function (feature, mapid) {
-      var self = this;
-      var icon_image = null;
+      let self = this;
+      let icon_image = null;
 
       // Override and set icon image with geojsonProperties.icon, if set as not
       // null/empty.
@@ -173,7 +175,7 @@
       }
 
       // Define the OverlappingMarkerSpiderfier flag.
-      var oms = self.map_data[mapid].oms ? self.map_data[mapid].oms : null;
+      let oms = self.map_data[mapid].oms ? self.map_data[mapid].oms : null;
 
       // Set the personalized Icon Image, if set.
       if (feature.setIcon && icon_image && icon_image.length > 0) {
@@ -184,7 +186,7 @@
           });
       }
 
-      var map = self.map_data[mapid].map;
+      let map = self.map_data[mapid].map;
 
       // Add a default Tooltip on the title geojsonProperty, if existing.
       if (feature.setTitle && feature.geojsonProperties.tooltip) {
@@ -202,9 +204,9 @@
 
         // Generate the markers object index based on entity id (and geofield
         // cardinality), and add the marker to the markers object.
-        var entity_id = feature['geojsonProperties']['entity_id'];
+        let entity_id = feature['geojsonProperties']['entity_id'];
         if (self.map_data[mapid].geofield_cardinality && self.map_data[mapid].geofield_cardinality !== 1) {
-          var i = 0;
+          let i = 0;
           while (self.map_data[mapid].markers[entity_id + '-' + i]) {
             i++;
           }
@@ -218,7 +220,7 @@
 
         // Check for eventual simple or OverlappingMarkerSpiderfier click
         // Listener.
-        var clickListener = oms ? 'spider_click' : 'click';
+        let clickListener = oms ? 'spider_click' : 'click';
         google.maps.event.addListener(feature, clickListener, function () {
           self.infowindow_open(mapid, feature);
         });
@@ -227,10 +229,10 @@
       // If the feature is a Polyline or a Polygon, add to the Map and extend
       // the Map bounds.
       if (feature.getPath) {
-        var feature_options = feature.geojsonProperties.path_options ? JSON.parse(feature.geojsonProperties.path_options) : {};
+        let feature_options = feature.geojsonProperties.path_options ? JSON.parse(feature.geojsonProperties.path_options) : {};
         feature.setOptions(feature_options);
         feature.setMap(map);
-        var path = feature.getPath();
+        let path = feature.getPath();
         path.forEach(function (element) {
           self.map_data[mapid].map_bounds.extend(element);
         });
@@ -243,9 +245,9 @@
 
     // Closes and open the Map Infowindow at the input feature.
     infowindow_open: function (mapid, feature, anchor) {
-      var self = this;
-      var map = self.map_data[mapid].map;
-      var properties = feature.get('geojsonProperties');
+      let self = this;
+      let map = self.map_data[mapid].map;
+      let properties = feature.get('geojsonProperties');
       if (feature.setTitle && properties && properties.title) {
         feature.setTitle(properties.title);
       }
@@ -264,7 +266,7 @@
     },
 
     map_refresh: function (mapid) {
-      var self = this;
+      let self = this;
       setTimeout(function () {
         google.maps.event.trigger(self.map_data[mapid].map, 'resize');
       }, 10);
@@ -272,14 +274,14 @@
 
     // Init Geofield Google Map and its functions.
     map_initialize: function (mapid, map_settings, data, context) {
-      var self = this;
+      let self = this;
       $.noConflict();
 
       // If google and google.maps have been defined.
       if (google && google.maps) {
-        var styledMapType;
+        let styledMapType;
 
-        var mapOptions = {
+        let mapOptions = {
           center: map_settings.map_center ? new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon) : new google.maps.LatLng(42, 12.5),
           zoom: map_settings.map_zoom_and_pan.zoom.initial ? parseInt(map_settings.map_zoom_and_pan.zoom.initial) : 8,
           minZoom: map_settings.map_zoom_and_pan.zoom.min ? parseInt(map_settings.map_zoom_and_pan.zoom.min) : 1,
@@ -302,8 +304,8 @@
         else {
           // Implement Custom Style Map, if Set.
           if (map_settings.custom_style_map && map_settings.custom_style_map.custom_style_control && map_settings.custom_style_map.custom_style_name.length > 0 && map_settings.custom_style_map.custom_style_options.length > 0) {
-            var customMapStyleName = map_settings.custom_style_map.custom_style_name;
-            var customMapStyle = JSON.parse(map_settings.custom_style_map.custom_style_options);
+            let customMapStyleName = map_settings.custom_style_map.custom_style_name;
+            let customMapStyle = JSON.parse(map_settings.custom_style_map.custom_style_options);
             styledMapType = new google.maps.StyledMapType(customMapStyle, {name: customMapStyleName});
             map_settings.map_controls.map_type_control_options_type_ids.push('custom_styled_map');
           }
@@ -321,10 +323,10 @@
 
         // Add map_additional_options if any.
         if (map_settings.map_additional_options.length > 0) {
-          var additionalOptions = JSON.parse(map_settings.map_additional_options);
+          let additionalOptions = JSON.parse(map_settings.map_additional_options);
           // Transforms additionalOptions "true", "false" values into true &
           // false.
-          for (var prop in additionalOptions) {
+          for (let prop in additionalOptions) {
             if (additionalOptions.hasOwnProperty(prop)) {
               if (additionalOptions[prop] === 'true') {
                 additionalOptions[prop] = true;
@@ -339,23 +341,23 @@
         }
 
         // Define the Geofield Google Map.
-        var map = new google.maps.Map(document.getElementById(mapid), mapOptions);
+        let map = new google.maps.Map(document.getElementById(mapid), mapOptions);
 
         // Add the Map Reset Control, if set.
         if (map_settings.map_zoom_and_pan.map_reset) {
-          var mapResetControlPosition = map_settings.map_zoom_and_pan.map_reset_position || 'TOP_RIGHT';
+          let mapResetControlPosition = map_settings.map_zoom_and_pan.map_reset_position || 'TOP_RIGHT';
 
           // Create the DIV to hold the control and call the mapResetControl()
           // constructor passing in this DIV.
-          var mapResetControlDiv = document.createElement('div');
+          let mapResetControlDiv = document.createElement('div');
           new self.map_reset_control(mapResetControlDiv, mapid);
           mapResetControlDiv.index = 1;
           map.controls[google.maps.ControlPosition[mapResetControlPosition]].push(mapResetControlDiv);
         }
 
         if (Drupal.geoFieldMap.map_geocoder_control && map_settings.map_geocoder.control) {
-          var mapGeocoderControlPosition = map_settings.map_geocoder.settings.position || 'TOP_RIGHT';
-          var mapGeocoderControlDiv = document.createElement('div');
+          let mapGeocoderControlPosition = map_settings.map_geocoder.settings.position || 'TOP_RIGHT';
+          let mapGeocoderControlDiv = document.createElement('div');
           Drupal.geoFieldMap.map_data[mapid].geocoder_control = new Drupal.geoFieldMap.map_geocoder_control(mapGeocoderControlDiv, mapid);
           mapGeocoderControlDiv.index = 1;
           map.controls[google.maps.ControlPosition[mapGeocoderControlPosition]].push(Drupal.geoFieldMap.map_data[mapid].geocoder_control);
@@ -386,7 +388,7 @@
         self.map_data[mapid].center_force = !!map_settings.map_center.center_force;
 
         // Parse the Geojson data into Google Maps Locations.
-        var features = data.features && data.features.length > 0 ? Drupal.googleGeoJson(data) : null;
+        let features = data.features && data.features.length > 0 ? Drupal.googleGeoJson(data) : null;
 
         if (features && features.length > 0 && (!features.type || features.type !== 'Error')) {
 
@@ -394,7 +396,7 @@
            * Implement  OverlappingMarkerSpiderfier if its control set true.
            */
           if (map_settings.map_oms && map_settings.map_oms.map_oms_control && OverlappingMarkerSpiderfier) {
-            var omsOptions = map_settings.map_oms.map_oms_options.length > 0 ? JSON.parse(map_settings.map_oms.map_oms_options) : {
+            let omsOptions = map_settings.map_oms.map_oms_options.length > 0 ? JSON.parse(map_settings.map_oms.map_oms_options) : {
               markersWontMove: true,
               markersWontHide: true,
               basicFormatEvents: true,
@@ -410,11 +412,11 @@
           // If the map.infowindow is defined, add an event listener for the
           // Ajax Infowindow Popup.
           google.maps.event.addListener(map.infowindow, 'domready', function () {
-            var infowindow_content = document.createElement('div');
+            let infowindow_content = document.createElement('div');
             infowindow_content.innerHTML = map.infowindow.getContent().trim();
-            var content = $('[data-geofield-google-map-ajax-popup]', infowindow_content);
+            let content = $('[data-geofield-google-map-ajax-popup]', infowindow_content);
             if (content.length) {
-              var url = content.data('geofield-google-map-ajax-popup');
+              let url = content.data('geofield-google-map-ajax-popup');
               $.get(url, function (response) {
                 if (response) {
                   map.infowindow.setContent(response);
@@ -427,12 +429,12 @@
             self.place_feature(features, mapid);
           }
           else {
-            for (var i in features) {
+            for (let i in features) {
               if (features[i].setMap) {
                 self.place_feature(features[i], mapid);
               }
               else {
-                for (var j in features[i]) {
+                for (let j in features[i]) {
                   if (features[i][j].setMap) {
                     self.place_feature(features[i][j], mapid);
                   }
@@ -445,22 +447,22 @@
           // and the markercluster option is set to true.
           if (typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
 
-            var markeclusterOption = {
+            let markeclusterOption = {
               imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
             };
 
             // Add markercluster_additional_options if any.
             if (map_settings.map_markercluster.markercluster_additional_options.length > 0) {
-              var markeclusterAdditionalOptions = JSON.parse(map_settings.map_markercluster.markercluster_additional_options);
+              let markeclusterAdditionalOptions = JSON.parse(map_settings.map_markercluster.markercluster_additional_options);
               // Merge markeclusterOption with markeclusterAdditionalOptions.
               $.extend(markeclusterOption, markeclusterAdditionalOptions);
             }
 
             // Define a markerCluster property, so other code can interact with
             // it.
-            var markerCluster = [];
-            var keys = Object.keys(self.map_data[mapid].markers);
-            for (var k = 0; k < keys.length; k++) {
+            let markerCluster = [];
+            let keys = Object.keys(self.map_data[mapid].markers);
+            for (let k = 0; k < keys.length; k++) {
               markerCluster.push(self.map_data[mapid].markers[keys[k]]);
             }
             self.map_data[mapid].markerCluster = new MarkerClusterer(map, markerCluster, markeclusterOption);
@@ -517,21 +519,21 @@
     },
 
     mapBoundsAreNull: function (mapBounds) {
-      var north_east = mapBounds.getNorthEast();
-      var south_west = mapBounds.getSouthWest();
+      let north_east = mapBounds.getNorthEast();
+      let south_west = mapBounds.getSouthWest();
       return north_east.toString() === south_west.toString();
 
     },
 
     map_set_start_state: function (mapid, center, zoom) {
-      var self = this;
+      let self = this;
       self.map_data[mapid].map_start_center = center;
       self.map_data[mapid].map_start_zoom = zoom;
     },
 
     map_reset_control: function (controlDiv, mapid) {
       // Set CSS for the control border.
-      var controlUI = document.createElement('div');
+      let controlUI = document.createElement('div');
       controlUI.style.backgroundColor = '#fff';
       controlUI.style.boxShadow = 'rgba(0,0,0,.3) 0px 1px 4px -1px';
       controlUI.style.cursor = 'pointer';
@@ -542,7 +544,7 @@
       controlDiv.appendChild(controlUI);
 
       // Set CSS for the control interior.
-      var controlText = document.createElement('div');
+      let controlText = document.createElement('div');
       controlText.style.position = 'relative';
       controlText.innerHTML = Drupal.t('Reset Map');
       controlText.style.padding = '0 17px';

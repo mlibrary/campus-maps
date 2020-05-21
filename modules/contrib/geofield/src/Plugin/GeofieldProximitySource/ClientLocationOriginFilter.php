@@ -32,9 +32,9 @@ class ClientLocationOriginFilter extends ManualOriginDefault {
     ];
 
     $form["origin"] = [
-      '#title' => t('Client Coordinates'),
+      '#title' => $this->t('Client Coordinates'),
       '#type' => 'geofield_latlon',
-      '#description' => t('Value in decimal degrees. Use dot (.) as decimal separator.'),
+      '#description' => $this->t('Value in decimal degrees. Use dot (.) as decimal separator.'),
       '#default_value' => [
         'lat' => '',
         'lon' => '',
@@ -50,7 +50,7 @@ class ClientLocationOriginFilter extends ManualOriginDefault {
 
       $form['origin_summary_flag'] = [
         '#type' => 'checkbox',
-        '#title' => t('Show the Client Origin coordinates as summary in the Exposed Form'),
+        '#title' => $this->t('Show the Client Origin coordinates as summary in the Exposed Form'),
         '#default_value' => isset($this->configuration['origin_summary_flag']) ? $this->configuration['origin_summary_flag'] : TRUE,
       ];
     }

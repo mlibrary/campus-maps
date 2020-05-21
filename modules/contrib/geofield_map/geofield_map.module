@@ -67,6 +67,11 @@ function geofield_map_googlemap_render(array $js_settings) {
     'geofield_map/geofield_google_map',
   ];
 
+  // Add the intersection_observer library, if lazy load is enabled.
+  if ($js_settings['map_settings']['map_lazy_load']) {
+    $attached_libraries[] = 'geofield_map/intersection_observer';
+  }
+
   // Add the Marker Cluster library, if asked.
   if ($js_settings['map_settings']['map_markercluster']['markercluster_control']) {
     $attached_libraries[] = 'geofield_map/marker_cluster';

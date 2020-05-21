@@ -4,6 +4,7 @@ namespace Drupal\geofield_map\Services;
 
 use Drupal;
 use Drupal\Component\Utility\Bytes;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -21,6 +22,7 @@ use Symfony\Component\Yaml\Exception\ParseException;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\Core\File\Exception\NotRegularDirectoryException;
 
 /**
  * Provides an Icon Managed File Service.
@@ -107,6 +109,13 @@ class MarkerIconService {
   protected $allowedExtension;
 
   /**
+   * The File system service.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
    * Set Geofield Map Default Icon Style.
    */
   protected function setDefaultIconStyle() {
@@ -153,16 +162,22 @@ class MarkerIconService {
     $regex = '/\.(' . preg_replace('/ +/', '|', preg_quote($this->allowedExtension)) . ')$/i';
     $security = $this->geofieldMapSettings->get('theming.markers_location.security');
     $rel_path = $this->geofieldMapSettings->get('theming.markers_location.rel_path');
-    $files = file_scan_directory($security . $rel_path, $regex);
-    $additional_markers_location = $this->geofieldMapSettings->get('theming.additional_markers_location');
-    if (!empty($additional_markers_location)) {
-      $additional_files = file_scan_directory($additional_markers_location, $regex);
-      $files = array_merge($files, $additional_files);
+    try {
+      $files = $this->fileSystem->scanDirectory($security . $rel_path, $regex);
+      $additional_markers_location = $this->geofieldMapSettings->get('theming.additional_markers_location');
+      if (!empty($additional_markers_location)) {
+        $additional_files = $this->fileSystem->scanDirectory($additional_markers_location, $regex);
+        $files = array_merge($files, $additional_files);
+      }
+      ksort($files, SORT_STRING);
+      foreach ($files as $k => $file) {
+        $markers_files_list[$k] = $file->filename;
+      }
     }
-    ksort($files, SORT_STRING);
-    foreach ($files as $k => $file) {
-      $markers_files_list[$k] = $file->filename;
+    catch (NotRegularDirectoryException $e) {
+      watchdog_exception('geofield map set markers fiel list', $e);
     }
+
     return $markers_files_list;
   }
 
@@ -173,6 +188,8 @@ class MarkerIconService {
    *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation service.
+   * @param \Drupal\Core\File\FileSystemInterface $file_system
+   *   File system service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
@@ -185,6 +202,7 @@ class MarkerIconService {
   public function __construct(
     ConfigFactoryInterface $config_factory,
     TranslationInterface $string_translation,
+    FileSystemInterface $file_system,
     EntityTypeManagerInterface $entity_manager,
     ModuleHandlerInterface $module_handler,
     LinkGeneratorInterface $link_generator,
@@ -197,6 +215,7 @@ class MarkerIconService {
     $this->link = $link_generator;
     $this->elementInfo = $element_info;
     $this->geofieldMapSettings = $config_factory->get('geofield_map.settings');
+    $this->fileSystem = $file_system;
     $this->fileUploadValidators = [
       'file_validate_extensions' => !empty($this->geofieldMapSettings->get('theming.markers_extensions')) ? [$this->geofieldMapSettings->get('theming.markers_extensions')] : ['gif png jpg jpeg'],
       'geofield_map_file_validate_is_image' => [],

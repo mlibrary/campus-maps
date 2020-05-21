@@ -126,7 +126,7 @@ class GeofieldProximitySort extends SortPluginBase {
     }
     catch (\Exception $e) {
       watchdog_exception('geofield', $e);
-      $form_state->setErrorByName($form['source'], t("The Proximity Source couldn't be set due to: @error", [
+      $form_state->setErrorByName($form['source'], $this->t("The Proximity Source couldn't be set due to: @error", [
         '@error' => $e,
       ]));
     }

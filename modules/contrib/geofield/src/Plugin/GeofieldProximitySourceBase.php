@@ -85,7 +85,7 @@ abstract class GeofieldProximitySourceBase extends PluginBase implements Geofiel
 
     // If the given value is not a valid option, throw an error.
     if (!in_array($units, $this->getUnitsOptions())) {
-      $message = t('Invalid units supplied.');
+      $message = $this->t('Invalid units supplied.');
       \Drupal::logger('geofield')->error($message);
       return FALSE;
     }

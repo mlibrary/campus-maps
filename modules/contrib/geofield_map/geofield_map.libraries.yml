@@ -103,3 +103,14 @@ overlappingmarkerspiderfier:
     https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js: { type: external }
   dependencies:
     - geofield_map/geofield_map_gmap_formatter
+
+# External IntersectionObserver polyfill
+intersection_observer:
+  remote: https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver
+  version: 1.x
+  license:
+    name: MIT license
+    url: https://choosealicense.com/licenses/mit/
+    gpl-compatible: true
+  js:
+    https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver: { type: external }

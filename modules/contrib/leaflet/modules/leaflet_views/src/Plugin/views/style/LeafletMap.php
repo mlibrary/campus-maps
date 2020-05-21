@@ -31,7 +31,6 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\leaflet\LeafletSettingsElementsTrait;
 use Drupal\views\Plugin\views\PluginBase;
 use Drupal\views\Views;
-use Drupal\Component\Serialization\Json;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -81,11 +80,14 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
   protected $entityInfo;
 
   /**
-   * Does the style plugin for itself support to add fields to it's output.
-   *
-   * @var bool
+   * {@inheritdoc}
    */
   protected $usesFields = TRUE;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $usesRowPlugin = TRUE;
 
   /**
    * The Entity type manager service.
@@ -530,16 +532,17 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
       '#type' => 'select',
       '#title' => $this->t('Title Field'),
       '#description' => $this->t('Choose the field which will appear as a title on tooltips.'),
-      '#options' => array_merge(['' => ''], $this->viewFields),
+      '#options' => array_merge(['' => ' - None - '], $this->viewFields),
       '#default_value' => $this->options['name_field'],
     ];
 
-    $desc_options = array_merge(['' => ''], $this->viewFields);
+    $desc_options = array_merge(['' => ' - None - '], $this->viewFields);
     // Add an option to render the entire entity using a view mode.
     if ($this->entityType) {
       $desc_options += [
         '#rendered_entity' => $this->t('< @entity entity >', ['@entity' => $this->entityType]),
         '#rendered_entity_ajax' => $this->t('< @entity entity via ajax >', ['@entity' => $this->entityType]),
+        '#rendered_view_fields' => $this->t('# Rendered View Fields (with field label, format, classes, etc)'),
       ];
     }
 
@@ -590,7 +593,7 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
 
     // Generate Icon form element.
     $icon_options = $this->options['icon'];
-    $form['icon'] = $this->generateIconFormElement($icon_options);
+    $form['icon'] = $this->generateIconFormElement($icon_options, $form);
 
     // Set Map Marker Cluster Element.
     $this->setMapMarkerclusterElement($form, $this->options);
@@ -785,31 +788,17 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
                 $map['settings']['ajaxPoup'] = TRUE;
                 break;
 
+              case '#rendered_view_fields':
+                // Normal rendering via view/row fields (with labels options, formatters, classes, etc.).
+                $renderRow = [
+                  "markup" => $this->view->rowPlugin->render($result),
+                ];
+                $description = !empty($this->options['description_field']) ? $this->renderer->renderPlain($renderRow) : '';
+                break;
+
               default:
-                // Normal rendering via fields.
+                // Row rendering of single specified field value (without labels).
                 $description = !empty($this->options['description_field']) ? $this->rendered_fields[$result->index][$this->options['description_field']] : '';
-            }
-
-            // Relates the feature with its entity id, so that it might be
-            // referenced from outside.
-            foreach ($features as &$feature) {
-              $feature['entity_id'] = $entity->id();
-            }
-
-            // Attach pop-ups if we have a description field.
-            if (isset($description)) {
-              foreach ($features as &$feature) {
-                $feature['popup'] = $description;
-              }
-            }
-
-            // Attach also titles, they might be used later on.
-            if ($this->options['name_field']) {
-              foreach ($features as &$feature) {
-                // Decode any entities because JS will encode them again and
-                // we don't want double encoding.
-                $feature['label'] = !empty($this->options['name_field']) ? Html::decodeEntities(($this->rendered_fields[$result->index][$this->options['name_field']])) : '';
-              }
             }
 
             // Merge eventual map icon definition from hook_leaflet_map_info.
@@ -834,37 +823,57 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
 
             $icon_type = isset($this->options['icon']['iconType']) ? $this->options['icon']['iconType'] : 'marker';
 
-            // Eventually set the custom icon as DivIcon or Icon Url.
-            if ($icon_type === 'marker' && !empty($this->options['icon']['iconUrl'])
-              || $icon_type === 'html' && !empty($this->options['icon']['html'])) {
-              foreach ($features as &$feature) {
-                if ($feature['type'] === 'point' && $icon_type === 'html' && !empty($this->options['icon']['html'])) {
-                  $feature['icon'] = $this->options['icon'];
-                  $feature['icon']['html'] = $this->viewsTokenReplace($this->options['icon']['html'], $tokens);
-                  $feature['icon']['html_class'] = $this->options['icon']['html_class'];
-                }
-                elseif ($feature['type'] === 'point' && !empty($this->options['icon']['iconUrl'])) {
-                  $feature['icon'] = $this->options['icon'];
-                  $feature['icon']['iconUrl'] = $this->viewsTokenReplace($this->options['icon']['iconUrl'], $tokens);
-                  if (!empty($this->options['icon']['shadowUrl'])) {
-                    $feature['icon']['shadowUrl'] = $this->viewsTokenReplace($this->options['icon']['shadowUrl'], $tokens);
-                  }
+            // Relates the feature with additional properties.
+            foreach ($features as &$feature) {
+
+              // Add its entity id, so that it might be referenced from outside.
+              $feature['entity_id'] = $entity->id();
+              // Attach pop-ups if we have a description field.
+              if (isset($description)) {
+                $feature['popup'] = $description;
+              }
+              // Attach also titles, they might be used later on.
+              if ($this->options['name_field']) {
+                // Decode any entities because JS will encode them again and
+                // we don't want double encoding.
+                $feature['label'] = !empty($this->options['name_field']) ? Html::decodeEntities(($this->rendered_fields[$result->index][$this->options['name_field']])) : '';
+              }
+
+              // Eventually set the custom Marker icon (DivIcon, Icon Url or
+              // Circle Marker).
+              if ($feature['type'] === 'point' && isset($this->options['icon'])) {
+                $feature['icon'] = $this->options['icon'];
+                switch ($icon_type) {
+                  case 'html':
+                    $feature['icon']['html'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['html'], $tokens));
+                    $feature['icon']['html_class'] = $this->options['icon']['html_class'];
+                    break;
+
+                  case 'circle_marker':
+                    $feature['icon']['options'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['circle_marker_options'], $tokens));
+                    break;
+
+                  default:
+                    if (!empty($this->options['icon']['iconUrl'])) {
+                      $feature['icon']['iconUrl'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['iconUrl'], $tokens));
+                      if (!empty($this->options['icon']['shadowUrl'])) {
+                        $feature['icon']['shadowUrl'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['shadowUrl'], $tokens));
+                      }
+                    }
+                    break;
                 }
               }
-            }
 
-            // Associate dynamic path properties (token based) to each feature,
-            // in case of not point.
-            foreach ($features as &$feature) {
+              // Associate dynamic path properties (token based) to each
+              // feature, in case of not point.
               if ($feature['type'] !== 'point') {
                 $feature['path'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['path'], $tokens));
               }
-            }
 
-            foreach ($features as &$feature) {
               // Allow modules to adjust the marker.
               \Drupal::moduleHandler()->alter('leaflet_views_feature', $feature, $result, $this->view->rowPlugin);
             }
+
             // Add new points to the whole basket.
             $data = array_merge($data, $features);
           }

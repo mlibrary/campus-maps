@@ -554,6 +554,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#value' => $this->t('Marker Infowindow @state', ['@state' => !empty($settings['map_marker_and_infowindow']['infowindow_field']) ? 'from: ' . $settings['map_marker_and_infowindow']['infowindow_field'] : $this->t('disabled')]),
         '#weight' => 2,
       ],
+      'tooltip_field' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Marker Tooltip @state', ['@state' => !empty($settings['map_marker_and_infowindow']['tooltip_field']) ? 'from: ' . $settings['map_marker_and_infowindow']['tooltip_field'] : $this->t('disabled')]),
+        '#weight' => 2,
+      ],
       'force_open' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
@@ -646,6 +652,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ];
     }
 
+    $map_lazy_load = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $this->t('Lazy load map: @state', ['@state' => $settings['map_lazy_load']['lazy_load'] ? $this->t('Yes') : $this->t('No')]),
+    ];
+
     $summary = [
       'map_google_api_key' => $this->setMapGoogleApiKeyElement(),
       'map_dimensions' => $map_dimensions,
@@ -658,6 +670,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'map_oms' => $map_oms,
       'map_markercluster' => $map_markercluster,
       'custom_style_map' => $custom_style_map,
+      'map_lazy_load' => $map_lazy_load,
     ];
 
     // Attach Geofield Map Library.
@@ -745,9 +758,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
 
     // Define a Tooltip for the Feature.
-    if (isset($entity)) {
-      $tooltip = $entity->label();
-    }
+    $tooltip = isset($map_settings['map_marker_and_infowindow']['tooltip_field']) && $map_settings['map_marker_and_infowindow']['tooltip_field'] == 'title' ? $entity->label() : '';
 
     $geojson_data = $this->getGeoJsonData($items, $entity->id(), $description, $tooltip);
 

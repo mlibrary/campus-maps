@@ -1,10 +1,10 @@
 (function($, Drupal, drupalSettings) {
 
   Drupal.geoFieldMap.query_url_serialize = function(obj, prefix) {
-    var str = [], p;
+    let str = [], p;
     for (p in obj) {
       if (obj.hasOwnProperty(p)) {
-        var k = prefix ? prefix + "[" + p + "]" : p,
+        let k = prefix ? prefix + "[" + p + "]" : p,
           v = obj[p];
         str.push((v !== null && typeof v === "object") ?
           Drupal.geoFieldMap.query_url_serialize(v, k) :
@@ -15,8 +15,8 @@
   };
 
   Drupal.geoFieldMap.geocoder_geocode = function(address, providers, options) {
-    var base_url = drupalSettings.path.baseUrl;
-    var geocode_path = base_url + 'geocoder/api/geocode';
+    let base_url = drupalSettings.path.baseUrl;
+    let geocode_path = base_url + 'geocoder/api/geocode';
     options = Drupal.geoFieldMap.query_url_serialize(options);
     return $.ajax({
       url: geocode_path + '?address=' +  encodeURIComponent(address) + '&geocoder=' + providers + '&' + options,
@@ -27,8 +27,8 @@
   };
 
   Drupal.geoFieldMap.geocoder_reverse_geocode = function(latlng, providers, options) {
-    var base_url = drupalSettings.path.baseUrl;
-    var reverse_geocode_path = base_url + 'geocoder/api/reverse_geocode';
+    let base_url = drupalSettings.path.baseUrl;
+    let reverse_geocode_path = base_url + 'geocoder/api/reverse_geocode';
     options = Drupal.geoFieldMap.query_url_serialize(options);
     return $.ajax({
       url: reverse_geocode_path + '?latlng=' +  latlng + '&geocoder=' + providers + '&' + options,
@@ -39,13 +39,13 @@
   };
 
   Drupal.geoFieldMap.map_geocoder_control = function(controlDiv, mapid) {
-    var geocoder_settings = drupalSettings.geofield_google_map[mapid].map_settings.map_geocoder.settings;
-    var controlUI = document.createElement('div');
+    let geocoder_settings = drupalSettings.geofield_google_map[mapid].map_settings.map_geocoder.settings;
+    let controlUI = document.createElement('div');
     controlUI.id = mapid + '--geofield-map--geocoder-control--container';
     controlDiv.appendChild(controlUI);
 
     // Set CSS for the control search interior.
-    var controlSearch = document.createElement('input');
+    let controlSearch = document.createElement('input');
     controlSearch.placeholder = Drupal.t('Search Address');
     controlSearch.id = mapid + '--geofield-map--geocoder-control';
     controlSearch.title = Drupal.t('Search an Address on the Map');
@@ -62,8 +62,8 @@
   };
 
   Drupal.geoFieldMap.map_geocoder_control.autocomplete = function(mapid, geocoder_settings, selector, type, map_library) {
-    var providers = geocoder_settings.providers.toString();
-    var options = geocoder_settings.options;
+    let providers = geocoder_settings.providers.toString();
+    let options = geocoder_settings.options;
     selector.autocomplete({
       autoFocus: true,
       minLength: geocoder_settings.min_terms || 4,
@@ -92,10 +92,10 @@
       },
       // This bit is executed upon selection of an address.
       select: function (event, ui) {
-        var self = Drupal.geoFieldMap;
-        var map = self.map_data[mapid].map;
-        var zoom = geocoder_settings.zoom || 14;
-        var position;
+        let self = Drupal.geoFieldMap;
+        let map = self.map_data[mapid].map;
+        let zoom = geocoder_settings.zoom || 14;
+        let position;
         switch (type) {
           case 'widget':
             position = self.getLatLng(mapid, ui.item.lat, ui.item.lng);

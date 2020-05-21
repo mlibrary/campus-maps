@@ -96,8 +96,8 @@ class OriginFromProximityFilter extends GeofieldProximitySourceBase implements C
     if (!empty($proximity_filters_sources)) {
       $form['source_proximity_filter'] = [
         '#type' => 'select',
-        '#title' => t('Source Proximity Filter'),
-        '#description' => t('Select the Geofield Proximity filter to use as the starting point for calculating proximity.'),
+        '#title' => $this->t('Source Proximity Filter'),
+        '#description' => $this->t('Select the Geofield Proximity filter to use as the starting point for calculating proximity.'),
         '#options' => $this->getAvailableProximityFilters(),
         '#default_value' => $source_proximity_filter,
         '#ajax' => [
@@ -110,12 +110,12 @@ class OriginFromProximityFilter extends GeofieldProximitySourceBase implements C
       $form['source_proximity_filter_warning'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => t('No Geofield Proximity Filter found. At least one should be set for this Proximity Field be able to work.'),
+        '#value' => $this->t('No Geofield Proximity Filter found. At least one should be set for this Proximity Field be able to work.'),
         "#attributes" => [
           'class' => ['proximity-filter-warning', 'red'],
         ],
       ];
-      $form_state->setError($form['source_proximity_filter_warning'], t('This Proximity Field cannot work. Dismiss this and add & setup a Geofield Proximity Filter before.'));
+      $form_state->setError($form['source_proximity_filter_warning'], $this->t('This Proximity Field cannot work. Dismiss this and add & setup a Geofield Proximity Filter before.'));
     }
   }
 
@@ -125,7 +125,7 @@ class OriginFromProximityFilter extends GeofieldProximitySourceBase implements C
   public function validateOptionsForm(array &$form, FormStateInterface $form_state, array $options_parents) {
     $values = $form_state->getValues();
     if (!isset($values['options']['source_configuration']['source_proximity_filter'])) {
-      $form_state->setError($form['source_proximity_filter_warning'], t('This Proximity Field cannot work. Dismiss this and add and setup a Proximity Filter before.'));
+      $form_state->setError($form['source_proximity_filter_warning'], $this->t('This Proximity Field cannot work. Dismiss this and add and setup a Proximity Filter before.'));
     }
   }
 

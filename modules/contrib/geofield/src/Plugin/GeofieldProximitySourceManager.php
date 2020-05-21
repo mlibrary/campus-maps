@@ -51,7 +51,7 @@ class GeofieldProximitySourceManager extends DefaultPluginManager {
 
     $form['units'] = [
       '#type' => 'select',
-      '#title' => t('Unit of Measure'),
+      '#title' => $this->t('Unit of Measure'),
       '#description' => '',
       '#options' => geofield_radius_options(),
       '#default_value' => '',

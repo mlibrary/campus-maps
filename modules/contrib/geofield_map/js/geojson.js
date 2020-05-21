@@ -11,17 +11,17 @@
 
   Drupal.googleGeoJson = function (geojson, options) {
 
-    var _geometryToGoogleMaps = function (geojsonGeometry, opts, geojsonProperties) {
+    let _geometryToGoogleMaps = function (geojsonGeometry, opts, geojsonProperties) {
 
-      var googleObj;
-      var bounds;
-      var paths = [];
-      var path = [];
-      var i;
-      var j;
-      var k;
-      var coord;
-      var ll;
+      let googleObj;
+      let bounds;
+      let paths = [];
+      let path = [];
+      let i;
+      let j;
+      let k;
+      let coord;
+      let ll;
 
       switch (geojsonGeometry.type) {
         case 'Point':
@@ -161,7 +161,7 @@
 
     };
 
-    var _error = function (message) {
+    let _error = function (message) {
 
       return {
         type: 'Error',
@@ -170,9 +170,9 @@
 
     };
 
-    var obj;
+    let obj;
 
-    var opts = options || {};
+    let opts = options || {};
 
     switch (geojson.type) {
       case 'FeatureCollection':
@@ -181,7 +181,7 @@
         }
         else {
           obj = [];
-          for (var y = 0; y < geojson.features.length; y++) {
+          for (let y = 0; y < geojson.features.length; y++) {
             obj.push(_geometryToGoogleMaps(geojson.features[y].geometry, opts, geojson.features[y].properties));
           }
         }
@@ -193,7 +193,7 @@
         }
         else {
           obj = [];
-          for (var z = 0; z < geojson.geometries.length; z++) {
+          for (let z = 0; z < geojson.geometries.length; z++) {
             obj.push(_geometryToGoogleMaps(geojson.geometries[z], opts, geojson.geometries[z].properties));
           }
         }

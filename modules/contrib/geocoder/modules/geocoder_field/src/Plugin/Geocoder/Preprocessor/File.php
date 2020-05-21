@@ -3,6 +3,7 @@
 namespace Drupal\geocoder_field\Plugin\Geocoder\Preprocessor;
 
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Locale\CountryManager;
 use Drupal\file\Entity\File as FileEntity;
 use Drupal\geocoder_field\PreprocessorBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -29,7 +30,7 @@ class File extends PreprocessorBase {
   protected $fileSystem;
 
   /**
-   * Constructs a geocoder file field preprocessor base class.
+   * Constructs a geocoder file field preprocessor constructor.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -37,11 +38,13 @@ class File extends PreprocessorBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\Core\Locale\CountryManager $country_manager
+   *   The Country Manager service.
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The file system service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, FileSystemInterface $file_system) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, CountryManager $country_manager, FileSystemInterface $file_system) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $country_manager);
     $this->fileSystem = $file_system;
   }
 
@@ -53,6 +56,7 @@ class File extends PreprocessorBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      $container->get('country_manager'),
       $container->get('file_system')
     );
   }

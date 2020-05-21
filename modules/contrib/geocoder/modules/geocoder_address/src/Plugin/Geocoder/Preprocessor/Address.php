@@ -28,7 +28,7 @@ class Address extends PreprocessorBase {
    *   The country name or country code if not decode existing.
    */
   protected function countryCodeToString($country_code) {
-    $countries = CountryManager::getStandardList();
+    $countries = $this->countryManager->getList();
     if (array_key_exists($country_code, $countries)) {
       return $countries[$country_code];
     }

@@ -8,3 +8,4 @@ services:
   plugin.manager.geocoder.preprocessor:
     class: Drupal\geocoder_field\PreprocessorPluginManager
     parent: default_plugin_manager
+    arguments: ['@country_manager']

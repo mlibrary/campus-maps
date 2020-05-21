@@ -89,6 +89,12 @@ class LeafletService {
     if (isset($map['settings']['fullscreen_control'])) {
       $attached_libraries[] = 'leaflet/leaflet.fullscreen';
     }
+
+    // Add the Leaflet Gesture Handling library, if requested.
+    if (isset($map['settings']['gestureHandling'])) {
+      $attached_libraries[] = 'leaflet/leaflet.gesture_handling';
+    }
+
     // Add the Leaflet Markecluster library and functionalities, if requested.
     if ($this->moduleHandler->moduleExists('leaflet_markercluster') && isset($map['settings']['leaflet_markercluster']) && $map['settings']['leaflet_markercluster']['control']) {
       $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster';

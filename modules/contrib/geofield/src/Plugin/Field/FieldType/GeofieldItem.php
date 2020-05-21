@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Component\Plugin\Exception\PluginException;
 
 /**
  * Plugin implementation of the 'geofield' field type.
@@ -43,21 +44,28 @@ class GeofieldItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function schema(FieldStorageDefinitionInterface $field) {
+    /* @var \Drupal\geofield\Plugin\GeofieldBackendManager $backend_manager */
     $backend_manager = \Drupal::service('plugin.manager.geofield_backend');
     $backend_plugin = NULL;
 
-    /* @var \Drupal\geofield\Plugin\GeofieldBackendPluginInterface $backend_plugin */
-    if (isset($field->settings['backend']) && $backend_manager->getDefinition($field->getSetting('backend')) != NULL) {
-      $backend_plugin = $backend_manager->createInstance($field->getSetting('backend'));
+    try {
+      /* @var \Drupal\geofield\Plugin\GeofieldBackendPluginInterface $backend_plugin */
+      if (!empty($field->getSetting('backend')) && $backend_manager->getDefinition($field->getSetting('backend')) != NULL) {
+        $backend_plugin = $backend_manager->createInstance($field->getSetting('backend'));
+      }
     }
-
-    if ($backend_plugin === NULL) {
-      $backend_plugin = $backend_manager->createInstance('geofield_backend_default');
+    catch (\Exception $e) {
+      watchdog_exception("geofiedl_backend_manager", $e);
+      try {
+        $backend_plugin = $backend_manager->createInstance('geofield_backend_default');
+      }
+      catch (PluginException $e) {
+        watchdog_exception("geofiedl_backend_manager", $e);
+      }
     }
-
     return [
       'columns' => [
-        'value' => $backend_plugin->schema(),
+        'value' => isset($backend_plugin) ? $backend_plugin->schema() : [],
         'geo_type' => [
           'type' => 'varchar',
           'default' => '',
@@ -189,8 +197,22 @@ class GeofieldItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    $value = $this->get('value')->getValue();
-    return !isset($value) || $value === '';
+    try {
+      $value = $this->get('value')->getValue();
+      if (!empty($value)) {
+        /* @var \Drupal\geofield\GeoPHP\GeoPHPInterface $geo_php_wrapper */
+        // Note: Geofield FieldType doesn't support Dependency Injection yet
+        // (https://www.drupal.org/node/2053415).
+        $geo_php_wrapper = \Drupal::service('geofield.geophp');
+        /* @var \Geometry|null $geometry */
+        $geometry = $geo_php_wrapper->load($value);
+        return isset($geometry) ? $geometry->isEmpty() : TRUE;
+      }
+    }
+    catch (\Exception $e) {
+      watchdog_exception('geofield_mising_data_exception', $e);
+    }
+    return TRUE;
   }
 
   /**

@@ -7,6 +7,7 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\field\Functional\FieldTestBase;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Tests the Geofield widgets.
@@ -14,6 +15,8 @@ use Drupal\Tests\field\Functional\FieldTestBase;
  * @group geofield
  */
 class GeofieldWidgetTest extends FieldTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * Modules to enable.
@@ -102,7 +105,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'name[0][value]' => 'Arnedo',
       'geofield_field[0][value]' => 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertFieldValues($entity, 'geofield_field', ['POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))']);
 
     // Test a valid GeoJSON value.
@@ -119,7 +122,7 @@ class GeofieldWidgetTest extends FieldTestBase {
   }
 }',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertFieldValues($entity, 'geofield_field', ['POINT (125.6 10.1)']);
 
     // Test a valid WKB value.
@@ -127,7 +130,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'name[0][value]' => 'Arnedo',
       'geofield_field[0][value]' => '0101000020E6100000705F07CE19D100C0865AD3BCE31C4540',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertFieldValues($entity, 'geofield_field', ['POINT (-2.1021 42.2257)']);
 
     // Add invalid values.
@@ -136,7 +139,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'name[0][value]' => 'Invalid',
       'geofield_field[0][value]' => $random,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertSession->pageTextContains('"' . $random . '" is not a valid geospatial content.');
   }
 
@@ -169,7 +172,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'geofield_field[0][value][lat]' => 42.2257,
       'geofield_field[0][value][lon]' => -2.1021,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertFieldValues($entity, 'geofield_field', ['POINT (-2.1021 42.2257)']);
 
     // Add values out of range.
@@ -178,7 +181,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'geofield_field[0][value][lat]' => 92.2257,
       'geofield_field[0][value][lon]' => -200.1021,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $this->assertSession->pageTextContains('geofield_field: Latitude is out of bounds');
     $this->assertSession->pageTextContains('geofield_field: Longitude is out of bounds');
@@ -189,7 +192,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'geofield_field[0][value][lat]' => 'Not',
       'geofield_field[0][value][lon]' => 'Numeric',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $this->assertSession->pageTextContains('geofield_field: Latitude is not valid.');
     $this->assertSession->pageTextContains('geofield_field: Longitude is not valid.');
@@ -228,7 +231,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'geofield_field[0][value][bottom]' => 41.6523,
       'geofield_field[0][value][left]' => -4.7245,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertFieldValues($entity, 'geofield_field', ['POLYGON ((-2.1021 42.2257, -2.1021 41.6523, -4.7245 41.6523, -4.7245 42.2257, -2.1021 42.2257))']);
 
     // Add invalid bounds.
@@ -239,7 +242,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'geofield_field[0][value][bottom]' => 45.2257,
       'geofield_field[0][value][left]' => 750,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertSession->pageTextContains('geofield_field: Right is not valid.');
     $this->assertSession->pageTextContains('geofield_field: Left is out of bounds');
     $this->assertSession->pageTextContains('geofield_field: Top must be greater than Bottom.');
@@ -278,7 +281,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'geofield_field[0][value][lon][minutes]' => 6,
       'geofield_field[0][value][lon][seconds]' => 7,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertFieldValues($entity, 'geofield_field', ['POINT (-2.1019444444 42.2255555556)']);
 
     // Add invalid data.
@@ -293,7 +296,7 @@ class GeofieldWidgetTest extends FieldTestBase {
       'geofield_field[0][value][lon][minutes]' => 'non numeric',
       'geofield_field[0][value][lon][seconds]' => 7,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $this->assertSession->pageTextContains('geofield_field must be lower than or equal to 59.');
     $this->assertSession->pageTextContains('geofield_field is not a valid number.');

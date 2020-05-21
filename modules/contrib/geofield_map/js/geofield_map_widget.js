@@ -78,10 +78,12 @@
      * Provides the callback that is called when maps loads.
      */
     googleCallback: function () {
-      var self = this;
+      let self = this;
       // Wait until the window load event to try to use the maps library.
       $(document).ready(function (e) {
-        _.invoke(self.googleCallbacks, 'callback');
+        _.each(self.googleCallbacks, function(callback) {
+          callback.callback();
+        });
         self.googleCallbacks = [];
       });
     },
@@ -92,7 +94,7 @@
      * @param {string} callback - The callback
      */
     addCallback: function (callback) {
-      var self = this;
+      let self = this;
       // Ensure callbacks array.
       self.googleCallbacks = self.googleCallbacks || [];
       self.googleCallbacks.push({callback: callback});
@@ -106,8 +108,8 @@
      * @param {object} callback - the Callback function
      */
     loadGoogle: function (mapid, gmap_api_key, callback) {
-      var self = this;
-      var html_language = $('html').attr('lang') || 'en';
+      let self = this;
+      let html_language = $('html').attr('lang') || 'en';
 
       // Add the callback.
       self.addCallback(callback);
@@ -122,7 +124,7 @@
 
         // Google maps isn't loaded so lazy load google maps.
         // Default script path.
-        var scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language);
+        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language);
 
         // If a Google API key is set, use it.
         if (gmap_api_key) {
@@ -144,34 +146,34 @@
 
     // Center the map to the marker position.
     find_marker: function (mapid) {
-      var self = this;
+      let self = this;
       self.mapSetCenter(mapid, self.getMarkerPosition(mapid));
     },
 
     // Place marker at the current center of the map.
     place_marker: function (mapid) {
-      var self = this;
+      let self = this;
       if (self.map_data[mapid].click_to_place_marker) {
         if (!window.confirm('Change marker position ?')) {
           return;
         }
       }
-      var position = self.map_data[mapid].map.getCenter();
+      let position = self.map_data[mapid].map.getCenter();
       self.setMarkerPosition(mapid, position);
       self.geofields_update(mapid, position);
     },
 
     // Geofields update.
     geofields_update: function (mapid, position) {
-      var self = this;
+      let self = this;
       self.setLatLngValues(mapid, position);
       self.reverse_geocode(mapid, position);
     },
 
     // Onchange of Geofields.
     geofield_onchange: function (mapid) {
-      var self = this;
-      var position = {};
+      let self = this;
+      let position = {};
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           position = L.latLng(
@@ -194,7 +196,7 @@
 
     // Coordinates update.
     setLatLngValues: function (mapid, position) {
-      var self = this;
+      let self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           $('#' + self.map_data[mapid].latid).val(position.lat.toFixed(6));
@@ -209,8 +211,8 @@
 
     // Set the Reverse Geocode result into the Client Side Storage.
     set_reverse_geocode_storage: function (mapid, latlng, address) {
-      var self = this;
-      var storage_type = self.map_data[mapid].geocode_cache.clientside;
+      let self = this;
+      let storage_type = self.map_data[mapid].geocode_cache.clientside;
       switch (storage_type) {
         case 'session_storage':
           sessionStorage.setItem('Drupal.geofield_map.reverse_geocode.' + latlng, address);
@@ -224,9 +226,9 @@
 
     // Get the Reverse Geocode result from Client Side Storage.
     get_reverse_geocode_storage: function (mapid, latlng) {
-      var self = this;
-      var result;
-      var storage_type = self.map_data[mapid].geocode_cache.clientside;
+      let self = this;
+      let result;
+      let storage_type = self.map_data[mapid].geocode_cache.clientside;
       switch (storage_type) {
         case 'session_storage':
           result = sessionStorage.getItem('Drupal.geofield_map.reverse_geocode.' + latlng);
@@ -244,8 +246,8 @@
 
     // Reverse geocode.
     reverse_geocode: function (mapid, position) {
-      var self = this;
-      var latlng;
+      let self = this;
+      let latlng;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           latlng = position.lat.toFixed(6) + ',' + position.lng.toFixed(6);
@@ -255,14 +257,14 @@
           latlng = position.lat().toFixed(6) + ',' + position.lng().toFixed(6);
       }
       // Check the result from the chosen client side storage, and use it eventually.
-      var reverse_geocode_storage = self.get_reverse_geocode_storage(mapid, latlng);
+      let reverse_geocode_storage = self.get_reverse_geocode_storage(mapid, latlng);
       if (localStorage && self.map_data[mapid].geocode_cache.clientside && self.map_data[mapid].geocode_cache.clientside !== '_none_' && reverse_geocode_storage !== null) {
         self.map_data[mapid].search.val(reverse_geocode_storage);
         self.setGeoaddressField(mapid, reverse_geocode_storage);
       }
       else if (self.map_data[mapid].gmap_geocoder === 1) {
-        var providers = self.map_data[mapid].gmap_geocoder_settings.providers.toString();
-        var options = self.map_data[mapid].gmap_geocoder_settings.options;
+        let providers = self.map_data[mapid].gmap_geocoder_settings.providers.toString();
+        let options = self.map_data[mapid].gmap_geocoder_settings.options;
         self.geocoder_reverse_geocode(latlng, providers, options).done(function (results, status, jqXHR) {
           if(status === 'success' && results[0]) {
             self.set_reverse_geocode_result(mapid, latlng, results[0].formatted_address)
@@ -282,7 +284,7 @@
     // Write the Reverse Geocode result in the Search Input field, in the
     // Geoaddress-ed field and in the Localstorage.
     set_reverse_geocode_result: function (mapid, latlng, formatted_address) {
-      var self = this;
+      let self = this;
       self.map_data[mapid].search.val(formatted_address);
       self.setGeoaddressField(mapid, formatted_address);
       // Set the result into the chosen client side storage.
@@ -293,7 +295,7 @@
 
     // Triggers the Geocode on the Geofield Map Widget.
     trigger_geocode: function (mapid, position) {
-      var self = this;
+      let self = this;
       self.setMarkerPosition(mapid, position);
       self.mapSetCenter(mapid, position);
       self.setZoomToFocus(mapid);
@@ -303,8 +305,8 @@
 
     // Define a Geographical point, from coordinates.
     getLatLng: function (mapid, lat, lng) {
-      var self = this;
-      var latLng = {};
+      let self = this;
+      let latLng = {};
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           latLng = L.latLng(lat, lng);
@@ -318,13 +320,13 @@
 
     // Returns the Map Bounds, in the specific Map Library format.
     getMapBounds: function (mapid, map_library) {
-      var self = this;
-      var mapid_map_library = self.map_data[mapid].map_library;
-      var ne;
-      var sw;
-      var bounds;
-      var bounds_array;
-      var bounds_obj;
+      let self = this;
+      let mapid_map_library = self.map_data[mapid].map_library;
+      let ne;
+      let sw;
+      let bounds;
+      let bounds_array;
+      let bounds_obj;
 
       if (!map_library) {
         map_library = mapid_map_library;
@@ -351,11 +353,11 @@
 
     // Define the Geofield Map.
     getGeofieldMap: function (mapid) {
-      var self = this;
-      var map = {};
-      var zoom_start = self.map_data[mapid].entity_operation !== 'edit' ? Number(self.map_data[mapid].zoom_start) : Number(self.map_data[mapid].zoom_focus);
-      var zoom_min = Number(self.map_data[mapid].zoom_min);
-      var zoom_max = Number(self.map_data[mapid].zoom_max);
+      let self = this;
+      let map = {};
+      let zoom_start = self.map_data[mapid].entity_operation !== 'edit' ? Number(self.map_data[mapid].zoom_start) : Number(self.map_data[mapid].zoom_focus);
+      let zoom_min = Number(self.map_data[mapid].zoom_min);
+      let zoom_max = Number(self.map_data[mapid].zoom_max);
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           map = L.map(mapid, {
@@ -365,8 +367,8 @@
             maxZoom: zoom_max
           });
 
-          var baseLayers = {};
-          for (var key in self.map_data[mapid].map_types_leaflet) {
+          let baseLayers = {};
+          for (let key in self.map_data[mapid].map_types_leaflet) {
             if (self.map_data[mapid].map_types_leaflet.hasOwnProperty(key)) {
               baseLayers[key] = L.tileLayer(self.map_data[mapid].map_types_leaflet[key].url, self.map_data[mapid].map_types_leaflet[key].options);
             }
@@ -379,7 +381,7 @@
           break;
 
         case 'gmap':
-          var options = {
+          let options = {
             zoom: zoom_start,
             minZoom: zoom_min,
             maxZoom: zoom_max,
@@ -404,7 +406,7 @@
     },
 
     setZoomToFocus: function (mapid) {
-      var self = this;
+      let self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           self.map_data[mapid].map.setZoom(self.map_data[mapid].zoom_focus, {animate: false});
@@ -416,8 +418,8 @@
     },
 
     setMarker: function (mapid, position) {
-      var self = this;
-      var marker = {};
+      let self = this;
+      let marker = {};
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           marker = L.marker(position, {draggable: true});
@@ -435,7 +437,7 @@
     },
 
     setMarkerPosition: function (mapid, position) {
-      var self = this;
+      let self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           self.map_data[mapid].marker.setLatLng(position);
@@ -447,8 +449,8 @@
     },
 
     getMarkerPosition: function (mapid) {
-      var self = this;
-      var latLng = {};
+      let self = this;
+      let latLng = {};
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           latLng = self.map_data[mapid].marker.getLatLng();
@@ -461,7 +463,7 @@
     },
 
     mapSetCenter: function (mapid, position) {
-      var self = this;
+      let self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           self.map_data[mapid].map.panTo(position, {animate: false});
@@ -473,14 +475,14 @@
     },
 
     setGeoaddressField: function (mapid, address) {
-      var self = this;
+      let self = this;
       if (mapid && self.map_data[mapid].geoaddress_field) {
         self.map_data[mapid].geoaddress_field.val(address);
       }
     },
 
     map_refresh: function (mapid) {
-      var self = this;
+      let self = this;
       setTimeout(function () {
         google.maps.event.trigger(self.map_data[mapid].map, 'resize');
         self.find_marker(mapid);
@@ -489,7 +491,7 @@
 
     // Init Geofield Map and its functions.
     map_initialize: function (params) {
-      var self = this;
+      let self = this;
       $.noConflict();
 
       if (params.searchid !== null) {
@@ -510,11 +512,11 @@
       }
 
       // Define the Geofield Position.
-      var position = self.getLatLng(params.mapid, params.lat, params.lng);
+      let position = self.getLatLng(params.mapid, params.lat, params.lng);
       self.map_data[params.mapid].position = position;
 
       // Define the Geofield Map.
-      var map = self.getGeofieldMap(params.mapid);
+      let map = self.getGeofieldMap(params.mapid);
 
       // Define a map self property, so other code can interact with it.
       self.map_data[params.mapid].map = map;
@@ -534,7 +536,7 @@
       }
 
       // Generate and Set/Place Marker Position.
-      var marker = self.setMarker(params.mapid, position);
+      let marker = self.setMarker(params.mapid, position);
 
       // Define a Drupal.geofield_map marker self property.
       self.map_data[params.mapid].marker = marker;
@@ -583,7 +585,7 @@
                 // property that is passed as the selected autocomplete text.
                 self.map_data[params.mapid].search.val(ui.item.value);
                 // Triggers the Geocode on the Geofield Map Widget.
-                var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
+                let position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
                 self.trigger_geocode(params.mapid, position);
               }
             });
@@ -601,14 +603,14 @@
             }
             self.map_data[params.mapid].autocompletePlacesService.addListener('place_changed', function () {
               self.map_data[params.mapid].search.removeClass('ui-autocomplete-loading');
-              var place = self.map_data[params.mapid].autocompletePlacesService.getPlace();
+              let place = self.map_data[params.mapid].autocompletePlacesService.getPlace();
               if (!place.place_id) {
                 return;
               }
               self.geocoder.geocode({placeId: place.place_id}, function (results, status) {
                 if (status === google.maps.GeocoderStatus.OK && results[0]) {
                   // Triggers the Geocode on the Geofield Map Widget.
-                  var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                  let position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
                   // Replace the Google Place name with its formatted address.
                   self.map_data[params.mapid].search.val(results[0].formatted_address);
                   self.trigger_geocode(params.mapid, position);
@@ -621,12 +623,12 @@
           self.map_data[params.mapid].search.keydown(function (e) {
             if (e.which === 13) {
               e.preventDefault();
-              var input = self.map_data[params.mapid].search.val();
+              let input = self.map_data[params.mapid].search.val();
               // Execute the geocoder.
               self.geocoder.geocode({address: input}, function (results, status) {
                 if (status === google.maps.GeocoderStatus.OK && results[0]) {
                   // Triggers the Geocode on the Geofield Map Widget.
-                  var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                  let position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
                   self.trigger_geocode(params.mapid, position);
                 }
               });
@@ -643,7 +645,7 @@
 
           // Change marker position with mouse click.
           google.maps.event.addListener(map, 'click', function (event) {
-            var position = self.getLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
+            let position = self.getLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
             self.setMarkerPosition(params.mapid, position);
             self.geofields_update(params.mapid, position);
           });
@@ -656,7 +658,7 @@
           });
 
           map.on('click', function (event) {
-            var position = event.latlng;
+            let position = event.latlng;
             self.setMarkerPosition(params.mapid, position);
             self.geofields_update(params.mapid, position);
           });

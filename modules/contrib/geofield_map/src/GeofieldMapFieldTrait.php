@@ -29,7 +29,7 @@ trait GeofieldMapFieldTrait {
   ];
 
   /**
-   * Infowindow Filed Types Options.
+   * Infowindow Field Types Options.
    *
    * @var array
    */
@@ -152,7 +152,7 @@ trait GeofieldMapFieldTrait {
         'view_mode' => 'full',
         'multivalue_split' => 0,
         'force_open' => 0,
-        'tooltip_field' => '',
+        'tooltip_field' => 'title',
       ],
       'map_oms' => [
         'map_oms_control' => 1,
@@ -184,7 +184,9 @@ trait GeofieldMapFieldTrait {
           'options' => '',
         ],
       ],
-
+      'map_lazy_load' => [
+        'lazy_load' => 0,
+      ],
     ];
   }
 
@@ -273,6 +275,9 @@ trait GeofieldMapFieldTrait {
     // Set Map Geocoder Control Element, if the Geocoder Module exists,
     // otherwise output a tip on Geocoder Module Integration.
     $this->setGeocoderMapControl($elements, $settings);
+
+    // Set Map Lazy Load Element.
+    $this->setMapLazyLoad($settings, $elements);
 
     return $elements;
 
@@ -616,7 +621,7 @@ trait GeofieldMapFieldTrait {
         '#type' => 'number',
         '#max' => 3,
         '#min' => -3,
-        '#step' => 0,
+        '#step' => 1,
         '#description' => $this->t('Value that might/will be added to default Fit Markers Bounds Zoom. (-3 / +3)'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['finer'] ?? $this->defaultSettings['map_zoom_and_pan']['zoom']['finer'],
         '#states' => [
@@ -839,20 +844,20 @@ trait GeofieldMapFieldTrait {
 
     $multivalue_fields_states = [];
 
-    $infowindow_fields_options = [];
+    $entities_fields_options = [];
     foreach ($this->infowindowFieldTypesOptions as $field_type) {
-      $infowindow_fields_options = array_merge_recursive($infowindow_fields_options, $this->entityFieldManager->getFieldMapByFieldType($field_type));
+      $entities_fields_options = array_merge_recursive($entities_fields_options, $this->entityFieldManager->getFieldMapByFieldType($field_type));
     }
 
     // Setup the tokens for views fields.
     // Code is snatched from Drupal\views\Plugin\views\field\FieldPluginBase.
     if (!isset($this->fieldDefinition)) {
       $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= '<br>' . $this->t('Twig notation allows you to define per-row icons (@see this @icon_image_path_issue).', [
-          '@icon_image_path_issue' => $this->link->generate('Geofield Map drupal.org issue', Url::fromUri('https://www.drupal.org/project/geofield_map/issues/3074255', [
-            'absolute' => TRUE,
-            'attributes' => ['target' => 'blank'],
-          ])),
-        ]);
+        '@icon_image_path_issue' => $this->link->generate('Geofield Map drupal.org issue', Url::fromUri('https://www.drupal.org/project/geofield_map/issues/3074255', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]);
 
       $options = [];
       $optgroup_fields = (string) t('Fields');
@@ -892,11 +897,11 @@ trait GeofieldMapFieldTrait {
 
     // Add SVG UI file support.
     $elements['map_marker_and_infowindow']['icon_image_path']['#description'] .= !$this->moduleHandler->moduleExists('svg_image') ? '<br>' . $this->t('SVG Files support is disabled. Enabled it with @svg_image_link', [
-        '@svg_image_link' => $this->link->generate('SVG Image Module', Url::fromUri('https://www.drupal.org/project/svg_image', [
-          'absolute' => TRUE,
-          'attributes' => ['target' => 'blank'],
-        ])),
-      ]) : '<br>' . $this->t('SVG Files support enabled.');
+      '@svg_image_link' => $this->link->generate('SVG Image Module', Url::fromUri('https://www.drupal.org/project/svg_image', [
+        'absolute' => TRUE,
+        'attributes' => ['target' => 'blank'],
+      ])),
+    ]) : '<br>' . $this->t('SVG Files support enabled.');
 
     // In case it is a Field Formatter.
     if (isset($this->fieldDefinition)) {
@@ -906,19 +911,21 @@ trait GeofieldMapFieldTrait {
       // Get the configurations of possible entity fields.
       $fields_configurations = $this->entityFieldManager->getFieldStorageDefinitions($entity);
 
-      $desc_options = [
-        '0' => $this->t('- Any - No Infowindow'),
+      $title_options = [
+        '0' => $this->t('- Any -'),
         'title' => $this->t('- Title -'),
       ];
+
+      $this_entity_fields_options = $title_options;
 
       // Get the Cardinality set for the Formatter Field.
       $field_cardinality = $this->fieldDefinition->getFieldStorageDefinition()
         ->getCardinality();
 
-      foreach ($infowindow_fields_options[$this->fieldDefinition->getTargetEntityTypeId()] as $k => $field) {
+      foreach ($entities_fields_options[$this->fieldDefinition->getTargetEntityTypeId()] as $k => $field) {
         if (!empty(array_intersect($field['bundles'], [$form['#bundle']])) &&
           !in_array($k, ['title', 'revision_log'])) {
-          $desc_options[$k] = $k;
+          $this_entity_fields_options[$k] = $k;
           /* @var \\Drupal\Core\Field\BaseFieldDefinition $fields_configurations[$k] */
           if ($field_cardinality !== 1 && (isset($fields_configurations[$k]) && $fields_configurations[$k]->getCardinality() !== 1)) {
             $multivalue_fields_states[] = ['value' => $k];
@@ -926,9 +933,10 @@ trait GeofieldMapFieldTrait {
         }
       }
 
-      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', ['@entity' => $this->fieldDefinition->getTargetEntityTypeId()]);
+      $info_window_source_options = $this_entity_fields_options;
+      // Add the #rendered_entity option.
+      $info_window_source_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', ['@entity' => $this->fieldDefinition->getTargetEntityTypeId()]);
 
-      $info_window_source_options = $desc_options;
       $info_window_source_description = $this->t('Choose an existing string/text type field from which populate the Marker Infowindow.');
     }
     // Else it is a Geofield View Style Format Settings.
@@ -1036,6 +1044,13 @@ trait GeofieldMapFieldTrait {
     }
 
     if (isset($this->fieldDefinition)) {
+      $elements['map_marker_and_infowindow']['tooltip_field'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Marker Tooltip'),
+        '#description' => $this->t('Choose the option whose value will appear as Tooltip on hover the Marker.'),
+        '#options' => $title_options,
+        '#default_value' => $settings['map_marker_and_infowindow']['tooltip_field'],
+      ];
       $elements['map_marker_and_infowindow']['force_open'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Open Infowindow on Load'),
@@ -1478,7 +1493,6 @@ trait GeofieldMapFieldTrait {
         '#description' => $this->t('Check this to open an Infowindow on the Map (with the found Address) upon the Geocode Focus.'),
       ];
 
-
       $element['map_geocoder']['settings']['options'] = [
         '#type' => 'textarea',
         '#rows' => 4,
@@ -1510,6 +1524,29 @@ trait GeofieldMapFieldTrait {
         ]),
       ];
     }
+  }
+
+  /**
+   * Set Map Lazy Load Element.
+   *
+   * @param array $settings
+   *   The Form Settings.
+   * @param array $elements
+   *   The Form element to alter.
+   */
+  protected function setMapLazyLoad(array $settings, array &$elements) {
+    $elements['map_lazy_load'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Lazy Loading'),
+    ];
+
+    $elements['map_lazy_load']['lazy_load'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Lazy load map'),
+      '#description' => $this->t("If checked, the map will be loaded when it enters the user's viewport. This can be useful to reduce unnecessary load time or API calls."),
+      '#default_value' => !empty($settings['map_lazy_load']['lazy_load']) ? $settings['map_lazy_load']['lazy_load'] : 0,
+      '#return_value' => 1,
+    ];
   }
 
   /**

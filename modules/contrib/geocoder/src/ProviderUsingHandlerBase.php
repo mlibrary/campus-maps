@@ -28,9 +28,8 @@ abstract class ProviderUsingHandlerBase extends ProviderBase {
     // exception @throw), to allow the ProviderBase process method.
     parent::__construct($configuration, $plugin_id, $plugin_definition, $config_factory, $cache_backend);
     if (empty($plugin_definition['handler'])) {
-      throw new InvalidPluginDefinitionException($plugin_id, "Plugin '$plugin_id' should define a handler.");
+      throw new InvalidPluginDefinitionException($plugin_id, "Plugin '$plugin_id' should define an handler.");
     }
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $config_factory, $cache_backend);
   }
 
   /**
