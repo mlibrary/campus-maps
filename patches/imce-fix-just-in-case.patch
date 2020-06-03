@@ -1,0 +1,18 @@
+diff --git a/modules/contrib/imce/imce.module b/modules/contrib/imce/imce.module
+index c424cc3..71b3c6d 100644
+--- a/modules/contrib/imce/imce.module
++++ b/modules/contrib/imce/imce.module
+@@ -74,7 +74,12 @@ function imce_field_widget_settings_summary_alter(&$summary, $context) {
+  */
+ function imce_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
+   if ($context['widget']->getThirdPartySetting('imce', 'enabled')) {
+-    $scheme = $context['items'][$context['delta']]->getFieldDefinition()->getSetting('uri_scheme');
++    if (is_object($context['items'][$context['delta']])) {
++      $scheme = $context['items'][$context['delta']]->getFieldDefinition()->getSetting('uri_scheme');
++    }
++    else {
++      $scheme = $context['items']->getFieldDefinition()->getSetting('uri_scheme');
++    }
+     if (Imce::access(\Drupal::currentUser(), $scheme)) {
+       $element['#scheme'] = $scheme;
+       $class = 'Drupal\imce\ImceFileField';

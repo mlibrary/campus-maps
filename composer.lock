@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0e950ddac2171df64b84f4a347faf5ff",
+    "content-hash": "e52ad8b5ad2cca88c04fea258574d267",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -3633,6 +3633,9 @@
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
                     }
+                },
+                "patches_applied": {
+                    "got a fatal wsod from this on terms for a bit. adding in case": "patches/imce-fix-just-in-case.patch"
                 }
             },
             "notification-url": "https://packages.drupal.org/8/downloads",

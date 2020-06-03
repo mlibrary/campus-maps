@@ -107,6 +107,9 @@
           "drupal/publishing_dropbutton": {
             "customize drop button and see also https://www.drupal.org/node/2914426": "patches/fix_drop_button_for_all_users.patch"
           },
+          "drupal/imce": {
+            "got a fatal wsod from this on terms for a bit. adding in case": "patches/imce-fix-just-in-case.patch"
+          },
           "drupal/paragraphs": {
             "https://www.drupal.org/node/2823909": "patches/consider_field-2823909-12.patch"
           },
