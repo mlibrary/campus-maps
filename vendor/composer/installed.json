@@ -3729,6 +3729,9 @@
                     "status": "covered",
                     "message": "Covered by Drupal's security advisory policy"
                 }
+            },
+            "patches_applied": {
+                "got a fatal wsod from this on terms for a bit. adding in case": "patches/imce-fix-just-in-case.patch"
             }
         },
         "installation-source": "dist",
