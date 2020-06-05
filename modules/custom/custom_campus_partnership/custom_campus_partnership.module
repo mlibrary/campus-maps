@@ -166,13 +166,10 @@ function custom_campus_partnership_node_presave(NodeInterface $node) {
         //needed for labels
         $paragraph = Paragraph::load($node->get('field_new_author_s_')->getValue()[$key]['target_id']);
         $p_labels = options_allowed_values($paragraph->getFieldDefinition('field_author_title')->getFieldStorageDefinition(), $paragraph);
-        $author_name = $author_name.', '.$p_labels[$author['field_author_title'][0]['value']];
+        $author_name = $author_name.', '.$p_labels[$author['field_author_title'][$key]['value']];
       }
       if (!empty($author['field_author_title_other']) && isset($author['field_author_title_other'][0]['value'])) {
-        //needed for labels
-        $paragraph = Paragraph::load($node->get('field_new_author_s_')->getValue()[$key]['target_id']);
-        $p_labels = $paragraph->get('field_author_title_other')->getValue();
-        $author_name = $author_name.' - '.$p_labels[0]['value'];
+        $author_name = $author_name.' - '.$author['field_author_title_other'][$key]['value'];
       }
       $author_node = _custom_campus_partnership_lookup_node($author_name, 'cp_author');
       if (!$author_node) {
