@@ -168,13 +168,20 @@ function custom_campus_partnership_node_presave(NodeInterface $node) {
         $p_labels = options_allowed_values($paragraph->getFieldDefinition('field_author_title')->getFieldStorageDefinition(), $paragraph);
         $author_name = $author_name.', '.$p_labels[$author['field_author_title'][0]['value']];
       }
+      if (!empty($author['field_author_title_other']) && isset($author['field_author_title_other'][0]['value'])) {
+        //needed for labels
+        $paragraph = Paragraph::load($node->get('field_new_author_s_')->getValue()[$key]['target_id']);
+        $p_labels = $paragraph->get('field_author_title_other')->getValue();
+        $author_name = $author_name.' - '.$p_labels[0]['value'];
+      }
       $author_node = _custom_campus_partnership_lookup_node($author_name, 'cp_author');
       if (!$author_node) {
         $author_node = _custom_campus_partnership_create_node($author_name, 'cp_author', '', [
           'field_author_first_name' => $author['field_author_first_name'], 
           'field_author_last_name' => $author['field_author_last_name'], 
           'field_author_middle_name' => $author['field_author_middle_name'], 
-          'field_author_title' => $author['field_author_title']
+          'field_author_title' => $author['field_author_title'],
+          'field_author_title_other' => $author['field_author_title_other']
         ]);
       }
       if (!$author_node) {
@@ -196,6 +203,7 @@ function custom_campus_partnership_node_presave(NodeInterface $node) {
       if ($author_existing && empty($author_existing->get('field_cp_author')->getValue())) {
         $author_existing->get('field_cp_author')->setValue([['target_id' => $author_node->id()]]);
         $author_existing->get('field_author_role')->setValue($author['field_author_role']);
+        $author_existing->get('field_role_additional')->setValue($author['field_role_additional']);
         $author_existing->save();
       }
       else {
@@ -204,11 +212,31 @@ function custom_campus_partnership_node_presave(NodeInterface $node) {
         ]);
         $author_existing->get('field_cp_author')->setValue([['target_id' => $author_node->id()]]);
         $author_existing->get('field_author_role')->setValue($author['field_author_role']);
+        $author_existing->get('field_role_additional')->setValue($author['field_role_additional']);
         $author_existing->save();
         $node->get('field_existing_author_s_')->appendItem(['target_id' => $author_existing->id(), 'target_revision_id' => $author_existing->getRevisionId()]);
       }
       $node->get('field_new_author_s_')->setValue([]);
     }
+  }
+  if ($node->bundle() == 'cp_author') {
+    $author_name = $node->get('field_author_first_name')->value;
+    if (!empty($node->get('field_author_middle_name')->value)) {
+      $author_name = $author_name.' '.$node->get('field_author_middle_name')->value;
+    }
+    if (!empty($node->get('field_author_last_name')->value)) {
+      $author_name = $author_name.' '.$node->get('field_author_last_name')->value;
+    }
+    if (!empty($node->get('field_author_title')->value)) {
+      //needed for labels
+      $p_labels = options_allowed_values($node->getFieldDefinition('field_author_title')->getFieldStorageDefinition(), $node);
+      $author_name = $author_name.', '.$p_labels[$node->get('field_author_title')->value];
+    }
+    if (!empty($node->get('field_author_title_other')->value)) {
+      //needed for labels
+      $author_name = $author_name.' - '.$node->get('field_author_title_other')->value;
+    }
+    $node->setTitle($author_name);
   }
 }
 
