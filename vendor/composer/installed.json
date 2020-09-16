@@ -2840,17 +2840,17 @@
     },
     {
         "name": "drupal/core",
-        "version": "8.9.1",
-        "version_normalized": "8.9.1.0",
+        "version": "8.9.6",
+        "version_normalized": "8.9.6.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core.git",
-            "reference": "e8ee964c562870381876e85d3f5eaaf8c8ecc9ee"
+            "reference": "caf4e756d31dfb0c2e52cd0748e900efe4b57766"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/drupal/core/zipball/e8ee964c562870381876e85d3f5eaaf8c8ecc9ee",
-            "reference": "e8ee964c562870381876e85d3f5eaaf8c8ecc9ee",
+            "url": "https://api.github.com/repos/drupal/core/zipball/caf4e756d31dfb0c2e52cd0748e900efe4b57766",
+            "reference": "caf4e756d31dfb0c2e52cd0748e900efe4b57766",
             "shasum": ""
         },
         "require": {
@@ -3017,7 +3017,7 @@
             "drupal/workflows": "self.version",
             "drupal/workspaces": "self.version"
         },
-        "time": "2020-06-17T17:57:48+00:00",
+        "time": "2020-09-16T11:22:21+00:00",
         "type": "drupal-core",
         "extra": {
             "drupal-scaffold": {
