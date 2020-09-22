@@ -14,7 +14,7 @@
         "issues": "https://www.drupal.org/project/issues/geofield_map",
         "source": "https://git.drupalcode.org/project/geofield_map"
     },
-    "license": "GPL-2.0+",
+    "license": "GPL-2.0-or-later",
     "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": {

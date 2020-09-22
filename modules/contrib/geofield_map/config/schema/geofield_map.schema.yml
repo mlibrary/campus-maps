@@ -133,3 +133,36 @@ field.widget.settings.geofield_map:
         disabled:
           type: boolean
           label: Disable the Field in Content Edit Form
+    map_geocoder:
+      type: mapping
+      label: Geocoder map integration
+      mapping:
+        control:
+          type: integer
+          label: Geocoder map control
+        settings:
+          type: mapping
+          label: Gecoder settings
+          mapping:
+            providers:
+              type: sequence
+              label: Providers
+              sequence:
+                type: mapping
+                label: Provider
+                mapping:
+                  weight:
+                    type: integer
+                    label: Weight
+                  checked:
+                    type: boolean
+                    label: Checked
+            min_terms:
+              type: integer
+              label: Minimum terms
+            delay:
+              type: integer
+              label: Delay
+            options:
+              type: string
+              label: Options

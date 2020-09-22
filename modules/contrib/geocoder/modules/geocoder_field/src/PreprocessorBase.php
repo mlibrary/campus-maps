@@ -6,7 +6,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Locale\CountryManager;
+use Drupal\Core\Locale\CountryManagerInterface;
 
 /**
  * Base class for the Preprocessor plugin.
@@ -23,7 +23,7 @@ abstract class PreprocessorBase extends PluginBase implements PreprocessorInterf
   /**
    * The country manager service.
    *
-   * @var \Drupal\Core\Locale\CountryManager
+   * @var \Drupal\Core\Locale\CountryManagerInterface
    */
   protected $countryManager;
 
@@ -36,10 +36,10 @@ abstract class PreprocessorBase extends PluginBase implements PreprocessorInterf
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Locale\CountryManager $country_manager
+   * @param \Drupal\Core\Locale\CountryManagerInterface $country_manager
    *   The Country Manager service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CountryManager $country_manager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, CountryManagerInterface $country_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->countryManager = $country_manager;
   }

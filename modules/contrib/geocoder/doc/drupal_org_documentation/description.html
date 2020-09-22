@@ -8,7 +8,7 @@ In addition to Latitude / Longitude points, this API also supports more complex 
 <h2>Compatible modules</h2>
 <ul>
   <li><a href="https://www.drupal.org/project/geofield" target="blank">Geofield</a> (recommended location storage);</li>
-  <li>Core String and Text fields, <a href="https://www.drupal.org/project/addressfield" target="blank">Addressfield</a> and <a href="https://www.drupal.org/project/address" target="blank">Address for D8</a> (recommended address storage);</li>
+  <li>Core String and Text fields, <a href="https://www.drupal.org/project/addressfield" target="blank">Addressfield</a> and <a href="https://www.drupal.org/project/address" target="blank">Address for D8/D9</a> (recommended address storage);</li>
   <li>Core Image and File modules (for Geo-Tagged and uploaded KML, Geojson, GPX files), into Drupal Geofield Format;</li>
   <li><a href="https://www.drupal.org/project/location" target="blank">location</a> (alternative location or address storage, only for D7 version);</li>
   <li><a href="https://www.drupal.org/project/geolocation" target="blank">geolocation</a> (alternative location storage, only for D7 version);</li>
@@ -70,7 +70,7 @@ This is a complete rewrite of the Geocoder module, based on the <a href="http://
   <li>Caching results capabilities, enabled by default;</li>
 </ul>
 
-<h3>Requirements for D8</h3>
+<h3>Requirements for D8/D9</h3>
 <ul>
   <li><a href="https://getcomposer.org" target="blank">Composer</a>, to add the module to your codebase (for more info refer to <a href="https://www.drupal.org/node/2718229" target="blank">Using Composer to manage Drupal site dependencies)</a></li>
   <li><a href="http://drush.org" target="blank">Drush</a>, to enable the module (and its dependencies) from the shell;</li>
@@ -79,7 +79,7 @@ This is a complete rewrite of the Geocoder module, based on the <a href="http://
   <li>The embedded "Geocoder Address" submodule requires the <a href="https://www.drupal.org/project/address" target="blank">Address Module</a>;</li>
 </ul>
 
-<h3>Installation for D8</h3>
+<h3>Installation for D8/D9</h3>
 
 <ol>
   <li>Download the module running the following shell command from you project root (at the composer.json file level):
@@ -94,24 +94,36 @@ This is a complete rewrite of the Geocoder module, based on the <a href="http://
 <h3>Detailed Documentation and APIs</h3>
 Find detailed documentation, also on its APIs in the README.md file.
 
-<h2>Geocoder 3.x (Drupal 8)</h2>
+<h2>Geocoder 3.x (Drupal 8/9)</h2>
 
 This is an evolution of the Geocoder 2.x module, based on the <a href="https://github.com/geocoder-php/Geocoder" target="blank">Geocoder PHP library - Version 4.x</a>.
 Starting with this version the Geocoder providers are config entities, whereas in earlier versions the provider settings were stored in simple configuration. An upgrade path is provided but any code that was relying on the old simple config will need to be updated to use the config entities instead.
 An upgrade path is provided but any code that was relying on the 2.x simple config will need to be updated to use the config entities instead.
 
-<h3>Installation the Geocoder 8.x-3.x version for D8</h3>
+<h3>Installation the Geocoder 8.x-3.x version for D8/D9</h3>
 
 <ol>
   <li>Download the module running the following shell command from you project root (at the composer.json file level):
     <b>$ composer require "drupal/geocoder:^3.0@beta"</b>
     <u>Note:</u> this will also download the Geocoder PHP library as willdurand/geocoder": "^4.0" library</li>
-  <li>Enable the module (and its sub-modules) via Drush, as instructed for the Geocoder 8.x-2.x version</li>
+  <li>Enable the module (and its sub-modules) via Drush</li>
   <li>Choose the <a href="https://packagist.org/providers/geocoder-php/provider-implementation" target="blank">Geocoder Provider</a> you want to use and also add it as a required dependency to your project. For
     example if you want to use Google Maps as your provider:
     <b>$ composer require geocoder-php/google-maps-provider</b>
     (you will find that as a possible geocoder provider choice in the "add provider"
     options of the Geocoder module settings page ('/admin/config/system/geocoder')</li>
 </ol>
-<h3>Detailed Documentation and APIs</h3>
-Find detailed documentation, also on its APIs in the README.md file.
+
+<h3>Upgrading from Geocoder 2.x to 3.x</h3>
+
+Geocoder 3.x is not back compatible with Geocoder 2.x and no upgrade path has been provided so for general and fields configurations settings.
+
+<strong>At the moment, upgrading to Geocoder 3.x requires a complete uninstall and removal of Geocoder 2.x</strong> with the following steps:
+
+<ol>
+  <li>Uninstall Geocoder 2.x, via Drupal backend or with `drush pmu geocoder`</li>
+  <li>Remove Geocoder 2.x via composer: `composer require drupal/geocoder`</li>
+  <li>Make sure also its dependency willdurand/geocoder": "^3.0" library is removed</li>
+</ol>
+
+Further Detailed Documentation and APIs provided in the Geocoder 3.x Readme.md file.

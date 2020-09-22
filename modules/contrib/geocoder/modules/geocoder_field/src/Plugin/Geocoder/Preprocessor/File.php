@@ -3,7 +3,7 @@
 namespace Drupal\geocoder_field\Plugin\Geocoder\Preprocessor;
 
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Locale\CountryManager;
+use Drupal\Core\Locale\CountryManagerInterface;
 use Drupal\file\Entity\File as FileEntity;
 use Drupal\geocoder_field\PreprocessorBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -38,12 +38,12 @@ class File extends PreprocessorBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Locale\CountryManager $country_manager
+   * @param \Drupal\Core\Locale\CountryManagerInterface $country_manager
    *   The Country Manager service.
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The file system service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CountryManager $country_manager, FileSystemInterface $file_system) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, CountryManagerInterface $country_manager, FileSystemInterface $file_system) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $country_manager);
     $this->fileSystem = $file_system;
   }

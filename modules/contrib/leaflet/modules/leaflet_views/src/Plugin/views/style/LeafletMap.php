@@ -782,28 +782,31 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
                   'view_mode' => $this->options['view_mode'],
                   'langcode' => $langcode,
                 ];
-                $url = Url::fromRoute('leaflet_views.ajax_popup', $parameters, ['absolute' => TRUE]);
+                $url = Url::fromRoute('leaflet_views.ajax_popup', $parameters);
                 $description = sprintf('<div class="leaflet-ajax-popup" data-leaflet-ajax-popup="%s" %s></div>',
                   $url->toString(), LeafletAjaxPopupController::getPopupIdentifierAttribute($entity_type, $entity->id(), $this->options['view_mode'], $langcode));
                 $map['settings']['ajaxPoup'] = TRUE;
                 break;
 
               case '#rendered_view_fields':
-                // Normal rendering via view/row fields (with labels options, formatters, classes, etc.).
-                $renderRow = [
+                // Normal rendering via view/row fields (with labels options,
+                // formatters, classes, etc.).
+                $render_row = [
                   "markup" => $this->view->rowPlugin->render($result),
                 ];
-                $description = !empty($this->options['description_field']) ? $this->renderer->renderPlain($renderRow) : '';
+                $description = !empty($this->options['description_field']) ? $this->renderer->renderPlain($render_row) : '';
                 break;
 
               default:
-                // Row rendering of single specified field value (without labels).
+                // Row rendering of single specified field value (without
+                // labels).
                 $description = !empty($this->options['description_field']) ? $this->rendered_fields[$result->index][$this->options['description_field']] : '';
             }
 
             // Merge eventual map icon definition from hook_leaflet_map_info.
             if (!empty($map['icon'])) {
               $this->options['icon'] = $this->options['icon'] ?: [];
+
               // Remove empty icon options so that they might be replaced by
               // the ones set by the hook_leaflet_map_info.
               foreach ($this->options['icon'] as $k => $icon_option) {

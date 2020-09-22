@@ -80,6 +80,9 @@ field.formatter.settings.geofield_default:
     output_format:
       type: string
       label: 'Output format'
+    output_escape:
+      type: boolean
+      label: 'Escape output'
 
 field.formatter.settings.geofield_latlon:
   type: mapping

@@ -9,7 +9,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\geofield\Plugin\GeofieldProximitySourceManager;
 use Drupal\Core\Render\Markup;
-use Drupal\geofield\Exception\ProximityUnavailableException;
 
 /**
  * Argument handler for geofield proximity.
@@ -22,9 +21,6 @@ use Drupal\geofield\Exception\ProximityUnavailableException;
  * @ViewsArgument("geofield_proximity_argument")
  */
 class GeofieldProximityArgument extends Formula implements ContainerFactoryPluginInterface {
-
-  protected $operator = '<';
-  protected $proximity = '';
 
   /**
    * The WktGenerator object.
@@ -152,7 +148,7 @@ class GeofieldProximityArgument extends Formula implements ContainerFactoryPlugi
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
-    $form['description']['#markup'] .= $this->t('<br/><u>Proximity format should be in the following format: <strong>"40.73,-73.93<=5[unit]"</strong>, where [unit] should be one of the following key value:</u>@units_decodes.', [
+    $form['description']['#markup'] .= $this->t('<br/><u>Proximity format should be in the following format: <strong>"40.73,-73.93<=5[unit]"</strong></u>, where the operator might be also: ><br>and [unit] should be one of the following key value:</u>@units_decodes.<br><u>Note:</u> Use dot (.) as decimal separator, and not comma (,), otherwise results won\'t be accurate.</strong>', [
       '@units_decodes' => Markup::create($this->unitsListMarkup()),
     ]);
   }
@@ -216,7 +212,7 @@ class GeofieldProximityArgument extends Formula implements ContainerFactoryPlugi
 
     if (!isset($values)) {
       // Process argument values into an array.
-      preg_match('/^([0-9\-.]+),+([0-9\-.]+)([<>=]+)([0-9.]+)(.*$)/', $this->getValue(), $values);
+      preg_match('/^([0-9\-.]+),+([0-9\-.]+)([<>=]+)([0-9.]+)(.*$)/', trim($this->getValue()), $values);
       // Validate and return the passed argument.
       $values = is_array($values) && !empty($values) ? [
         'lat' => (isset($values[1]) && is_numeric($values[1]) && $values[1] >= -90 && $values[1] <= 90) ? floatval($values[1]) : FALSE,
@@ -230,7 +226,7 @@ class GeofieldProximityArgument extends Formula implements ContainerFactoryPlugi
           '<',
         ])) ? $values[3] : '<=',
         'distance' => (isset($values[4])) ? floatval($values[4]) : FALSE,
-        'units' => (isset($values[5]) && array_key_exists($values[5], $this->units)) ? $this->units[$values[5]]['value'] : NULL,
+        'units' => (isset($values[5]) && array_key_exists($values[5], $this->units)) ? $this->units[$values[5]]['value'] : 'GEOFIELD_KILOMETERS',
       ] : FALSE;
 
     }

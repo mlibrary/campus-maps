@@ -28,12 +28,12 @@
           // - leaflet js is the chosen map library;
           // - geocoder integration is enabled;
           if (options.map_library === 'leaflet' && options.gmap_geocoder) {
-            Drupal.geoFieldMap.map_initialize(options);
+            Drupal.geoFieldMap.map_initialize(options, context);
           }
           else {
             // Load before the Gmap Library, if needed, then initialize the Map.
             Drupal.geoFieldMap.loadGoogle(mapid, options.gmap_api_key, function () {
-              Drupal.geoFieldMap.map_initialize(options);
+              Drupal.geoFieldMap.map_initialize(options, context);
             });
           }
         }
@@ -490,7 +490,7 @@
     },
 
     // Init Geofield Map and its functions.
-    map_initialize: function (params) {
+    map_initialize: function (params, context) {
       let self = this;
       $.noConflict();
 
@@ -696,6 +696,9 @@
           self.reverse_geocode(params.mapid, position);
         }
       }
+
+      // Trigger a custom event on Geofield Map initialized, with mapid.
+      $(context).trigger('geofieldMapInit', params.mapid);
     }
   };
 

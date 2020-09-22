@@ -6,7 +6,7 @@ package: Geofield
 dependencies:
   - geofield_map:geofield_map
 
-# Information added by Drupal.org packaging script on 2020-05-18
-version: '8.x-2.63'
+# Information added by Drupal.org packaging script on 2020-08-19
+version: '8.x-2.67'
 project: 'geofield_map'
-datestamp: 1589827077
+datestamp: 1597844478

@@ -266,10 +266,10 @@ class MarkerIconService {
   /**
    * Save a file, handling exception.
    *
-   * @param \Drupal\file\Entity\file $file
+   * @param \Drupal\file\Entity\File $file
    *   The file to save.
    */
-  public static function fileSave(file $file) {
+  public static function fileSave(File $file) {
     try {
       $file->save();
     }

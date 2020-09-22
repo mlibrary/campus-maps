@@ -56,3 +56,30 @@ function swiftmailer_update_8102() {
     $config->save();
   }
 }
+
+/**
+ * Set default transport to Sendmail.
+ */
+function swiftmailer_update_8103() {
+  $config = Drupal::configFactory()->getEditable('swiftmailer.transport');
+  if ($config->get('transport') == 'native') {
+    $config->set('transport', SWIFTMAILER_TRANSPORT_SENDMAIL);
+    $config->save();
+  }
+}
+
+/**
+ * Update message settings.
+ */
+function swiftmailer_update_8104() {
+  $config = Drupal::configFactory()->getEditable('swiftmailer.message');
+  $content_type = $config->get('respect_format') ? '' : $config->get('format');
+  $config->set('content_type', $content_type)
+    ->set('text_format', $config->get('filter_format'))
+    ->set('generate_plain', $config->get('convert_mode'))
+    ->clear('format')
+    ->clear('respect_format')
+    ->clear('filter_format')
+    ->clear('convert_mode')
+    ->save();
+}

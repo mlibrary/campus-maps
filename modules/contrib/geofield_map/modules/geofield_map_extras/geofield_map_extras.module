@@ -51,6 +51,7 @@ function geofield_map_extras_theme($existing, $type, $theme, $path) {
         'q' => NULL,
         'apikey' => NULL,
         'options_string' => NULL,
+        'title' => NULL,
       ],
     ],
   ];

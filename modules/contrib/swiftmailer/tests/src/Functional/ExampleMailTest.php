@@ -3,14 +3,11 @@
 namespace Drupal\Tests\swiftmailer\Functional;
 
 use Drupal\Core\Url;
-use Drupal\Tests\BrowserTestBase;
 
 /**
  * @group swiftmailer
  */
-class ExampleMailTest extends BrowserTestBase {
-
-  public static $modules = ['swiftmailer', 'mailsystem'];
+class ExampleMailTest extends SwiftMailerTestBase {
 
   /**
    * Tests the e-mail test form.
@@ -20,6 +17,7 @@ class ExampleMailTest extends BrowserTestBase {
     $this->drupalLogin($account);
     $this->drupalPostForm(Url::fromRoute('swiftmailer.test'), [], 'Send');
     $this->assertSession()->pageTextContains(t('An attempt has been made to send an e-mail to @email.', ['@email' => $account->getEmail()]));
+    $this->assertBodyContains('The module has been successfully configured.');
   }
 
 }

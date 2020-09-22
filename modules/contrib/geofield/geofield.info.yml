@@ -1,10 +1,10 @@
 name: Geofield
 description: Stores geographic and location data (points, lines, and polygons).
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8.8 || ^9
 type: module
 package: Geofield
 
-# Information added by Drupal.org packaging script on 2020-04-30
-version: '8.x-1.13'
+# Information added by Drupal.org packaging script on 2020-06-07
+version: '8.x-1.15'
 project: 'geofield'
-datestamp: 1588276835
+datestamp: 1591556174

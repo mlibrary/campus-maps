@@ -83,15 +83,16 @@ class LeafletService {
    */
   public function leafletRenderMap(array $map, array $features = [], $height = '400px') {
     $map_id = isset($map['id']) ? $map['id'] : Html::getUniqueId('leaflet_map');
-    $attached_libraries = ['leaflet/leaflet-drupal', 'leaflet/general'];
+
+    $attached_libraries = ['leaflet/general', 'leaflet/leaflet-drupal'];
 
     // Add the Leaflet Fullscreen library, if requested.
-    if (isset($map['settings']['fullscreen_control'])) {
+    if (!empty($map['settings']['fullscreen_control'])) {
       $attached_libraries[] = 'leaflet/leaflet.fullscreen';
     }
 
     // Add the Leaflet Gesture Handling library, if requested.
-    if (isset($map['settings']['gestureHandling'])) {
+    if (!empty($map['settings']['gestureHandling'])) {
       $attached_libraries[] = 'leaflet/leaflet.gesture_handling';
     }
 
@@ -103,24 +104,8 @@ class LeafletService {
 
     // Add the Leaflet Geocoder library and functionalities, if requested,
     // and the user has access to Geocoder Api Enpoints.
-    if ($this->moduleHandler->moduleExists('geocoder')
-      && class_exists('\Drupal\geocoder\Controller\GeocoderApiEnpoints')
-      && isset($map['settings']['geocoder'])
-      && $map['settings']['geocoder']['control']
-      && $this->currentUser->hasPermission('access geocoder api endpoints')) {
-      $attached_libraries[] = 'leaflet/leaflet.geocoder';
-
-      // Set the $map['settings']['geocoder']['providers'] as the enabled ones.
-      $enabled_providers = [];
-      foreach ($map['settings']['geocoder']['settings']['providers'] as $plugin_id => $plugin) {
-        if (!empty($plugin['checked'])) {
-          $enabled_providers[] = $plugin_id;
-        }
-      }
-      $map['settings']['geocoder']['settings']['providers'] = $enabled_providers;
-      $map['settings']['geocoder']['settings']['options'] = [
-        'options' => JSON::decode($map['settings']['geocoder']['settings']['options']),
-      ];
+    if (!empty($map['settings']['geocoder']['control'])) {
+      $this->setGeocoderControlSettings($map['settings']['geocoder'], $attached_libraries);
     }
 
     $settings[$map_id] = [
@@ -385,6 +370,35 @@ class LeafletService {
       }
     }
     return TRUE;
+  }
+
+  /**
+   * Set Geocoder Controls Settings.
+   *
+   * @param array $geocoder_settings
+   *   The geocoder settings.
+   * @param array $attached_libraries
+   *   The attached libraries.
+   */
+  public function setGeocoderControlSettings(array &$geocoder_settings, array &$attached_libraries): void {
+    if ($this->moduleHandler->moduleExists('geocoder')
+      && class_exists('\Drupal\geocoder\Controller\GeocoderApiEnpoints')
+      && $geocoder_settings['control']
+      && $this->currentUser->hasPermission('access geocoder api endpoints')) {
+      $attached_libraries[] = 'leaflet/leaflet.geocoder';
+
+      // Set the geocoder settings ['providers'] as the enabled ones.
+      $enabled_providers = [];
+      foreach ($geocoder_settings['settings']['providers'] as $plugin_id => $plugin) {
+        if (!empty($plugin['checked'])) {
+          $enabled_providers[] = $plugin_id;
+        }
+      }
+      $geocoder_settings['settings']['providers'] = $enabled_providers;
+      $geocoder_settings['settings']['options'] = [
+        'options' => Json::decode($geocoder_settings['settings']['options']),
+      ];
+    }
   }
 
 }

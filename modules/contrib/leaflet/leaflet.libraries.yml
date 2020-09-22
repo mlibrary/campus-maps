@@ -20,11 +20,31 @@ leaflet:
 leaflet-drupal:
   version: VERSION
   js:
-    leaflet.drupal.js: {}
+    js/leaflet.drupal.js: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - leaflet/leaflet
+
+leaflet-geoman:
+  version: 2.x
+  css:
+    theme:
+      '//unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css': {type: external, minified: true}
+  js:
+    '//unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js': {type: external, minified: true}
   dependencies:
     - leaflet/leaflet
+
+leaflet-widget:
+  version: 1.x
+  js:
+    js/leaflet.widget.js: {}
+  dependencies:
     - core/jquery
-    - core/drupal
+    - leaflet/general
+    - leaflet/leaflet-geoman
 
 # Control Fullscreen
 leaflet.fullscreen:
@@ -66,7 +86,7 @@ leaflet.geocoder:
     component:
       css/leaflet_geocoder.css: {}
   js:
-    js/leaflet.geocoder.drupal.js: {}
+    js/leaflet.geocoder.js: {}
   dependencies:
     - core/drupal.autocomplete
     - leaflet/leaflet-drupal

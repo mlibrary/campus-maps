@@ -262,7 +262,7 @@ class Conversion {
    *   TRUE if the provided header is an id header, and otherwise FALSE.
    */
   public static function swiftmailer_is_id_header($key, $value) {
-    if (\Drupal::service('email.validator')->isValid($value) && $key == 'Message-ID') {
+    if ($key == 'Message-ID' && \Drupal::service('email.validator')->isValid($value)) {
       return TRUE;
     }
     else {
@@ -294,7 +294,7 @@ class Conversion {
    *
    * It is difficult to distinguish id, mailbox and path headers from each other
    * as they all may very well contain the exact same value. This public static function simply
-   * checks whether the header key equals to 'Message-ID' to determine if the
+   * checks whether the header key equals to 'Return-Path' to determine if the
    * header is a path header.
    *
    * @see http://swift_mailer.org/docs/header-path
@@ -308,7 +308,7 @@ class Conversion {
    *   TRUE if the provided header is a path header, and otherwise FALSE.
    */
   public static function swiftmailer_is_path_header($key, $value) {
-    if (\Drupal::service('email.validator')->isValid($value) && $key == 'Return-Path') {
+    if ($key == 'Return-Path' && \Drupal::service('email.validator')->isValid($value)) {
       return TRUE;
     }
     else {

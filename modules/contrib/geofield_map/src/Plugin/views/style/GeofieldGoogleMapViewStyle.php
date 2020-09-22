@@ -954,7 +954,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
                     'view_mode' => $default_view_mode,
                     'langcode' => $langcode,
                   ];
-                  $url = Url::fromRoute('geofield_map.ajax_popup', $parameters, ['absolute' => TRUE]);
+                  $url = Url::fromRoute('geofield_map.ajax_popup', $parameters);
                   $description[] = sprintf('<div class="geofield-google-map-ajax-popup" data-geofield-google-map-ajax-popup="%s" %s></div>',
                     $url->toString(), GeofieldMapAjaxPopupController::getPopupIdentifierAttribute($entity_type, $entity->id(), $default_view_mode, $langcode));
                   $js_settings['map_settings']['ajaxPoup'] = TRUE;

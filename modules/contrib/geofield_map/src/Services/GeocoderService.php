@@ -29,7 +29,7 @@ class GeocoderService {
     }
     $map_geocoder_settings['providers'] = $enabled_providers;
     $map_geocoder_settings['options'] = [
-      'options' => JSON::decode($map_geocoder_settings['options']),
+      'options' => Json::decode($map_geocoder_settings['options']),
     ];
 
     return $map_geocoder_settings;

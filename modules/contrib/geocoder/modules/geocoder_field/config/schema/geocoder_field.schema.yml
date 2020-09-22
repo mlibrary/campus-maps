@@ -16,6 +16,9 @@ field.field.*.*.*.third_party.geocoder_field:
     reverse_geocode_field:
       type: string
       label: 'Field to geocode to'
+    skip_not_empty_value:
+      type: boolean
+      label: 'Skip Geocode/Reverse Geocode if target value is not empty'
     hidden:
       type: boolean
       label: 'Hide field'

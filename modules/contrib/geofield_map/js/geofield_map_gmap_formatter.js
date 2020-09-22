@@ -42,13 +42,13 @@
         // It will be used to handle map loading instead of displaying the map on page load.
         let mapObserver = null;
         if ('IntersectionObserver' in window){
-          mapObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach((entry) => {
-              if(entry.isIntersecting){
-                const mapId = entry.target.id;
+          mapObserver = new IntersectionObserver(function (entries, observer) {
+            for(var i = 0; i < entries.length; i++) {
+              if(entries[i].isIntersecting){
+                const mapId = entries[i].target.id;
                 loadMap(mapId);
               }
-            })
+            }
           });
         }
 

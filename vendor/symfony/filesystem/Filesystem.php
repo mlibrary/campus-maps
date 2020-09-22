@@ -12,6 +12,7 @@
 namespace Symfony\Component\Filesystem;
 
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
+use Symfony\Component\Filesystem\Exception\InvalidArgumentException;
 use Symfony\Component\Filesystem\Exception\IOException;
 
 /**
@@ -101,7 +102,7 @@ class Filesystem
                 if (!is_dir($dir)) {
                     // The directory was not created by a concurrent process. Let's throw an exception with a developer friendly error message if we have one
                     if (self::$lastError) {
-                        throw new IOException(sprintf('Failed to create "%s": '.self::$lastError, $dir), 0, null, $dir);
+                        throw new IOException(sprintf('Failed to create "%s": ', $dir).self::$lastError, 0, null, $dir);
                     }
                     throw new IOException(sprintf('Failed to create "%s".', $dir), 0, null, $dir);
                 }
@@ -171,16 +172,16 @@ class Filesystem
             if (is_link($file)) {
                 // See https://bugs.php.net/52176
                 if (!(self::box('unlink', $file) || '\\' !== \DIRECTORY_SEPARATOR || self::box('rmdir', $file)) && file_exists($file)) {
-                    throw new IOException(sprintf('Failed to remove symlink "%s": '.self::$lastError, $file));
+                    throw new IOException(sprintf('Failed to remove symlink "%s": ', $file).self::$lastError);
                 }
             } elseif (is_dir($file)) {
                 $this->remove(new \FilesystemIterator($file, \FilesystemIterator::CURRENT_AS_PATHNAME | \FilesystemIterator::SKIP_DOTS));
 
                 if (!self::box('rmdir', $file) && file_exists($file)) {
-                    throw new IOException(sprintf('Failed to remove directory "%s": '.self::$lastError, $file));
+                    throw new IOException(sprintf('Failed to remove directory "%s": ', $file).self::$lastError);
                 }
             } elseif (!self::box('unlink', $file) && file_exists($file)) {
-                throw new IOException(sprintf('Failed to remove file "%s": '.self::$lastError, $file));
+                throw new IOException(sprintf('Failed to remove file "%s": ', $file).self::$lastError);
             }
         }
     }
@@ -198,7 +199,7 @@ class Filesystem
     public function chmod($files, $mode, $umask = 0000, $recursive = false)
     {
         foreach ($this->toIterable($files) as $file) {
-            if (true !== @chmod($file, $mode & ~$umask)) {
+            if ((\PHP_VERSION_ID < 80000 || \is_int($mode)) && true !== @chmod($file, $mode & ~$umask)) {
                 throw new IOException(sprintf('Failed to chmod file "%s".', $file), 0, null, $file);
             }
             if ($recursive && is_dir($file) && !is_link($file)) {
@@ -250,7 +251,7 @@ class Filesystem
                 $this->chgrp(new \FilesystemIterator($file), $group, true);
             }
             if (is_link($file) && \function_exists('lchgrp')) {
-                if (true !== @lchgrp($file, $group) || (\defined('HHVM_VERSION') && !posix_getgrnam($group))) {
+                if (true !== @lchgrp($file, $group)) {
                     throw new IOException(sprintf('Failed to chgrp file "%s".', $file), 0, null, $file);
                 }
             } else {
@@ -293,13 +294,9 @@ class Filesystem
     /**
      * Tells whether a file exists and is readable.
      *
-     * @param string $filename Path to the file
-     *
-     * @return bool
-     *
      * @throws IOException When windows path is longer than 258 characters
      */
-    private function isReadable($filename)
+    private function isReadable(string $filename): bool
     {
         $maxPathLength = PHP_MAXPATHLEN - 2;
 
@@ -380,11 +377,9 @@ class Filesystem
     }
 
     /**
-     * @param string $origin
-     * @param string $target
      * @param string $linkType Name of the link type, typically 'symbolic' or 'hard'
      */
-    private function linkException($origin, $target, $linkType)
+    private function linkException(string $origin, string $target, string $linkType)
     {
         if (self::$lastError) {
             if ('\\' === \DIRECTORY_SEPARATOR && false !== strpos(self::$lastError, 'error code(1314)')) {
@@ -445,8 +440,12 @@ class Filesystem
      */
     public function makePathRelative($endPath, $startPath)
     {
-        if (!$this->isAbsolutePath($endPath) || !$this->isAbsolutePath($startPath)) {
-            @trigger_error(sprintf('Support for passing relative paths to %s() is deprecated since Symfony 3.4 and will be removed in 4.0.', __METHOD__), E_USER_DEPRECATED);
+        if (!$this->isAbsolutePath($startPath)) {
+            throw new InvalidArgumentException(sprintf('The start path "%s" is not absolute.', $startPath));
+        }
+
+        if (!$this->isAbsolutePath($endPath)) {
+            throw new InvalidArgumentException(sprintf('The end path "%s" is not absolute.', $endPath));
         }
 
         // Normalize separators on Windows
@@ -455,28 +454,19 @@ class Filesystem
             $startPath = str_replace('\\', '/', $startPath);
         }
 
-        $stripDriveLetter = function ($path) {
-            if (\strlen($path) > 2 && ':' === $path[1] && '/' === $path[2] && ctype_alpha($path[0])) {
-                return substr($path, 2);
-            }
-
-            return $path;
+        $splitDriveLetter = function ($path) {
+            return (\strlen($path) > 2 && ':' === $path[1] && '/' === $path[2] && ctype_alpha($path[0]))
+                ? [substr($path, 2), strtoupper($path[0])]
+                : [$path, null];
         };
 
-        $endPath = $stripDriveLetter($endPath);
-        $startPath = $stripDriveLetter($startPath);
-
-        // Split the paths into arrays
-        $startPathArr = explode('/', trim($startPath, '/'));
-        $endPathArr = explode('/', trim($endPath, '/'));
-
-        $normalizePathArray = function ($pathSegments, $absolute) {
+        $splitPath = function ($path) {
             $result = [];
 
-            foreach ($pathSegments as $segment) {
-                if ('..' === $segment && ($absolute || \count($result))) {
+            foreach (explode('/', trim($path, '/')) as $segment) {
+                if ('..' === $segment) {
                     array_pop($result);
-                } elseif ('.' !== $segment) {
+                } elseif ('.' !== $segment && '' !== $segment) {
                     $result[] = $segment;
                 }
             }
@@ -484,8 +474,16 @@ class Filesystem
             return $result;
         };
 
-        $startPathArr = $normalizePathArray($startPathArr, static::isAbsolutePath($startPath));
-        $endPathArr = $normalizePathArray($endPathArr, static::isAbsolutePath($endPath));
+        list($endPath, $endDriveLetter) = $splitDriveLetter($endPath);
+        list($startPath, $startDriveLetter) = $splitDriveLetter($startPath);
+
+        $startPathArr = $splitPath($startPath);
+        $endPathArr = $splitPath($endPath);
+
+        if ($endDriveLetter && $startDriveLetter && $endDriveLetter != $startDriveLetter) {
+            // End path is on another drive, so no relative path exists
+            return $endDriveLetter.':/'.($endPathArr ? implode('/', $endPathArr).'/' : '');
+        }
 
         // Find for which directory the common path stops
         $index = 0;
@@ -536,6 +534,10 @@ class Filesystem
         $originDir = rtrim($originDir, '/\\');
         $originDirLen = \strlen($originDir);
 
+        if (!$this->exists($originDir)) {
+            throw new IOException(sprintf('The origin directory specified "%s" was not found.', $originDir), 0, null, $originDir);
+        }
+
         // Iterate in destination folder to remove obsolete entries
         if ($this->exists($targetDir) && isset($options['delete']) && $options['delete']) {
             $deleteIterator = $iterator;
@@ -552,41 +554,32 @@ class Filesystem
             }
         }
 
-        $copyOnWindows = false;
-        if (isset($options['copy_on_windows'])) {
-            $copyOnWindows = $options['copy_on_windows'];
-        }
+        $copyOnWindows = $options['copy_on_windows'] ?? false;
 
         if (null === $iterator) {
             $flags = $copyOnWindows ? \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS : \FilesystemIterator::SKIP_DOTS;
             $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($originDir, $flags), \RecursiveIteratorIterator::SELF_FIRST);
         }
 
-        if ($this->exists($originDir)) {
-            $this->mkdir($targetDir);
-        }
+        $this->mkdir($targetDir);
+        $filesCreatedWhileMirroring = [];
 
         foreach ($iterator as $file) {
-            $target = $targetDir.substr($file->getPathname(), $originDirLen);
+            if ($file->getPathname() === $targetDir || $file->getRealPath() === $targetDir || isset($filesCreatedWhileMirroring[$file->getRealPath()])) {
+                continue;
+            }
 
-            if ($copyOnWindows) {
-                if (is_file($file)) {
-                    $this->copy($file, $target, isset($options['override']) ? $options['override'] : false);
-                } elseif (is_dir($file)) {
-                    $this->mkdir($target);
-                } else {
-                    throw new IOException(sprintf('Unable to guess "%s" file type.', $file), 0, null, $file);
-                }
+            $target = $targetDir.substr($file->getPathname(), $originDirLen);
+            $filesCreatedWhileMirroring[$target] = true;
+
+            if (!$copyOnWindows && is_link($file)) {
+                $this->symlink($file->getLinkTarget(), $target);
+            } elseif (is_dir($file)) {
+                $this->mkdir($target);
+            } elseif (is_file($file)) {
+                $this->copy($file, $target, isset($options['override']) ? $options['override'] : false);
             } else {
-                if (is_link($file)) {
-                    $this->symlink($file->getLinkTarget(), $target);
-                } elseif (is_dir($file)) {
-                    $this->mkdir($target);
-                } elseif (is_file($file)) {
-                    $this->copy($file, $target, isset($options['override']) ? $options['override'] : false);
-                } else {
-                    throw new IOException(sprintf('Unable to guess "%s" file type.', $file), 0, null, $file);
-                }
+                throw new IOException(sprintf('Unable to guess "%s" file type.', $file), 0, null, $file);
             }
         }
     }
@@ -600,6 +593,10 @@ class Filesystem
      */
     public function isAbsolutePath($file)
     {
+        if (null === $file) {
+            @trigger_error(sprintf('Calling "%s()" with a null in the $file argument is deprecated since Symfony 4.4.', __METHOD__), E_USER_DEPRECATED);
+        }
+
         return strspn($file, '/\\', 0, 1)
             || (\strlen($file) > 3 && ctype_alpha($file[0])
                 && ':' === $file[1]
@@ -664,13 +661,17 @@ class Filesystem
     /**
      * Atomically dumps content into a file.
      *
-     * @param string $filename The file to be written to
-     * @param string $content  The data to write into the file
+     * @param string          $filename The file to be written to
+     * @param string|resource $content  The data to write into the file
      *
      * @throws IOException if the file cannot be written to
      */
     public function dumpFile($filename, $content)
     {
+        if (\is_array($content)) {
+            @trigger_error(sprintf('Calling "%s()" with an array in the $content argument is deprecated since Symfony 4.3.', __METHOD__), E_USER_DEPRECATED);
+        }
+
         $dir = \dirname($filename);
 
         if (!is_dir($dir)) {
@@ -697,13 +698,17 @@ class Filesystem
     /**
      * Appends content to an existing file.
      *
-     * @param string $filename The file to which to append content
-     * @param string $content  The content to append
+     * @param string          $filename The file to which to append content
+     * @param string|resource $content  The content to append
      *
      * @throws IOException If the file is not writable
      */
     public function appendToFile($filename, $content)
     {
+        if (\is_array($content)) {
+            @trigger_error(sprintf('Calling "%s()" with an array in the $content argument is deprecated since Symfony 4.3.', __METHOD__), E_USER_DEPRECATED);
+        }
+
         $dir = \dirname($filename);
 
         if (!is_dir($dir)) {
@@ -719,24 +724,15 @@ class Filesystem
         }
     }
 
-    /**
-     * @param mixed $files
-     *
-     * @return array|\Traversable
-     */
-    private function toIterable($files)
+    private function toIterable($files): iterable
     {
         return \is_array($files) || $files instanceof \Traversable ? $files : [$files];
     }
 
     /**
      * Gets a 2-tuple of scheme (may be null) and hierarchical part of a filename (e.g. file:///tmp -> [file, tmp]).
-     *
-     * @param string $filename The filename to be parsed
-     *
-     * @return array The filename scheme and hierarchical part
      */
-    private function getSchemeAndHierarchy($filename)
+    private function getSchemeAndHierarchy(string $filename): array
     {
         $components = explode('://', $filename, 2);
 
@@ -744,21 +740,18 @@ class Filesystem
     }
 
     /**
-     * @param callable $func
-     *
      * @return mixed
      */
-    private static function box($func)
+    private static function box(callable $func)
     {
         self::$lastError = null;
         set_error_handler(__CLASS__.'::handleError');
         try {
-            $result = \call_user_func_array($func, \array_slice(\func_get_args(), 1));
+            $result = $func(...\array_slice(\func_get_args(), 1));
             restore_error_handler();
 
             return $result;
         } catch (\Throwable $e) {
-        } catch (\Exception $e) {
         }
         restore_error_handler();
 

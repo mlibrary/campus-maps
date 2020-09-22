@@ -20,13 +20,11 @@
           lFeature = this.create_feature(groupFeature);
           if (lFeature !== undefined) {
             if (lFeature.setStyle) {
-              feature.path = feature.path ? JSON.parse(feature.path) : {};
+              feature.path = feature.path ? (feature.path instanceof Object ? feature.path : JSON.parse(feature.path)) : {};
               lFeature.setStyle(feature.path);
             }
             if (groupFeature.popup) {
-              lFeature.bindPopup(groupFeature.popup, {
-                maxWidth: "auto"
-              });
+              lFeature.bindPopup(groupFeature.popup);
             }
             lGroup.addLayer(lFeature);
           }
@@ -39,14 +37,12 @@
         lFeature = this.create_feature(feature);
         if (lFeature !== undefined) {
           if (lFeature.setStyle) {
-            feature.path = feature.path ? JSON.parse(feature.path) : {};
+            feature.path = feature.path ? (feature.path instanceof Object ? feature.path : JSON.parse(feature.path)) : {};
             lFeature.setStyle(feature.path);
             collections_cluster_layers[i] = new L.MarkerClusterGroup(leaflet_markercluster_options);
             collections_cluster_layers[i].addLayer(lFeature);
             if (feature.popup) {
-              collections_cluster_layers[i].bindPopup(feature.popup, {
-                maxWidth: "auto"
-              });
+              collections_cluster_layers[i].bindPopup(feature.popup);
             }
 
           }
@@ -54,9 +50,7 @@
             // this.lMap.addLayer(lFeature);
             cluster_layer.addLayer(lFeature);
             if (feature.popup) {
-              lFeature.bindPopup(feature.popup, {
-                maxWidth: "auto"
-              });
+              lFeature.bindPopup(feature.popup);
             }
           }
         }

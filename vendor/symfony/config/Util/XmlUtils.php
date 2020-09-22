@@ -47,17 +47,21 @@ class XmlUtils
     public static function parse($content, $schemaOrCallable = null)
     {
         if (!\extension_loaded('dom')) {
-            throw new \RuntimeException('Extension DOM is required.');
+            throw new \LogicException('Extension DOM is required.');
         }
 
         $internalErrors = libxml_use_internal_errors(true);
-        $disableEntities = libxml_disable_entity_loader(true);
+        if (LIBXML_VERSION < 20900) {
+            $disableEntities = libxml_disable_entity_loader(true);
+        }
         libxml_clear_errors();
 
         $dom = new \DOMDocument();
         $dom->validateOnParse = true;
         if (!$dom->loadXML($content, LIBXML_NONET | (\defined('LIBXML_COMPACT') ? LIBXML_COMPACT : 0))) {
-            libxml_disable_entity_loader($disableEntities);
+            if (LIBXML_VERSION < 20900) {
+                libxml_disable_entity_loader($disableEntities);
+            }
 
             throw new XmlParsingException(implode("\n", static::getXmlErrors($internalErrors)));
         }
@@ -65,7 +69,9 @@ class XmlUtils
         $dom->normalizeDocument();
 
         libxml_use_internal_errors($internalErrors);
-        libxml_disable_entity_loader($disableEntities);
+        if (LIBXML_VERSION < 20900) {
+            libxml_disable_entity_loader($disableEntities);
+        }
 
         foreach ($dom->childNodes as $child) {
             if (XML_DOCUMENT_TYPE_NODE === $child->nodeType) {
@@ -80,7 +86,7 @@ class XmlUtils
             $e = null;
             if (\is_callable($schemaOrCallable)) {
                 try {
-                    $valid = \call_user_func($schemaOrCallable, $dom, $internalErrors);
+                    $valid = $schemaOrCallable($dom, $internalErrors);
                 } catch (\Exception $e) {
                     $valid = false;
                 }
