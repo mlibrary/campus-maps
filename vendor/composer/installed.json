@@ -2156,7 +2156,8 @@
         "keywords": [
             "reflection",
             "static"
-        ]
+        ],
+        "abandoned": "roave/better-reflection"
     },
     {
         "name": "drupal-composer/drupal-scaffold",
@@ -2203,7 +2204,7 @@
             "GPL-2.0-or-later"
         ],
         "description": "Composer Plugin for updating the Drupal scaffold files when using drupal/core",
-        "abandoned": "drupal / core-composer-scaffold"
+        "abandoned": "drupal/core-composer-scaffold"
     },
     {
         "name": "drupal/address",
@@ -2851,17 +2852,17 @@
     },
     {
         "name": "drupal/core",
-        "version": "8.9.6",
-        "version_normalized": "8.9.6.0",
+        "version": "8.9.9",
+        "version_normalized": "8.9.9.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core.git",
-            "reference": "caf4e756d31dfb0c2e52cd0748e900efe4b57766"
+            "reference": "724ada1a6c497a663797c40e4ee3d0c7c618371d"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/drupal/core/zipball/caf4e756d31dfb0c2e52cd0748e900efe4b57766",
-            "reference": "caf4e756d31dfb0c2e52cd0748e900efe4b57766",
+            "url": "https://api.github.com/repos/drupal/core/zipball/724ada1a6c497a663797c40e4ee3d0c7c618371d",
+            "reference": "724ada1a6c497a663797c40e4ee3d0c7c618371d",
             "shasum": ""
         },
         "require": {
@@ -3028,7 +3029,7 @@
             "drupal/workflows": "self.version",
             "drupal/workspaces": "self.version"
         },
-        "time": "2020-09-16T11:22:21+00:00",
+        "time": "2020-11-17T22:05:46+00:00",
         "type": "drupal-core",
         "extra": {
             "drupal-scaffold": {
@@ -3060,7 +3061,6 @@
             },
             "patches_applied": {
                 "add primary to primary patch": "patches/primary_primary.patch",
-                "make sure the author exists": "patches/author_name.patch",
                 "https://www.drupal.org/node/2596937": "https://www.drupal.org/files/issues/array_merge_failure_on-2596937-65.patch",
                 "custom access denied page": "patches/change_access_denied-2.patch",
                 "https://www.drupal.org/node/2822460": "https://www.drupal.org/files/issues/no_hook_to_edit-2822460-12.patch",
