@@ -5,10 +5,6 @@ add primary to primary patch
 Source: patches/primary_primary.patch
 
 
-make sure the author exists
-Source: patches/author_name.patch
-
-
 https://www.drupal.org/node/2596937
 Source: https://www.drupal.org/files/issues/array_merge_failure_on-2596937-65.patch
 
