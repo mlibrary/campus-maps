@@ -60,8 +60,8 @@ class GeofieldItemTest extends FieldKernelTestBase {
     $entity->save();
 
     $entity = EntityTest::load($entity->id());
-    $this->assertTrue($entity->geofield_field instanceof FieldItemListInterface, 'Field implements interface.');
-    $this->assertTrue($entity->geofield_field[0] instanceof FieldItemInterface, 'Field item implements interface.');
+    $this->assertInstanceOf(FieldItemListInterface::class, $entity->geofield_field, 'Field implements interface.');
+    $this->assertInstanceOf(FieldItemInterface::class, $entity->geofield_field[0], 'Field item implements interface.');
     $this->assertEquals($entity->geofield_field->value, $value);
 
     // Test computed values.

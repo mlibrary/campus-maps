@@ -126,7 +126,7 @@ class SwiftMailerSettingsTest extends WebDriverTestBase {
     $this->clickLink('Messages');
     $this->assertSession()->pageTextContains('Content type');
 
-    $this->drupalPostForm(NULL, [
+    $this->submitForm([
       'content_type[type]' => 'text/html',
       'generate_plain[mode]' => TRUE,
       'character_set[type]' => 'EUC-CN',

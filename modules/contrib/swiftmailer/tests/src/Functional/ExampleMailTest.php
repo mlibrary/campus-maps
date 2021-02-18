@@ -15,7 +15,8 @@ class ExampleMailTest extends SwiftMailerTestBase {
   public function testForm() {
     $account = $this->createUser(['administer swiftmailer']);
     $this->drupalLogin($account);
-    $this->drupalPostForm(Url::fromRoute('swiftmailer.test'), [], 'Send');
+    $this->drupalGet(Url::fromRoute('swiftmailer.test'));
+    $this->submitForm([], 'Send');
     $this->assertSession()->pageTextContains(t('An attempt has been made to send an e-mail to @email.', ['@email' => $account->getEmail()]));
     $this->assertBodyContains('The module has been successfully configured.');
   }

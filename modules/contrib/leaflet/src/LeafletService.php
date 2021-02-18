@@ -96,7 +96,7 @@ class LeafletService {
       $attached_libraries[] = 'leaflet/leaflet.gesture_handling';
     }
 
-    // Add the Leaflet Markecluster library and functionalities, if requested.
+    // Add the Leaflet Markercluster library and functionalities, if requested.
     if ($this->moduleHandler->moduleExists('leaflet_markercluster') && isset($map['settings']['leaflet_markercluster']) && $map['settings']['leaflet_markercluster']['control']) {
       $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster';
       $attached_libraries[] = 'leaflet_markercluster/leaflet-markercluster-drupal';
@@ -305,24 +305,6 @@ class LeafletService {
   }
 
   /**
-   * Pre Process the MapSettings.
-   *
-   * Performs some preprocess on the maps settings before sending to js.
-   *
-   * @param array $map_settings
-   *   The map settings.
-   */
-  public function preProcessMapSettings(array &$map_settings) {
-    // Generate correct Absolute iconUrl & shadowUrl, if not external.
-    if (!empty($map_settings['icon']['iconUrl'])) {
-      $map_settings['icon']['iconUrl'] = $this->pathToAbsolute($map_settings['icon']['iconUrl']);
-    }
-    if (!empty($map_settings['icon']['shadowUrl'])) {
-      $map_settings['icon']['shadowUrl'] = $this->pathToAbsolute($map_settings['icon']['shadowUrl']);
-    }
-  }
-
-  /**
    * Leaflet Icon Documentation Link.
    *
    * @return \Drupal\Core\GeneratedLink
@@ -349,6 +331,48 @@ class LeafletService {
       $path = Url::fromUri('base:', ['absolute' => TRUE])->toString() . $path;
     }
     return $path;
+  }
+
+  /**
+   * Set Feature Icon Size & Shadow Size If Empty or Invalid.
+   *
+   * @param array $feature
+   *   The feature array.
+   */
+  public function setFeatureIconSizesIfEmptyOrInvalid(array &$feature) {
+    if (isset($feature["icon"]["iconSize"])
+      && (empty(intval($feature["icon"]["iconSize"]["x"])) && empty(intval($feature["icon"]["iconSize"]["y"])))
+      && (!empty($feature["icon"]["iconUrl"]) && $this->fileExists($feature["icon"]["iconUrl"]))) {
+      $iconSize = getimagesize($feature["icon"]["iconUrl"]);
+      $feature["icon"]["iconSize"]["x"] = $iconSize[0];
+      $feature["icon"]["iconSize"]["y"] = $iconSize[1];
+    }
+
+    if (isset($feature["icon"]["shadowSize"])
+      && (empty(intval($feature["icon"]["shadowSize"]["x"])) && empty(intval($feature["icon"]["shadowSize"]["y"])))
+      && (!empty($feature["icon"]["shadowUrl"]) && $this->fileExists($feature["icon"]["shadowUrl"]))) {
+      $shadowSize = getimagesize($feature["icon"]["iconUrl"]);
+      $feature["icon"]["shadowSize"]["x"] = $shadowSize[0];
+      $feature["icon"]["shadowSize"]["y"] = $shadowSize[1];
+    }
+  }
+
+  /**
+   * Check if a file exists.
+   *
+   * @param string $fileUrl
+   *   The file url.
+   *
+   * @return bool
+   *   The bool result.
+   */
+  public function fileExists($fileUrl) {
+    $file_headers = @get_headers($fileUrl);
+    if ((stripos($file_headers[0], "404 Not Found") == 0)
+      && (stripos($file_headers[0], "302 Found") == 0 && stripos($file_headers[7], "404 Not Found") == 0)) {
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
@@ -396,7 +420,7 @@ class LeafletService {
       }
       $geocoder_settings['settings']['providers'] = $enabled_providers;
       $geocoder_settings['settings']['options'] = [
-        'options' => Json::decode($geocoder_settings['settings']['options']),
+        'options' => Json::decode($geocoder_settings['settings']['options']) ?? '',
       ];
     }
   }

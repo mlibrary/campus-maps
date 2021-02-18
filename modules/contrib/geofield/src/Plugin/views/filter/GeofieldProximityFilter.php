@@ -194,9 +194,6 @@ class GeofieldProximityFilter extends NumericFilter {
     $lat_alias = $this->realField . '_lat';
     $lon_alias = $this->realField . '_lon';
 
-    /** @var \Drupal\views\Plugin\views\query\Sql $query */
-    $query = $this->query;
-
     try {
       /** @var \Drupal\geofield\Plugin\GeofieldProximitySourceInterface $source_plugin */
       $this->sourcePlugin = $this->proximitySourceManager->createInstance($this->options['source'], $this->options['source_configuration']);
@@ -212,12 +209,12 @@ class GeofieldProximityFilter extends NumericFilter {
 
         // Ensure that destination is valid.
         $condition = (new Condition('AND'))->isNotNull($haversine_options['destination_latitude'])->isNotNull($haversine_options['destination_longitude']);
-        $query->addWhere($this->options['group'], $condition);
+        $this->query->addWhere(0, $condition);
       }
       // Otherwise output empty result in case of unexposed proximity filter.
       elseif (!$this->isExposed()) {
         // Origin is not valid so return no results (if not exposed filter).
-        $query->addWhereExpression($this->options['group'], '1=0');
+        $this->query->addWhereExpression($this->options['group'], '1=0');
       }
     }
     catch (\Exception $e) {
@@ -229,16 +226,13 @@ class GeofieldProximityFilter extends NumericFilter {
    * {@inheritdoc}
    */
   protected function opBetween($options) {
-
     if (!empty($this->value['min']) && is_numeric($this->value['min']) &&
       !empty($this->value['max']) && is_numeric($this->value['max'])) {
-      /** @var \Drupal\views\Plugin\views\query\Sql $query */
-      $query = $this->query;
       // Be sure to convert $options into array,
       // as this method PhpDoc might expects $options to be an object.
       $options = (array) $options;
       /* @var array $options */
-      $query->addWhereExpression($this->options['group'], geofield_haversine($options) . ' ' . strtoupper($this->operator) . ' ' . $this->value['min'] . ' AND ' . $this->value['max']);
+      $this->query->addWhereExpression($this->options['group'], geofield_haversine($options) . ' ' . strtoupper($this->operator) . ' ' . $this->value['min'] . ' AND ' . $this->value['max']);
     }
   }
 
@@ -246,15 +240,11 @@ class GeofieldProximityFilter extends NumericFilter {
    * {@inheritdoc}
    */
   protected function opSimple($options) {
-
     if (!empty($this->value['value']) && is_numeric($this->value['value'])) {
-      /** @var \Drupal\views\Plugin\views\query\Sql $query */
-      $query = $this->query;
       // Be sure to convert $options into array,
       // as this method PhpDoc might expects $options to be an object.
       $options = (array) $options;
-      $query->addWhereExpression($this->options['group'], geofield_haversine($options) . ' ' . $this->operator . ' ' . $this->value['value']);
-      $this->value['value'];
+      $this->query->addWhereExpression($this->options['group'], geofield_haversine($options) . ' ' . $this->operator . ' ' . $this->value['value']);
     }
   }
 
@@ -297,7 +287,6 @@ class GeofieldProximityFilter extends NumericFilter {
     catch (\Exception $e) {
       watchdog_exception('geofield', $e);
     }
-
     parent::buildOptionsForm($form, $form_state);
   }
 

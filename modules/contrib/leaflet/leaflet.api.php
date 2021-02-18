@@ -5,10 +5,10 @@
  * API documentation for Administration menu.
  */
 
-use Drupal\views\ResultRow;
-use Drupal\views\Plugin\views\row\RowPluginBase;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\leaflet_views\Plugin\views\style\LeafletMap;
+use Drupal\geofield\Plugin\Field\FieldType\GeofieldItem;
+use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\leaflet\Plugin\Field\FieldWidget\LeafletDefaultWidget;
 
 /**
  * Define map definitions to be used when rendering a map.
@@ -103,18 +103,40 @@ function hook_leaflet_map_info_alter(array &$map_info) {
 }
 
 /**
- * Alter Leaflet View Style Point / Marker definition.
+ * Alter the Leaflet Map Default Widget settings.
  *
- * @param array $point
- *   The Point / Marker definition.
- * @param \Drupal\views\ResultRow $result
- *   The view row result.
- * @param \Drupal\views\Plugin\views\row\RowPluginBase $rowPlugin
- *   The rowPlugin.
+ * Allow other modules to add/alter the map js settings.
+ *
+ * @param array $map_settings
+ *   The array of geofield map element settings.
+ * @param Drupal\leaflet\Plugin\Field\FieldWidget\LeafletDefaultWidget $leafletDefaultWidget
+ *   The Leaflet default Widget.
  * */
-function hook_leaflet_views_feature_alter(array &$point, ResultRow &$result, RowPluginBase $rowPlugin) {
-  // Make custom alterations to $point, eventually using others contexts
-  // definitions..
+function hook_leaflet_default_widget_alter(array &$map_settings, LeafletDefaultWidget $leafletDefaultWidget) {
+  // Make custom alterations to $map_settings, eventually using the $items
+  // context.
+}
+
+
+/**
+ * Adjust the array representing a leaflet formatter feature/marker.
+ *
+ * @param array $feature
+ *   The leaflet feature. Available keys are:
+ *   - type: Indicates the type of feature (usually one of these: point,
+ *     polygon, linestring, multipolygon, multipolyline).
+ *   - popup: This value is displayed in a popup after the user clicks on the
+ *     feature.
+ *   - Other possible keys include "lat", "lon", "points", "component",
+ *     depending on feature type.
+ * @param \Drupal\geofield\Plugin\Field\FieldType\GeofieldItem $item
+ *   The Geofield Item.
+ * @param \Drupal\Core\Entity\ContentEntityBase $entity
+ *   The Content Entity base of the formatter.
+ */
+function hook_leaflet_formatter_feature_alter(array $feature, GeofieldItem $item, ContentEntityBase $entity) {
+  // Make custom alterations to $map_settings, eventually using the $items
+  // context.
 }
 
 /**
@@ -132,17 +154,3 @@ function hook_leaflet_default_map_formatter_alter(array &$map_settings, FieldIte
   // context.
 }
 
-/**
- * Alter the Leaflet Map View Style settings.
- *
- * Allow other modules to add/alter the map js settings.
- *
- * @param array $map_settings
- *   The array of geofield map element settings.
- * @param \Drupal\leaflet_views\Plugin\views\style\LeafletMap $view_style
- *   The Leaflet Map View Style.
- * */
-function hook_leaflet_map_view_style_alter(array &$map_settings, LeafletMap &$view_style) {
-  // Make custom alterations to $map_settings, eventually using the $view_style
-  // context.
-}

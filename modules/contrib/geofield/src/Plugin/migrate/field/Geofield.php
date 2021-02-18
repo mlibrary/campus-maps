@@ -70,4 +70,16 @@ class Geofield extends FieldPluginBase {
     $this->defineValueProcessPipeline($migration, $field_name, $data);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function alterFieldMigration(MigrationInterface $migration) {
+    $settings = [
+      'geofield' => [
+        'plugin' => 'geofield_field_settings',
+      ],
+    ];
+    $migration->mergeProcessOfProperty('settings', $settings);
+  }
+
 }

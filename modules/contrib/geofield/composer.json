@@ -25,7 +25,7 @@
     "irc": "irc://irc.freenode.org/drupal-contribute",
     "source": "https://git.drupalcode.org/project/geofield"
   },
-  "license": "GPL-2.0+",
+  "license": "GPL-2.0-or-later",
   "minimum-stability": "dev",
   "require": {
     "phayes/geophp": "^1.2"

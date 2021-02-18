@@ -3,13 +3,12 @@
 namespace Drupal\leaflet;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\FieldConfigInterface;
 use Drupal\views\Plugin\views\ViewsPluginInterface;
 use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 
 /**
- * Class GeofieldMapFieldTrait.
+ * Class LeafletSettingsElementsTrait.
  *
  * Provide common functions for Leaflet Settings Elements.
  *
@@ -41,12 +40,6 @@ trait LeafletSettingsElementsTrait {
   ];
 
   /**
-   * The Link generator Service.
-   *
-   * @var \Drupal\Core\Utility\LinkGeneratorInterface $this->link
-   */
-
-  /**
    * Get the Default Settings.
    *
    * @return array
@@ -54,22 +47,22 @@ trait LeafletSettingsElementsTrait {
    */
   public static function getDefaultSettings() {
     return [
-      'multiple_map' => 0,
+      'multiple_map' => FALSE,
       'leaflet_map' => 'OSM Mapnik',
       'height' => 400,
       'height_unit' => 'px',
-      'hide_empty_map' => 0,
-      'disable_wheel' => 0,
-      'fullscreen_control' => 1,
-      'gesture_handling' => 0,
+      'hide_empty_map' => FALSE,
+      'disable_wheel' => FALSE,
+      'fullscreen_control' => TRUE,
+      'gesture_handling' => FALSE,
       'reset_map' => [
-        'control' => 0,
+        'control' => FALSE,
         'position' => 'topright',
       ],
       'popup' => FALSE,
       'popup_content' => '',
       'map_position' => [
-        'force' => 0,
+        'force' => FALSE,
         'center' => [
           'lat' => 0,
           'lon' => 0,
@@ -79,12 +72,14 @@ trait LeafletSettingsElementsTrait {
         'maxZoom' => 18,
         'zoomFiner' => 0,
       ],
+      'weight' => NULL,
       'icon' => [
         'iconType' => 'marker',
         'iconUrl' => '',
+        'shadowUrl' => '',
+        'className' => '',
         'iconSize' => ['x' => NULL, 'y' => NULL],
         'iconAnchor' => ['x' => NULL, 'y' => NULL],
-        'shadowUrl' => '',
         'shadowSize' => ['x' => NULL, 'y' => NULL],
         'shadowAnchor' => ['x' => NULL, 'y' => NULL],
         'popupAnchor' => ['x' => NULL, 'y' => NULL],
@@ -93,12 +88,12 @@ trait LeafletSettingsElementsTrait {
         'circle_marker_options' => '{"radius": 100, "color": "red", "fillColor": "#f03", "fillOpacity": 0.5}',
       ],
       'leaflet_markercluster' => [
-        'control' => 0,
+        'control' => FALSE,
         'options' => '{"spiderfyOnMaxZoom":true,"showCoverageOnHover":true,"removeOutsideVisibleBounds": false}',
       ],
-      'path' => '{"color":"#3388ff","opacity":"1.0","stroke":true,"weight":3,"fill":"depends","fillColor":"*","fillOpacity":"0.2"}',
+      'path' => '{"color":"#3388ff","opacity":"1.0","stroke":true,"weight":3,"fill":"depends","fillColor":"*","fillOpacity":"0.2","radius":"6"}',
       'geocoder' => [
-        'control' => 0,
+        'control' => FALSE,
         'settings' => [
           'position' => 'topright',
           'input_size' => 25,
@@ -106,7 +101,7 @@ trait LeafletSettingsElementsTrait {
           'min_terms' => 4,
           'delay' => 800,
           'zoom' => 16,
-          'popup' => 0,
+          'popup' => FALSE,
           'options' => '',
         ],
       ],
@@ -232,11 +227,11 @@ trait LeafletSettingsElementsTrait {
         '#value' => $this->t('These settings will be applied in case of single Marker Map (otherwise the Zoom will be set to Fit Elements bounds).'),
       ],
       '#states' => [
-        'invisible' => [
+        'invisible' => isset($force_checkbox_selector_widget) ? [
           [$force_checkbox_selector => ['checked' => TRUE]],
           'or',
           [$force_checkbox_selector_widget => ['checked' => TRUE]],
-        ],
+        ] : [$force_checkbox_selector => ['checked' => TRUE]],
       ],
     ];
 
@@ -314,15 +309,35 @@ trait LeafletSettingsElementsTrait {
       '#description' => $this->t('Value that might/will be added to default Fit Elements Bounds Zoom. (-5 / +5)'),
       '#default_value' => $map_position_options['zoomFiner'] ?? $this->getDefaultSettings()['map_position']['zoomFiner'],
       '#states' => [
-        'invisible' => [
+        'invisible' => isset($force_checkbox_selector_widget) ? [
           [$force_checkbox_selector => ['checked' => TRUE]],
           'or',
           [$force_checkbox_selector_widget => ['checked' => TRUE]],
-        ],
+        ] : [$force_checkbox_selector => ['checked' => TRUE]],
       ],
     ];
 
     return $element;
+  }
+
+  /**
+   * Generate the weight Form Element.
+   *
+   * @param string $weight
+   *   The weight string definition.
+   *
+   * @return array
+   *   The Leaflet weight Form Element.
+   */
+  protected function generateWeightElement($weight) {
+    $default_settings = $this::getDefaultSettings();
+    return [
+      '#title' => $this->t('weight / zIndex Offset'),
+      '#type' => 'textfield',
+      '#size' => 30,
+      '#description' => $this->t('This option supports <b>Replacement Patterns</b> and should end up into an Integer (positive or negative value).<br>This will apply to each Leaflet Feature/Marker result, and might be used to dynamically set its position/visibility on top (or below) of each others.'),
+      '#default_value' => isset($weight) ? $weight : $default_settings['weight'],
+    ];
   }
 
   /**
@@ -395,6 +410,18 @@ trait LeafletSettingsElementsTrait {
       '#type' => 'textarea',
       '#rows' => 3,
       '#default_value' => isset($icon_options['shadowUrl']) ? $icon_options['shadowUrl'] : $default_settings['icon']['shadowUrl'],
+      '#states' => [
+        'visible' => [
+          $icon_type => ['value' => 'marker'],
+        ],
+      ],
+    ];
+
+    $element['className'] = [
+      '#title' => $this->t('Icon Class Name'),
+      '#description' => $this->t('A custom class name to assign to both icon and shadow images.<br>Supports <b>Replacement Patterns</b>'),
+      '#type' => 'textfield',
+      '#default_value' => isset($icon_options['className']) ? $icon_options['className'] : $default_settings['icon']['className'],
       '#states' => [
         'visible' => [
           $icon_type => ['value' => 'marker'],
@@ -510,18 +537,20 @@ trait LeafletSettingsElementsTrait {
     $element['iconSize'] = [
       '#title' => $this->t('Icon Size'),
       '#type' => 'fieldset',
-      '#description' => $this->t("Size of the icon image in pixels (if empty the natural icon image size will be used).<br>Note: Both the values shouldn't be null to be valid."),
+      '#description' => $this->t("Size of the icon image in pixels (if empty the natural icon image size will be used).<br>Both support <b>Replacement Patterns</b> and should end up into an Integer (positive value)"),
     ];
 
     $element['iconSize']['x'] = [
       '#title' => $this->t('Width'),
-      '#type' => 'number',
+      '#type' => 'textfield',
+      '#size' => 30,
       '#default_value' => isset($icon_options['iconSize']['x']) ? $icon_options['iconSize']['x'] : NULL,
     ];
 
     $element['iconSize']['y'] = [
       '#title' => $this->t('Height'),
-      '#type' => 'number',
+      '#type' => 'textfield',
+      '#size' => 30,
       '#default_value' => isset($icon_options['iconSize']['y']) ? $icon_options['iconSize']['y'] : NULL,
     ];
 
@@ -535,30 +564,36 @@ trait LeafletSettingsElementsTrait {
     $element['iconAnchor']['x'] = [
       '#title' => $this->t('X'),
       '#type' => 'number',
+      '#min' => -1000,
+      '#max' => 1000,
       '#default_value' => isset($icon_options['iconAnchor']) ? $icon_options['iconAnchor']['x'] : NULL,
     ];
 
     $element['iconAnchor']['y'] = [
       '#title' => $this->t('Y'),
       '#type' => 'number',
+      '#min' => -1000,
+      '#max' => 1000,
       '#default_value' => isset($icon_options['iconAnchor']) ? $icon_options['iconAnchor']['y'] : NULL,
     ];
 
     $element['shadowSize'] = [
       '#title' => $this->t('Shadow Size'),
       '#type' => 'fieldset',
-      '#description' => $this->t("Size of the shadow image in pixels (if empty the natural shadow image size will be used). <br>Note: Both the values shouldn't be null to be valid."),
+      '#description' => $this->t("Size of the shadow image in pixels (if empty the natural shadow image size will be used). <br>Both support <b>Replacement Patterns</b> and should end up into an Integer (positive value)"),
     ];
 
     $element['shadowSize']['x'] = [
       '#title' => $this->t('Width'),
-      '#type' => 'number',
+      '#type' => 'textfield',
+      '#size' => 30,
       '#default_value' => isset($icon_options['shadowSize']['x']) ? $icon_options['shadowSize']['x'] : NULL,
     ];
 
     $element['shadowSize']['y'] = [
       '#title' => $this->t('Height'),
-      '#type' => 'number',
+      '#type' => 'textfield',
+      '#size' => 30,
       '#default_value' => isset($icon_options['shadowSize']['y']) ? $icon_options['shadowSize']['y'] : NULL,
     ];
 
@@ -571,12 +606,16 @@ trait LeafletSettingsElementsTrait {
     $element['shadowAnchor']['x'] = [
       '#title' => $this->t('X'),
       '#type' => 'number',
+      '#min' => -1000,
+      '#max' => 1000,
       '#default_value' => isset($icon_options['shadowAnchor']) ? $icon_options['shadowAnchor']['x'] : NULL,
     ];
 
     $element['shadowAnchor']['y'] = [
       '#title' => $this->t('Y'),
       '#type' => 'number',
+      '#min' => -1000,
+      '#max' => 1000,
       '#default_value' => isset($icon_options['shadowAnchor']) ? $icon_options['shadowAnchor']['y'] : NULL,
     ];
 
@@ -590,16 +629,51 @@ trait LeafletSettingsElementsTrait {
     $element['popupAnchor']['x'] = [
       '#title' => $this->t('X'),
       '#type' => 'number',
+      '#min' => -1000,
+      '#max' => 1000,
       '#default_value' => isset($icon_options['popupAnchor']) ? $icon_options['popupAnchor']['x'] : NULL,
     ];
 
     $element['popupAnchor']['y'] = [
       '#title' => $this->t('Y'),
       '#type' => 'number',
+      '#min' => -1000,
+      '#max' => 1000,
       '#default_value' => isset($icon_options['popupAnchor']) ? $icon_options['popupAnchor']['y'] : NULL,
     ];
 
     return $element;
+  }
+
+  /**
+   * Set Replacement Patterns Element.
+   *
+   * @param array $element
+   *   The Form element to alter.
+   */
+  protected function setReplacementPatternsElement(array &$element) {
+    if ($this->moduleHandler->moduleExists('token')) {
+
+      $element['replacement_patterns'] = [
+        '#type' => 'details',
+        '#title' => 'Replacement patterns',
+        '#description' => $this->t('The following replacement tokens are available for the "Popup Content and the Icon Options":'),
+      ];
+
+      $element['replacement_patterns']['token_help'] = [
+        '#theme' => 'token_tree_link',
+        '#token_types' => [$this->fieldDefinition->getTargetEntityTypeId()],
+      ];
+    }
+    else {
+      $element['replacement_patterns']['#description'] = $this->t('The @token_link is needed to browse and use @entity_type entity token replacements.', [
+        '@token_link' => $this->link->generate(t('Token module'), Url::fromUri('https://www.drupal.org/project/token', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+        '@entity_type' => $this->fieldDefinition->getTargetEntityTypeId(),
+      ]);
+    }
   }
 
   /**
@@ -612,7 +686,13 @@ trait LeafletSettingsElementsTrait {
    */
   protected function setMapPathOptionsElement(array &$element, array $settings) {
 
-    $token_replacement_disclaimer = $this->t('<b>Note: </b> Using <strong>Replacement Patterns</strong> it is possible to dynamically define the Path geometries options, based on the entity properties or fields values.');
+    $token_replacement_disclaimer = $this->moduleHandler->moduleExists('token') ? $this->t('<b>Note: </b> Using <strong>Replacement Patterns</strong> it is possible to dynamically define the Path geometries options, based on the entity properties or fields values.')
+      : $this->t('<b>Note: </b> Using the @token_module_link it is possible to use <strong>Replacement Patterns</strong> and dynamically define the Path geometries options, based on the entity properties or fields values.', [
+        '@token_module_link' => $this->link->generate($this->t('Toke module'), Url::fromUri('https://www.drupal.org/project/token', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]);
     $path_description = $this->t('Set here options that will be applied to the rendering of Map Path Geometries (Lines & Polylines, Polygons, Multipolygons, etc.).<br>Refer to the @polygons_documentation.<br>Note: If empty the default Leaflet path style, or the one choosen and defined in leaflet.api/hook_leaflet_map_info, will be used.<br>@token_replacement_disclaimer', [
       '@polygons_documentation' => $this->link->generate($this->t('Leaflet Path Documentation'), Url::fromUri('https://leafletjs.com/reference-1.0.3.html#path', [
         'absolute' => TRUE,
@@ -648,8 +728,8 @@ trait LeafletSettingsElementsTrait {
     $map['settings']['map_position_force'] = isset($options['map_position']['force']) ? $options['map_position']['force'] : $default_settings['map_position']['force'];
     $map['settings']['zoom'] = isset($options['map_position']['zoom']) ? (int) $options['map_position']['zoom'] : $default_settings['map_position']['zoom'];
     $map['settings']['zoomFiner'] = isset($options['map_position']['zoomFiner']) ? (int) $options['map_position']['zoomFiner'] : $default_settings['map_position']['zoomFiner'];
-    $map['settings']['minZoom'] = isset($options['map_position']['minZoom']) ? (int) $options['map_position']['minZoom'] : $default_settings['settings']['minZoom'];
-    $map['settings']['maxZoom'] = isset($options['map_position']['maxZoom']) ? (int) $options['map_position']['maxZoom'] : $default_settings['settings']['maxZoom'];
+    $map['settings']['minZoom'] = isset($options['map_position']['minZoom']) ? (int) $options['map_position']['minZoom'] : $default_settings['map_position']['minZoom'];
+    $map['settings']['maxZoom'] = isset($options['map_position']['maxZoom']) ? (int) $options['map_position']['maxZoom'] : $default_settings['map_position']['maxZoom'];
     $map['settings']['center'] = (isset($options['map_position']['center']['lat']) && isset($options['map_position']['center']['lon'])) ? [
       'lat' => floatval($options['map_position']['center']['lat']),
       'lon' => floatval($options['map_position']['center']['lon']),

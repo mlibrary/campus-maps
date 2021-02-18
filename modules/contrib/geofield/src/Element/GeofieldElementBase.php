@@ -39,8 +39,7 @@ abstract class GeofieldElementBase extends FormElement {
     foreach (static::$components as $name => $component) {
       $element[$name] = [
         '#type' => 'textfield',
-        // The t func is needed to make component translatable throw interface.
-        '#title' => $component['title'],
+        '#title' => t('@title', ['@title' => $component['title']]),
         '#required' => (!empty($element['#required'])) ? $element['#required'] : FALSE,
         '#default_value' => (isset($element['#default_value'][$name])) ? $element['#default_value'][$name] : '',
         '#attributes' => [
@@ -72,7 +71,7 @@ abstract class GeofieldElementBase extends FormElement {
       if (!empty($element[$key]['#value']) && !is_numeric($element[$key]['#value'])) {
         $form_state->setError($element[$key], t('@title: @component_title is not valid.', ['@title' => $error_label, '@component_title' => $component['title']]));
       }
-      elseif (abs($element[$key]['#value']) > $component['range']) {
+      elseif (is_numeric($element[$key]['#value']) && abs($element[$key]['#value']) > $component['range']) {
         $form_state->setError($element[$key], t('@title: @component_title is out of bounds (@bounds).', [
           '@title' => $error_label,
           '@component_title' => $component['title'],
@@ -81,4 +80,5 @@ abstract class GeofieldElementBase extends FormElement {
       }
     }
   }
+
 }

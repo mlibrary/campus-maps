@@ -7,6 +7,12 @@
 
 use Drupal\Core\Database\Database;
 
+// Ludwig integration for 'classmap' type phayes/geophp library.
+if (\Drupal::hasService('ludwig.require_once')) {
+  $ludwig_require_once = \Drupal::service('ludwig.require_once');
+  $ludwig_require_once->requireOnce('phayes/geophp', 'geoPHP.inc', dirname(__FILE__));
+}
+
 /**
  * Point feature constant.
  *

@@ -33,8 +33,11 @@
 <p><i>For Drupal 7 version all you need to do is install the <a href="/project/geophp" rel="nofollow">geoPHP</a> module, which is required by geofield.</i></p>
 <hr><h3><b>Drupal 8 and GeoPHP library dependency</b></h3>
 <p>Since <strong>8.x-1.0-alpha2</strong> version, this module is not depending on GeoPHP module anymore.<br><b>The Drupal 8 version of Geofield module needs to be installed <a href="https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies" target="_blank" rel="nofollow">using Composer to manage Drupal site dependencies</a></b>, it means simply running the following command from your project root (where the main composer.json file is sited):</p>
-<p><b>$ composer require 'drupal/geofield_map'</b></p>
+<p><b>$ composer require 'drupal/geofield'</b></p>
 <p>This process will also download the required <a href="https://github.com/phayes/geoPHP" title="GeoPHP library" target="_blank" rel="nofollow">GeoPHP library</a> dependency, that will be sited in the /vendor folder (as Drupal 8 default settings).</p>
+<p><u>Note:</u> Since version 8.x-1.20 Geofield also supports the <a href="https://www.drupal.org/project/ludwig" target="blank">Ludwig module/project</a>,
+  that offers an alternative to users who are not friendly with the command line
+  tools or want to avoid Composer usage for other reasons.
 <hr><p>Once installed you can enable the module in the usual way, both from the extend/modules backend interfaces or via drush with the following command:</p>
 <p><b>$ drush en geofield</b></p>
 <p>Once enabled the module it will be possible to add a "Geofield" field type to<br>

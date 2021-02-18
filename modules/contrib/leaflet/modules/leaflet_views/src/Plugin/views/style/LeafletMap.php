@@ -339,9 +339,14 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
         $field_storage_definition = $field_storage_definitions[$handler->definition['field_name']];
 
         $type = $field_storage_definition->getType();
-        $definition = $this->fieldTypeManager->getDefinition($type);
-        if (is_a($definition['class'], '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem', TRUE)) {
-          $fields_geo_data[$field_id] = $label;
+        try {
+          $definition = $this->fieldTypeManager->getDefinition($type);
+          if (is_a($definition['class'], '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem', TRUE)) {
+            $fields_geo_data[$field_id] = $label;
+          }
+        }
+        catch (\Exception $e) {
+          watchdog_exception("Leaflet Map - Get Available data sources", $e);
         }
       }
     }
@@ -591,9 +596,12 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
     $map_position_options = $this->options['map_position'];
     $form['map_position'] = $this->generateMapPositionElement($map_position_options);
 
+    // Generate the Leaflet Map weight/zIndex Form Element.
+    $form['weight'] = $this->generateWeightElement($this->options['weight']);
+
     // Generate Icon form element.
     $icon_options = $this->options['icon'];
-    $form['icon'] = $this->generateIconFormElement($icon_options, $form);
+    $form['icon'] = $this->generateIconFormElement($icon_options);
 
     // Set Map Marker Cluster Element.
     $this->setMapMarkerclusterElement($form, $this->options);
@@ -615,13 +623,6 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
     $style_options = $form_state->getValue('style_options');
     if (!empty($style_options['height']) && (!is_numeric($style_options['height']) || $style_options['height'] <= 0)) {
       $form_state->setError($form['height'], $this->t('Map height needs to be a positive number.'));
-    }
-    $icon_options = isset($style_options['icon']) ? $style_options['icon'] : [];
-    if (!empty($icon_options['iconSize']['x']) && (!is_numeric($icon_options['iconSize']['x']) || $icon_options['iconSize']['x'] <= 0)) {
-      $form_state->setError($form['icon']['iconSize']['x'], $this->t('Icon width needs to be a positive number.'));
-    }
-    if (!empty($icon_options['iconSize']['y']) && (!is_numeric($icon_options['iconSize']['y']) || $icon_options['iconSize']['y'] <= 0)) {
-      $form_state->setError($form['icon']['iconSize']['y'], $this->t('Icon height needs to be a positive number.'));
     }
   }
 
@@ -669,9 +670,6 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
    * Renders the View.
    */
   public function render() {
-    // Performs some preprocess on the leaflet map settings.
-    $this->leafletService->preProcessMapSettings($this->options);
-
     $data = [];
 
     // Collect bubbleable metadata when doing early rendering.
@@ -829,8 +827,14 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
             // Relates the feature with additional properties.
             foreach ($features as &$feature) {
 
+              // Attach pop-ups if we have a description field.
               // Add its entity id, so that it might be referenced from outside.
               $feature['entity_id'] = $entity->id();
+
+              // Generate the weight feature property
+              // (falls back to natural result ordering).
+              $feature['weight'] = !empty($this->options['weight']) ? intval(str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['weight'], $tokens))) : $id;
+
               // Attach pop-ups if we have a description field.
               if (isset($description)) {
                 $feature['popup'] = $description;
@@ -845,7 +849,24 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
               // Eventually set the custom Marker icon (DivIcon, Icon Url or
               // Circle Marker).
               if ($feature['type'] === 'point' && isset($this->options['icon'])) {
+                // Set Feature Icon properties.
                 $feature['icon'] = $this->options['icon'];
+
+                // Transforms Icon Options that support Replacement
+                // Patterns/Tokens.
+                if (!empty($this->options["icon"]["iconSize"]["x"])) {
+                  $feature['icon']["iconSize"]["x"] = $this->viewsTokenReplace($this->options["icon"]["iconSize"]["x"], $tokens);
+                }
+                if (!empty($this->options["icon"]["iconSize"]["y"])) {
+                  $feature['icon']["iconSize"]["y"] = $this->viewsTokenReplace($this->options["icon"]["iconSize"]["y"], $tokens);
+                }
+                if (!empty($this->options["icon"]["shadowSize"]["x"])) {
+                  $feature['icon']["shadowSize"]["x"] = $this->viewsTokenReplace($this->options["icon"]["shadowSize"]["x"], $tokens);
+                }
+                if (!empty($this->options["icon"]["shadowSize"]["y"])) {
+                  $feature['icon']["shadowSize"]["y"] = $this->viewsTokenReplace($this->options["icon"]["shadowSize"]["y"], $tokens);
+                }
+
                 switch ($icon_type) {
                   case 'html':
                     $feature['icon']['html'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['html'], $tokens));
@@ -859,10 +880,23 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
                   default:
                     if (!empty($this->options['icon']['iconUrl'])) {
                       $feature['icon']['iconUrl'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['iconUrl'], $tokens));
-                      if (!empty($this->options['icon']['shadowUrl'])) {
-                        $feature['icon']['shadowUrl'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['shadowUrl'], $tokens));
+                      // Generate correct Absolute iconUrl & shadowUrl,
+                      // if not external.
+                      if (!empty($feature['icon']['iconUrl'])) {
+                        $feature['icon']['iconUrl'] = $this->leafletService->pathToAbsolute($feature['icon']['iconUrl']);
                       }
                     }
+                    if (!empty($this->options['icon']['shadowUrl'])) {
+                      $feature['icon']['shadowUrl'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['shadowUrl'], $tokens));
+                      if (!empty($feature['icon']['shadowUrl'])) {
+                        $feature['icon']['shadowUrl'] = $this->leafletService->pathToAbsolute($feature['icon']['shadowUrl']);
+                      }
+                    }
+
+                    // Set the Feature IconSize and ShadowSize to the IconUrl or
+                    // ShadowUrl Image sizes (if empty or invalid).
+                    $this->leafletService->setFeatureIconSizesIfEmptyOrInvalid($feature);
+
                     break;
                 }
               }
@@ -873,8 +907,11 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
                 $feature['path'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['path'], $tokens));
               }
 
+              // Associate dynamic className property (token based) to icon.
+              $feature['icon']['className'] = !empty($this->options['icon']['className']) ? str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['icon']['className'], $tokens)) : '';
+
               // Allow modules to adjust the marker.
-              \Drupal::moduleHandler()->alter('leaflet_views_feature', $feature, $result, $this->view->rowPlugin);
+              $this->moduleHandler->alter('leaflet_views_feature', $feature, $result, $this->view->rowPlugin);
             }
 
             // Add new points to the whole basket.
@@ -889,6 +926,9 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
     if (empty($data) && !empty($this->options['hide_empty_map'])) {
       return [];
     }
+
+    // Order the data features based on the 'weight' element.
+    uasort($data, ['Drupal\Component\Utility\SortArray', 'sortByWeightElement']);
 
     $js_settings = [
       'map' => $map,

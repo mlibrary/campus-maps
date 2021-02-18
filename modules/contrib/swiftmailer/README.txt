@@ -51,6 +51,24 @@ Finally, you can test whether the Swift Mailer library sends e-mail messages
 correctly when the module has been configured and you are ready to put it into
 action.
 
+1.1 Configuration Overrides
+
+If you need to override configuration per environment, you can do so in the
+settings.php file with a mix of the following overrides:
+
+<?php
+$config['swiftmailer.transport']['transport'] = ''; // 'smtp', etc
+$config['swiftmailer.transport']['smtp_host'] = '';
+$config['swiftmailer.transport']['smtp_port'] = 123; // e.g. 465
+$config['swiftmailer.transport']['smtp_encryption'] = ''; // 'tls', 'ssl', '0' for no encryption.
+$config['swiftmailer.transport']['smtp_credential_provider'] = 'swiftmailer';
+$config['swiftmailer.transport']['smtp_credentials']['swiftmailer']['username'] = '';
+$config['swiftmailer.transport']['smtp_credentials']['swiftmailer']['password'] = '';
+?>
+
+See https://www.drupal.org/docs/8/api/configuration-api/configuration-override-system
+for more information about configuration overrides.
+
 2.0 Theming
 
 All e-mails sent by the SwiftMailer module can be themed. This is useful when
