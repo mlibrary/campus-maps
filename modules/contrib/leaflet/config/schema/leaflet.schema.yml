@@ -50,17 +50,17 @@ field.formatter.settings.leaflet_formatter_default:
       mapping:
         force:
           type: boolean
-          label: 'Force'
+          label: 'Force map center & zoom'
         center:
           type: mapping
           label: 'Center'
           mapping:
             lat:
               type: float
-              label: 'Lat'
+              label: 'Latitude'
             lon:
               type: float
-              label: 'Lon'
+              label: 'Longitude'
         zoom:
           type: integer
           label: 'Zoom'
@@ -161,19 +161,22 @@ field.formatter.settings.leaflet_formatter_default:
         options:
           type: text
           label: 'Options'
+        include_path:
+          type: boolean
+          label: 'Include Path'
     path:
       type: text
       label: 'Path'
     geocoder:
       type: mapping
-      label: 'Gecoder map control'
+      label: 'Geocoder map control'
       mapping:
         control:
           type: boolean
           label: 'Enable Geocoder map control'
         settings:
           type: mapping
-          label: 'Gecoder settings'
+          label: 'Geocoder settings'
           mapping:
             position:
               type: string

@@ -216,6 +216,11 @@ class GeofieldFormatterTest extends EntityKernelTestBase {
         'decimal',
         '<span class="latlon latlon-lat">42.2257</span>, <span class="latlon latlon-lon">-2.1021</span>',
       ],
+      'Polygon' => [
+        'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))',
+        'wkt',
+        'POINT (25.454545454545 26.969696969697)',
+      ],
     ];
   }
 

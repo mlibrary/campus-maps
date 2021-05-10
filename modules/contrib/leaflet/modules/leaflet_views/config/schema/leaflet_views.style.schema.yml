@@ -65,10 +65,10 @@ views.style.leaflet_map:
           label: 'Centre'
           mapping:
             lat:
-              type: integer
-              label: 'Lattitude'
+              type: float
+              label: 'Latitude'
             lon:
-              type: integer
+              type: float
               label: 'Longitude'
         zoom:
           type: integer
@@ -81,7 +81,7 @@ views.style.leaflet_map:
           label: 'Maximum zoom'
         zoomFiner:
           type: integer
-          label: 'Zoomfiner'
+          label: 'Zoom finer'
     weight:
       type: string
       label: 'Weight'

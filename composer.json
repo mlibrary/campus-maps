@@ -1,8 +1,8 @@
 {
-    "name": "drupal/drupal",
+    "name": "drupal/recommended-project",
     "description": "Drupal is an open source content management platform powering millions of websites and applications.",
     "type": "project",
-    "license": "GPL-2.0+",
+    "license": "GPL-2.0-or-later",
     "repositories": {
         "drupal": {
             "type": "composer",
@@ -16,7 +16,6 @@
     "require": {
         "composer/installers": "^1.2",
         "cweagans/composer-patches": "^1.6",
-        "drupal-composer/drupal-scaffold": "^2.2",
         "drupal/console": "^1.0.2",
         "drupal/core": "^8.7",
         "drush/drush": "^9.0.0",
@@ -119,30 +118,6 @@
           "drupal/draggableviews": {
             "https://www.drupal.org/node/2853973 (note: committed to dev but dev breaks many things)": "https://www.drupal.org/files/issues/draggableviews-relationship-2853973-2-D8.patch"
           }
-        },
-        "drupal-scaffold": {
-          "excludes": [
-            ".htaccess",
-            "robots.txt"
-          ],
-          "includes": [
-          ],
-          "initial": {
-          },
-          "omit-defaults": false
         }
-    },
-    "autoload": {
-        "psr-4": {
-            "Drupal\\Core\\Composer\\": "core/lib/Drupal/Core/Composer"
-        }
-    },
-    "scripts": {
-        "pre-autoload-dump": "Drupal\\Core\\Composer\\Composer::preAutoloadDump",
-        "post-autoload-dump": [
-          "Drupal\\Core\\Composer\\Composer::ensureHtaccess"
-        ],
-        "post-package-install": "Drupal\\Core\\Composer\\Composer::vendorTestCodeCleanup",
-        "post-package-update": "Drupal\\Core\\Composer\\Composer::vendorTestCodeCleanup"
     }
 }
