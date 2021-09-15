@@ -124,7 +124,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       (array_key_exists('icon_file_uri', $row) ? $this->markerIcon->getIconFileSelectElement($row['icon_file_uri'], $row['id']) : NULL),
       'image_style' => array_key_exists('icon_file_id', $row) ? [
         '#type' => 'select',
-        '#title' => t('Image style'),
+        '#title' => $this->t('Image style'),
         '#title_display' => 'invisible',
         '#options' => $row['image_style']['options'],
         '#default_value' => $row['image_style']['value'],

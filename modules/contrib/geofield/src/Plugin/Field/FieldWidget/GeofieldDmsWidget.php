@@ -53,7 +53,7 @@ class GeofieldDmsWidget extends GeofieldBaseWidget {
         is_numeric($value['value']['lat']['seconds'])
       ) {
         $components = DmsConverter::dmsToDecimal(new DmsPoint($value['value']['lon'], $value['value']['lat']));
-        $values[$delta]['value'] = $this->wktGenerator->wktGeneratePoint($components);
+        $values[$delta]['value'] = $this->geofieldBackendValue($this->wktGenerator->wktGeneratePoint($components));
       }
       // Otherwise delete the entry.
       else {

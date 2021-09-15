@@ -46,7 +46,9 @@
   margin: 4px 0 4px 0;
 }
 /* line 40, ../sass/geofield_google_map.scss */
-.gm-style .gm-style-iw p:first-child, .gm-style .gm-style-iw div:first-child, .gm-style .gm-style-iw .field:first-child {
+.gm-style .gm-style-iw p:first-child,
+.gm-style .gm-style-iw div:first-child,
+.gm-style .gm-style-iw .field:first-child {
   padding: 2px 0;
 }
 /* line 43, ../sass/geofield_google_map.scss */

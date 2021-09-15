@@ -26,6 +26,11 @@ class GeofieldWidgetTest extends FieldTestBase {
   public static $modules = ['geofield', 'entity_test'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'seven';
+
+  /**
    * A field storage with cardinality 1 to use in this test class.
    *
    * @var \Drupal\field\Entity\FieldStorageConfig

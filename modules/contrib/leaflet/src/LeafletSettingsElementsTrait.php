@@ -772,7 +772,7 @@ trait LeafletSettingsElementsTrait {
             'attributes' => ['target' => 'blank'],
           ])),
         ]),
-        '#default_value' => isset($settings['leaflet_markercluster']['control']) ? $settings['leaflet_markercluster']['control'] : $default_settings['leaflet_markercluster']['control'],
+        '#default_value' => $settings['leaflet_markercluster']['control'] ?? $default_settings['leaflet_markercluster']['control'],
         '#description' => $this->t("@leaflet_markercluster_submodule_warning", [
           '@leaflet_markercluster_submodule_warning' => $leaflet_markercluster_submodule_warning,
         ]),
@@ -797,7 +797,7 @@ trait LeafletSettingsElementsTrait {
         '#rows' => 4,
         '#title' => $this->t('Marker Cluster Additional Options'),
         '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Leaflet Markercluster Js Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
-        '#default_value' => isset($settings['leaflet_markercluster']['options']) ? $settings['leaflet_markercluster']['options'] : $default_settings['leaflet_markercluster']['options'],
+        '#default_value' => $settings['leaflet_markercluster']['options'] ?? $default_settings['leaflet_markercluster']['options'],
         '#placeholder' => $default_settings['leaflet_markercluster']['options'],
         '#element_validate' => [[get_class($this), 'jsonValidate']],
         '#states' => $leaflet_markercluster_visibility,
@@ -805,7 +805,7 @@ trait LeafletSettingsElementsTrait {
       $element['leaflet_markercluster']['include_path'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Enable Markeclustering of Paths elements'),
-        '#default_value' => $settings['leaflet_markercluster']['include_path'],
+        '#default_value' => $settings['leaflet_markercluster']['include_path'] ?? $default_settings['leaflet_markercluster']['include_path'],
         '#description' => $this->t("Check this options to extend Markerclustering to the Leaflet Map features extending the @path_class_link (Polygon, Polyline, Circle).", [
           '@path_class_link' => $this->link->generate($this->t('Leaflet Path class'), Url::fromUri('https://leafletjs.com/reference-1.7.1.html#path', [
             'absolute' => TRUE,

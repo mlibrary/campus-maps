@@ -57,7 +57,7 @@ class CustomIconThemer extends MapThemerBase {
       'icon_file' => $this->markerIcon->getIconFileManagedElement($fid[0]),
       'image_style' => [
         '#type' => 'select',
-        '#title' => t('Image style'),
+        '#title' => $this->t('Image style'),
         '#options' => $this->markerIcon->getImageStyleOptions(),
         '#default_value' => isset($default_element['image_style']) ? $default_element['image_style'] : 'geofield_map_default_icon_style',
         '#states' => [
@@ -79,7 +79,7 @@ class CustomIconThemer extends MapThemerBase {
       ],
       'label_alias' => [
         '#type' => 'textfield',
-        '#title' => t('Label alias'),
+        '#title' => $this->t('Label alias'),
         '#default_value' => isset($default_element['label_alias']) ? $default_element['label_alias'] : '',
         '#description' => $this->t('If not empty, this will be used in the legend.'),
         '#size' => 20,

@@ -18,7 +18,12 @@ class GeoPHPWrapper implements GeoPHPInterface {
    * {@inheritdoc}
    */
   public function load($data = NULL, $type = NULL) {
-    return call_user_func_array(['\geoPHP', 'load'], func_get_args());
+    try {
+      return call_user_func_array(['\geoPHP', 'load'], func_get_args());
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
   }
 
   /**

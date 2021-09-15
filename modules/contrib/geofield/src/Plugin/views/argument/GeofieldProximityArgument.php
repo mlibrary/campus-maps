@@ -132,13 +132,11 @@ class GeofieldProximityArgument extends Formula implements ContainerFactoryPlugi
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\geofield\WktGenerator $wkt_generator */
-    $wkt_generator = $container->get('geofield.wkt_generator');
     return new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $wkt_generator,
+      $container->get('geofield.wkt_generator'),
       $container->get('plugin.manager.geofield_proximity_source')
     );
   }

@@ -2,6 +2,7 @@
 
 namespace Drupal\geofield_map\Plugin\Field\FieldWidget;
 
+use Drupal\geofield\Plugin\GeofieldBackendManager;
 use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\geofield_map\GeofieldMapFormElementsValidationTrait;
 use Drupal\Core\Url;
@@ -21,6 +22,7 @@ use Drupal\geofield\WktGeneratorInterface;
 use Drupal\geofield_map\LeafletTileLayerPluginManager;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\geofield_map\Services\GeocoderService;
 
 /**
  * Plugin implementation of the 'geofield_map' widget.
@@ -74,11 +76,25 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
   protected $renderer;
 
   /**
+   * The Current User.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * The module handler to invoke the alter hook.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected $moduleHandler;
+
+  /**
+   * The Geofield Map Geocoder Service.
+   *
+   * @var \Drupal\geofield_map\Services\GeocoderService
+   */
+  protected $geofieldGmapGeocoder;
 
   /**
    * The EntityField Manager service.
@@ -93,13 +109,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    * @var \Drupal\geofield_map\LeafletTileLayerPluginManager
    */
   protected $leafletTileManager;
-
-  /**
-   * The Current User.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $currentUser;
 
   /**
    * Lat Lon widget components.
@@ -142,6 +151,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    *   The geoPhpWrapper.
    * @param \Drupal\geofield\WktGeneratorInterface|null $wkt_generator
    *   The WKT format Generator service.
+   * @param \Drupal\geofield\Plugin\GeofieldBackendManager $geofield_backend_manager
+   *   The geofieldBackendManager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
@@ -158,6 +169,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    *   The Current User.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\geofield_map\Services\GeocoderService $geofield_map_geocoder
+   *   The Geofield Map Geocoder Service.
    */
   public function __construct(
     $plugin_id,
@@ -167,6 +180,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     array $third_party_settings,
     GeoPHPInterface $geophp_wrapper,
     WktGeneratorInterface $wkt_generator,
+    GeofieldBackendManager $geofield_backend_manager,
     ConfigFactoryInterface $config_factory,
     TranslationInterface $string_translation,
     RendererInterface $renderer,
@@ -174,9 +188,19 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     LinkGeneratorInterface $link_generator,
     LeafletTileLayerPluginManager $leaflet_tile_manager,
     AccountInterface $current_user,
-    ModuleHandlerInterface $module_handler
+    ModuleHandlerInterface $module_handler,
+    GeocoderService $geofield_map_geocoder
   ) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings, $geophp_wrapper, $wkt_generator);
+    parent::__construct(
+      $plugin_id,
+      $plugin_definition,
+      $field_definition,
+      $settings,
+      $third_party_settings,
+      $geophp_wrapper,
+      $wkt_generator,
+      $geofield_backend_manager
+    );
     $this->config = $config_factory;
     $this->renderer = $renderer;
     $this->entityFieldManager = $entity_field_manager;
@@ -186,6 +210,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $this->leafletTileLayers = $this->leafletTileManager->getLeafletTileLayers();
     $this->currentUser = $current_user;
     $this->moduleHandler = $module_handler;
+    $this->geofieldGmapGeocoder = $geofield_map_geocoder;
   }
 
   /**
@@ -200,6 +225,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       $configuration['third_party_settings'],
       $container->get('geofield.geophp'),
       $container->get('geofield.wkt_generator'),
+      $container->get('plugin.manager.geofield_backend'),
       $container->get('config.factory'),
       $container->get('string_translation'),
       $container->get('renderer'),
@@ -207,7 +233,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       $container->get('link_generator'),
       $container->get('plugin.manager.leaflet_tile_layer_plugin'),
       $container->get('current_user'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('geofield_map.geocoder')
     );
   }
 
@@ -703,16 +730,13 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         $latlon_value[$component] = isset($items[$delta]->{$component}) ? floatval($items[$delta]->{$component}) : $this->getSetting('default_value')[$component];
       }
 
-      /* @var \Drupal\geofield_map\Services\GeocoderService $geofield_map_geocoder_service */
-      $geofield_map_geocoder_service = \Drupal::service('geofield_map.geocoder');
-
       $element += [
         '#type' => 'geofield_map',
         '#gmap_api_key' => $gmap_api_key,
         '#gmap_places' => (int) $this->getSetting('map_google_places')['places_control'],
         '#gmap_places_options' => $this->getSetting('map_google_places')['places_additional_options'],
         '#gmap_geocoder' => (int) $this->getSetting('map_geocoder')['control'],
-        '#gmap_geocoder_settings' => $geofield_map_geocoder_service->getJsGeocoderSettings($this->getSetting('map_geocoder')['settings']),
+        '#gmap_geocoder_settings' => $this->geofieldGmapGeocoder->getJsGeocoderSettings($this->getSetting('map_geocoder')['settings']),
         '#default_value' => $latlon_value,
         '#geolocation' => $this->getSetting('html5_geolocation'),
         '#geofield_map_geolocation_override' => $this->getSetting('html5_geolocation'),
@@ -732,7 +756,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     }
     else {
       $element += [
-        '#prefix' => '<div class="geofield-map-warning">' . t('This Geofield Map cannot be applied because Polylines and Polygons are not supported at the moment') . '</div>',
+        '#prefix' => '<div class="geofield-map-warning">' . $this->t('This Geofield Map cannot be applied because Polylines and Polygons are not supported at the moment') . '</div>',
         '#type' => 'textarea',
         '#default_value' => $items[$delta]->value ?: NULL,
       ];
@@ -754,14 +778,15 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
           }
         }
         $components = $value['value'];
-        $values[$delta]['value'] = $this->wktGenerator->wktBuildPoint([
-          $components['lon'],
-          $components['lat'],
-        ]);
+        $values[$delta]['value'] = $this->geofieldBackendValue(
+          $this->wktGenerator->wktBuildPoint([
+            $components['lon'],
+            $components['lat'],
+          ])
+        );
       }
-      /* @var \Geometry $geom */
-      elseif ($geom = $this->geoPhpWrapper->load($value['value'])) {
-        $values[$delta]['value'] = $geom->out('wkt');
+      else {
+        $values[$delta]['value'] = $this->geofieldBackendValue($value['value']);
       }
     }
     return $values;

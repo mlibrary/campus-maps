@@ -14,16 +14,18 @@ class GeofieldLatLon extends GeofieldElementBase {
   /**
    * {@inheritdoc}
    */
-  public static $components = [
-    'lat' => [
-      'title' => 'Latitude',
-      'range' => 90,
-    ],
-    'lon' => [
-      'title' => 'Longitude',
-      'range' => 180,
-    ],
-  ];
+  public static function getComponents() {
+    return [
+      'lat' => [
+        'title' => t('Latitude'),
+        'range' => 90,
+      ],
+      'lon' => [
+        'title' => t('Longitude'),
+        'range' => 180,
+      ],
+    ];
+  }
 
   /**
    * {@inheritdoc}

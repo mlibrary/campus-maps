@@ -1,6 +1,6 @@
-(function($, Drupal, drupalSettings) {
+(function ($, Drupal, drupalSettings) {
 
-  Drupal.geoFieldMap.query_url_serialize = function(obj, prefix) {
+  Drupal.geoFieldMap.query_url_serialize = function (obj, prefix) {
     let str = [], p;
     for (p in obj) {
       if (obj.hasOwnProperty(p)) {
@@ -14,31 +14,31 @@
     return str.join("&");
   };
 
-  Drupal.geoFieldMap.geocoder_geocode = function(address, providers, options) {
+  Drupal.geoFieldMap.geocoder_geocode = function (address, providers, options) {
     let base_url = drupalSettings.path.baseUrl;
     let geocode_path = base_url + 'geocoder/api/geocode';
     options = Drupal.geoFieldMap.query_url_serialize(options);
     return $.ajax({
-      url: geocode_path + '?address=' +  encodeURIComponent(address) + '&geocoder=' + providers + '&' + options,
+      url: geocode_path + '?address=' + encodeURIComponent(address) + '&geocoder=' + providers + '&' + options,
       type:"GET",
       contentType:"application/json; charset=utf-8",
       dataType: "json",
     });
   };
 
-  Drupal.geoFieldMap.geocoder_reverse_geocode = function(latlng, providers, options) {
+  Drupal.geoFieldMap.geocoder_reverse_geocode = function (latlng, providers, options) {
     let base_url = drupalSettings.path.baseUrl;
     let reverse_geocode_path = base_url + 'geocoder/api/reverse_geocode';
     options = Drupal.geoFieldMap.query_url_serialize(options);
     return $.ajax({
-      url: reverse_geocode_path + '?latlng=' +  latlng + '&geocoder=' + providers + '&' + options,
+      url: reverse_geocode_path + '?latlng=' + latlng + '&geocoder=' + providers + '&' + options,
       type:"GET",
       contentType:"application/json; charset=utf-8",
       dataType: "json",
     });
   };
 
-  Drupal.geoFieldMap.map_geocoder_control = function(controlDiv, mapid) {
+  Drupal.geoFieldMap.map_geocoder_control = function (controlDiv, mapid) {
     let geocoder_settings = drupalSettings.geofield_google_map[mapid].map_settings.map_geocoder.settings;
     let controlUI = document.createElement('div');
     controlUI.id = mapid + '--geofield-map--geocoder-control--container';
@@ -61,7 +61,7 @@
     return controlSearch;
   };
 
-  Drupal.geoFieldMap.map_geocoder_control.autocomplete = function(mapid, geocoder_settings, selector, type, map_library) {
+  Drupal.geoFieldMap.map_geocoder_control.autocomplete = function (mapid, geocoder_settings, selector, type, map_library) {
     let providers = geocoder_settings.providers.toString();
     let options = geocoder_settings.options;
     selector.autocomplete({
@@ -84,8 +84,8 @@
             }));
           },
           // On Reject/Error.
-          function() {
-            response(function(){
+          function () {
+            response(function () {
               return false;
             });
           }));

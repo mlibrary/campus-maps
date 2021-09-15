@@ -3,7 +3,7 @@
  * Javascript for the Geofield Google Map formatter.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function ($, Drupal) {
 
   'use strict';
 
@@ -16,22 +16,25 @@
    *   Attaches the Geofield Google Map formatter behavior.
    */
   Drupal.behaviors.geofieldGoogleMap = {
-    attach: function (context, settings) {
+    attach: function (context, drupalSettings) {
 
       function loadMap(mapId) {
         // Check if the Map container really exists and hasn't been yet
         // initialized.
-        if (drupalSettings['geofield_google_map'][mapId] && !Drupal.geoFieldMap.map_data[mapId]) {
+        if (drupalSettings['geofield_google_map'][mapId] && !Drupal.geoFieldMapFormatter.map_data[mapId]) {
 
           let map_settings = drupalSettings['geofield_google_map'][mapId]['map_settings'];
           let data = drupalSettings['geofield_google_map'][mapId]['data'];
 
           // Set the map_data[mapid] settings.
-          Drupal.geoFieldMap.map_data[mapId] = map_settings;
+          Drupal.geoFieldMapFormatter.map_data[mapId] = map_settings;
 
-          // Load before the Gmap Library, if needed.
-          Drupal.geoFieldMap.loadGoogle(mapId, map_settings.gmap_api_key, map_settings.map_additional_libraries, function () {
-            Drupal.geoFieldMap.map_initialize(mapId, map_settings, data, context);
+          // Load before the GMap Library, if needed.
+          Drupal.geoFieldMapFormatter.loadGoogle(mapId, map_settings.gmap_api_key, map_settings.map_additional_libraries, function () {
+            if (!document.getElementById(mapId)) {
+              return;
+            }
+            Drupal.geoFieldMapFormatter.map_initialize(mapId, map_settings, data, context);
           });
         }
       }
@@ -67,7 +70,7 @@
     }
   };
 
-  Drupal.geoFieldMap = {
+  Drupal.geoFieldMapFormatter = {
 
     map_start: {
       center: {lat: 41.85, lng: -87.65},
@@ -109,7 +112,7 @@
       let self = this;
       // Wait until the window load event to try to use the maps library.
       $(document).ready(function (e) {
-        _.each(self.googleCallbacks, function(callback) {
+        _.each(self.googleCallbacks, function (callback) {
           callback.callback();
         });
         self.googleCallbacks = [];
@@ -381,13 +384,13 @@
           map.controls[google.maps.ControlPosition[mapResetControlPosition]].push(mapResetControlDiv);
         }
 
-        if (Drupal.geoFieldMap.map_geocoder_control && map_settings.map_geocoder.control) {
+        if (Drupal.geoFieldMapFormatter.map_geocoder_control && map_settings.map_geocoder.control) {
           let mapGeocoderControlPosition = map_settings.map_geocoder.settings.position || 'TOP_RIGHT';
           let mapGeocoderControlDiv = document.createElement('div');
-          Drupal.geoFieldMap.map_data[mapid].geocoder_control = new Drupal.geoFieldMap.map_geocoder_control(mapGeocoderControlDiv, mapid);
+          Drupal.geoFieldMapFormatter.map_data[mapid].geocoder_control = new Drupal.geoFieldMapFormatter.map_geocoder_control(mapGeocoderControlDiv, mapid);
           mapGeocoderControlDiv.index = 1;
-          map.controls[google.maps.ControlPosition[mapGeocoderControlPosition]].push(Drupal.geoFieldMap.map_data[mapid].geocoder_control);
-          Drupal.geoFieldMap.map_geocoder_control.autocomplete(mapid, map_settings.map_geocoder.settings, $(Drupal.geoFieldMap.map_data[mapid].geocoder_control), 'formatter', 'gmap');
+          map.controls[google.maps.ControlPosition[mapGeocoderControlPosition]].push(Drupal.geoFieldMapFormatter.map_data[mapid].geocoder_control);
+          Drupal.geoFieldMapFormatter.map_geocoder_control.autocomplete(mapid, map_settings.map_geocoder.settings, $(Drupal.geoFieldMapFormatter.map_data[mapid].geocoder_control), 'formatter', 'gmap');
         }
 
         // If defined a Custom Map Style, associate the styled map with
@@ -584,12 +587,12 @@
 
       // Setup the click event listeners: simply set the map to Chicago.
       controlUI.addEventListener('click', function () {
-        Drupal.geoFieldMap.map_data[mapid].map.setCenter(Drupal.geoFieldMap.map_data[mapid].map_start_center);
-        Drupal.geoFieldMap.map_data[mapid].map.setZoom(Drupal.geoFieldMap.map_data[mapid].map_start_zoom);
+        Drupal.geoFieldMapFormatter.map_data[mapid].map.setCenter(Drupal.geoFieldMapFormatter.map_data[mapid].map_start_center);
+        Drupal.geoFieldMapFormatter.map_data[mapid].map.setZoom(Drupal.geoFieldMapFormatter.map_data[mapid].map_start_zoom);
       });
       return controlUI;
     }
 
   };
 
-})(jQuery, Drupal, drupalSettings);
+})(jQuery, Drupal);

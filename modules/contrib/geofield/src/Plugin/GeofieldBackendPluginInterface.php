@@ -21,27 +21,19 @@ interface GeofieldBackendPluginInterface extends PluginInspectionInterface {
    * Provides the specific database schema for the specific backend.
    *
    * @return array
-   *   The schema.
+   *   The schema value array.
    */
   public function schema();
 
   /**
-   * Saves the Geo value into the specific backend.
+   * Saves the Geo value into the Specific Backend Format.
    *
-   * @param string $geometry
+   * @param mixed|null $geometry
    *   The Geometry to save.
+   *
+   * @return mixed|null
+   *   The specific backend format value.
    */
   public function save($geometry);
-
-  /**
-   * Loads the Geo value from the specific backend.
-   *
-   * @param string $geometry
-   *   The geometry to load.
-   *
-   * @return \Geometry|null
-   *   The geometry output.
-   */
-  public function load($geometry);
 
 }

@@ -3,7 +3,7 @@
 namespace Drupal\geofield_map\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\geofield\Element\GeofieldElementBase;
+use Drupal\geofield\Element\GeofieldLatLon;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\NestedArray;
 
@@ -12,38 +12,7 @@ use Drupal\Component\Utility\NestedArray;
  *
  * @FormElement("geofield_map")
  */
-class GeofieldMap extends GeofieldElementBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static $components = [
-    'lat' => [
-      'title' => 'Latitude',
-      'range' => 90,
-    ],
-    'lon' => [
-      'title' => 'Longitude',
-      'range' => 180,
-    ],
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getInfo() {
-    $class = get_class($this);
-    return [
-      '#input' => TRUE,
-      '#process' => [
-        [$class, 'latLonProcess'],
-      ],
-      '#element_validate' => [
-        [$class, 'elementValidate'],
-      ],
-      '#theme_wrappers' => ['fieldset'],
-    ];
-  }
+class GeofieldMap extends GeofieldLatLon {
 
   /**
    * Generates the Geofield Map form element.
@@ -68,20 +37,23 @@ class GeofieldMap extends GeofieldElementBase {
     /** @var \Drupal\geofield_map\Services\GoogleMapsService $google_maps_service */
     $google_maps_service = \Drupal::service('geofield_map.google_maps');
 
-    // Conditionally use the Leaflet library from the D8 Module, if enabled.
-    if ($element['#map_library'] == 'leaflet') {
-      $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
-    }
+    /** @var \Drupal\Core\Session\AccountProxyInterface $currentUser */
+    $currentUser = \Drupal::currentUser();
 
-    $mapid = 'map-' . $element['#id'];
+    // Initialize the basic geofield_map_element.
+    static::elementProcess($element, $form_state, $complete_form);
 
+    // Define the $mapid variable.
+    $mapid = $element['#mapid'] = 'map-' . $element['#id'];
+
+    // Map Element.
     $element['map'] = [
       '#type' => 'fieldset',
       '#weight' => 0,
     ];
 
+    // Geocode address textfield and functionality.
     $gmap_geocoder_enabled = \Drupal::moduleHandler()->moduleExists('geocoder') && $element['#gmap_geocoder'];
-
     $message_recipient = t("(Note: This message is only shown to the Geofield Map module administrator ('Configure Geofield Map' permission).");
     if (strlen($element['#gmap_api_key']) > 0 || $gmap_geocoder_enabled) {
       $element['map']['geocode'] = [
@@ -96,7 +68,7 @@ class GeofieldMap extends GeofieldElementBase {
         ],
       ];
 
-      if (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
+      if ($currentUser->hasPermission('configure geofield_map')) {
         $element['map']['geocode']['#description'] .= '<div class="geofield-map-message">' . t('Search Address Functionalities based on:') . ' ';
         if ($element['#gmap_geocoder']) {
           $element['map']['geocode']['#description'] .= t('Geocoder Module Providers.');
@@ -110,7 +82,7 @@ class GeofieldMap extends GeofieldElementBase {
         $element['map']['geocode']['#description'] .= '<br>' . $message_recipient . '</div>';
       }
     }
-    elseif (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
+    elseif ($currentUser->hasPermission('configure geofield_map')) {
       $geocoder_module_link = !\Drupal::moduleHandler()->moduleExists('geocoder') ? \Drupal::service('link_generator')->generate('Geocoder Module', Url::fromUri('https://www.drupal.org/project/geocoder', ['attributes' => ['target' => 'blank']])) : 'Geocoder Module';
       $element['map']['geocode_missing'] = [
         '#type' => 'html_tag',
@@ -166,6 +138,7 @@ class GeofieldMap extends GeofieldElementBase {
       $element['#attributes']['class'] = ['geofield-map-marker'];
     }
 
+    // Add the HTML5 User Geolocation button functionality.
     if (!empty($element['#geolocation']) && $element['#geolocation'] == TRUE) {
       $element['#attached']['library'][] = 'geofield_map/geolocation';
       $element['map']['actions']['geolocation'] = [
@@ -177,11 +150,11 @@ class GeofieldMap extends GeofieldElementBase {
       $element['#attributes']['class'] = ['auto-geocode'];
     }
 
-    static::elementProcess($element, $form_state, $complete_form);
-
+    // Define Lat and Lon sub-elements.
+    $element['lat']['#weight'] = 10;
+    $element['lon']['#weight'] = 20;
     $element['lat']['#attributes']['id'] = 'lat-' . $element['#id'];
     $element['lon']['#attributes']['id'] = 'lon-' . $element['#id'];
-
     if ($element['#hide_coordinates']) {
       $element['lat']['#attributes']['class'][] = 'visually-hidden';
       $element['lat']['#title_display'] = 'invisible';
@@ -189,15 +162,13 @@ class GeofieldMap extends GeofieldElementBase {
       $element['lon']['#title_display'] = 'invisible';
     }
 
+    // Geoaddress Field Functionality and Settings.
     $address_field_exists = FALSE;
     if (!empty($element['#geoaddress_field']['field'])) {
       $address_field_name = $element['#geoaddress_field']['field'];
       $parents = array_slice($element['#array_parents'], 0, -4);
       $parents[] = $address_field_name;
-
       $address_field = NestedArray::getValue($complete_form, $parents, $address_field_exists);
-
-      // Geoaddress Field Settings.
       if ($address_field_exists && ($address_field['widget']['#cardinality'] == '-1' || $address_field['widget']['#cardinality'] > $element['#delta'])) {
 
         if ($element['#delta'] > 0 && !isset($address_field['widget'][$element['#delta']])) {
@@ -218,15 +189,17 @@ class GeofieldMap extends GeofieldElementBase {
 
         // Re-Generate the geoaddress_field #id.
         $address_field['widget'][$element['#delta']]['value']['#id'] = $element['#geoaddress_field']['field'] . '-' . $element['#delta'];
-
         NestedArray::setValue($complete_form, $parents, $address_field);
       }
-
     }
 
     // Attach Geofield Map Libraries.
     $element['#attached']['library'][] = 'geofield_map/geofield_map_general';
     $element['#attached']['library'][] = 'geofield_map/geofield_map_widget';
+    // Conditionally use the Leaflet library from the D8 Module, if enabled.
+    if ($element['#map_library'] == 'leaflet') {
+      $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
+    }
 
     // The Entity Form.
     /* @var \Drupal\Core\Entity\ContentEntityFormInterface $entity_form */
@@ -235,7 +208,9 @@ class GeofieldMap extends GeofieldElementBase {
 
     $map_settings = [
       'entity_operation' => $entity_operation,
+      'widget' => TRUE,
       'id' => $element['#id'],
+      'mapid' => $mapid,
       'name' => $element['#name'],
       'lat' => floatval($element['lat']['#default_value']),
       'lng' => floatval($element['lon']['#default_value']),
@@ -247,8 +222,6 @@ class GeofieldMap extends GeofieldElementBase {
       'lngid' => $element['lon']['#attributes']['id'],
       'searchid' => isset($element['map']['geocode']) ? $element['map']['geocode']['#attributes']['id'] : NULL,
       'geoaddress_field_id' => $address_field_exists && isset($address_field['widget'][$element['#delta']]['value']['#id']) ? $address_field['widget'][$element['#delta']]['value']['#id'] : NULL,
-      'mapid' => $mapid,
-      'widget' => TRUE,
       'gmap_places' => $element['#gmap_places'],
       'gmap_places_options' => $element['#gmap_places_options'],
       'gmap_geocoder' => 0,
@@ -266,9 +239,6 @@ class GeofieldMap extends GeofieldElementBase {
       'gmap_api_localization' => $google_maps_service->getGmapApiLocalization($geofield_map_settings->get('gmap_api_localization')),
       'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
       'geocoder' => !empty($geofield_map_settings->get('geocoder')) ? $geofield_map_settings->get('geocoder') : [],
-      'geocode_cache' => [
-        'clientside' => !empty($geofield_map_settings->get('geocoder.caching.clientside')) ? $geofield_map_settings->get('geocoder.caching.clientside') : 'session_storage',
-      ],
     ];
 
     // Add the Geofield Map Geocoder settings and library if Geocoder Search is
@@ -286,11 +256,7 @@ class GeofieldMap extends GeofieldElementBase {
     \Drupal::moduleHandler()->alter('geofield_map_latlon_element', $map_settings, $complete_form, $form_state->getValues());
 
     // Geofield Map Element specific mapid settings.
-    $settings[$mapid] = $map_settings;
-
-    $element['#attached']['drupalSettings'] = [
-      'geofield_map' => $settings,
-    ];
+    $element['#attached']['drupalSettings']['geofield_map'][$mapid] = $map_settings;
 
     return $element;
   }

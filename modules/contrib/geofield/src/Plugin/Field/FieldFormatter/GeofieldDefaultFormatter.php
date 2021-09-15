@@ -148,7 +148,6 @@ class GeofieldDefaultFormatter extends FormatterBase implements ContainerFactory
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $elements = [];
-
     foreach ($items as $delta => $item) {
       $geom = $this->geoPhpWrapper->load($item->value);
       $output = $geom ? $geom->out($this->getOutputFormat()) : '';
@@ -157,7 +156,6 @@ class GeofieldDefaultFormatter extends FormatterBase implements ContainerFactory
       }
       $elements[$delta] = ['#markup' => $output];
     }
-
     return $elements;
   }
 

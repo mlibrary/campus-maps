@@ -28,7 +28,13 @@
           // - leaflet js is the chosen map library;
           // - geocoder integration is enabled;
           if (options.map_library === 'leaflet' && options.gmap_geocoder) {
-            Drupal.geoFieldMap.map_initialize(options, context);
+            // Check and wai for the Leaflet module to be loaded.
+            let checkLeafletExist = setInterval(function() {
+               if (window.hasOwnProperty('L')) {
+                  Drupal.geoFieldMap.map_initialize(options, context);
+                  clearInterval(checkLeafletExist);
+               }
+            }, 100);
           }
           else {
             // Load before the Gmap Library, if needed, then initialize the Map.
@@ -81,7 +87,7 @@
       let self = this;
       // Wait until the window load event to try to use the maps library.
       $(document).ready(function (e) {
-        _.each(self.googleCallbacks, function(callback) {
+        _.each(self.googleCallbacks, function (callback) {
           callback.callback();
         });
         self.googleCallbacks = [];
@@ -212,7 +218,7 @@
     // Set the Reverse Geocode result into the Client Side Storage.
     set_reverse_geocode_storage: function (mapid, latlng, address) {
       let self = this;
-      let storage_type = self.map_data[mapid].geocode_cache.clientside;
+      let storage_type = self.map_data[mapid].geocoder.caching.clientside;
       switch (storage_type) {
         case 'session_storage':
           sessionStorage.setItem('Drupal.geofield_map.reverse_geocode.' + latlng, address);
@@ -228,7 +234,7 @@
     get_reverse_geocode_storage: function (mapid, latlng) {
       let self = this;
       let result;
-      let storage_type = self.map_data[mapid].geocode_cache.clientside;
+      let storage_type = self.map_data[mapid].geocoder.caching.clientside;
       switch (storage_type) {
         case 'session_storage':
           result = sessionStorage.getItem('Drupal.geofield_map.reverse_geocode.' + latlng);
@@ -258,7 +264,7 @@
       }
       // Check the result from the chosen client side storage, and use it eventually.
       let reverse_geocode_storage = self.get_reverse_geocode_storage(mapid, latlng);
-      if (localStorage && self.map_data[mapid].geocode_cache.clientside && self.map_data[mapid].geocode_cache.clientside !== '_none_' && reverse_geocode_storage !== null) {
+      if (localStorage && self.map_data[mapid].geocoder.caching.clientside && self.map_data[mapid].geocoder.caching.clientside !== '_none_' && reverse_geocode_storage !== null) {
         self.map_data[mapid].search.val(reverse_geocode_storage);
         self.setGeoaddressField(mapid, reverse_geocode_storage);
       }
@@ -288,7 +294,7 @@
       self.map_data[mapid].search.val(formatted_address);
       self.setGeoaddressField(mapid, formatted_address);
       // Set the result into the chosen client side storage.
-      if (localStorage && self.map_data[mapid].geocode_cache.clientside && self.map_data[mapid].geocode_cache.clientside !== '_none_') {
+      if (localStorage && self.map_data[mapid].geocoder.caching.clientside && self.map_data[mapid].geocoder.caching.clientside !== '_none_') {
         self.set_reverse_geocode_storage(mapid, latlng, formatted_address);
       }
     },

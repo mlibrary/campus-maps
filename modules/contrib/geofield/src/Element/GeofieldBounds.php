@@ -14,24 +14,26 @@ class GeofieldBounds extends GeofieldElementBase {
   /**
    * {@inheritdoc}
    */
-  public static $components = [
-    'top' => [
-      'title' => 'Top',
-      'range' => 90,
-    ],
-    'right' => [
-      'title' => 'Right',
-      'range' => 180,
-    ],
-    'bottom' => [
-      'title' => 'Bottom',
-      'range' => 90,
-    ],
-    'left' => [
-      'title' => 'Left',
-      'range' => 180,
-    ],
-  ];
+  public static function getComponents() {
+    return [
+      'top' => [
+        'title' => t('Top'),
+        'range' => 90,
+      ],
+      'right' => [
+        'title' => t('Right'),
+        'range' => 180,
+      ],
+      'bottom' => [
+        'title' => t('Bottom'),
+        'range' => 90,
+      ],
+      'left' => [
+        'title' => t('Left'),
+        'range' => 180,
+      ],
+    ];
+  }
 
   /**
    * {@inheritdoc}
@@ -77,12 +79,13 @@ class GeofieldBounds extends GeofieldElementBase {
 
     foreach ($pairs as $pair) {
       if ($element[$pair['smaller']]['#value'] > $element[$pair['bigger']]['#value']) {
+        $components = static::getComponents();
         $form_state->setError(
           $element[$pair['smaller']],
           t('@title: @component_bigger must be greater than @component_smaller.', [
             '@title' => $element['#title'],
-            '@component_bigger' => static::$components[$pair['bigger']]['title'],
-            '@component_smaller' => static::$components[$pair['smaller']]['title'],
+            '@component_bigger' => $components[$pair['bigger']]['title'],
+            '@component_smaller' => $components[$pair['smaller']]['title'],
           ])
         );
       }

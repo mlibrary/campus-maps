@@ -378,7 +378,7 @@ trait GeofieldMapFieldTrait {
       $query['destination'] = Url::fromRoute('<current>')->toString();
     }
 
-    $this_class = $class = get_class($this);
+    $this_class = get_class($this);
     // Define the Google Maps API Key value message markup.
     if (!empty($gmap_api_key)) {
       $map_google_api_key_value = $this->t("<strong>Gmap Api Key:</strong> @gmaps_api_key_link", [
@@ -635,10 +635,10 @@ trait GeofieldMapFieldTrait {
       '#type' => 'select',
       '#title' => $this->t('Gesture Handling (Controlling Zoom and Pan)'),
       '#options' => [
-        'auto' => 'auto',
-        'greedy' => 'greedy',
-        'cooperative' => 'cooperative',
-        'none' => 'none',
+        'auto' => $this->t('auto'),
+        'greedy' => $this->t('greedy'),
+        'cooperative' => $this->t('cooperative'),
+        'none' => $this->t('none'),
       ],
       '#default_value' => isset($settings['map_zoom_and_pan']['gestureHandling']) ? $settings['map_zoom_and_pan']['gestureHandling'] : 'auto',
       '#description' => $this->t("This control sets how users can zoom and pan the map, and also whether the user's page scrolling actions take priority over the map's zooming and panning.<br>Visit the @google_map_page to inspect and learn the corresponding behaviours of the different options.", [
@@ -1088,7 +1088,7 @@ trait GeofieldMapFieldTrait {
       '#placeholder' => '{"disableDoubleClickZoom": "cooperative",
 "gestureHandling": "none",
 "streetViewControlOptions": {"position": 5}
-}',
+      }',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
@@ -1324,7 +1324,7 @@ trait GeofieldMapFieldTrait {
       '#type' => 'textarea',
       '#rows' => 4,
       '#title' => $this->t('Marker Cluster Additional Options'),
-      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.<br><u>Hint:</u> it is possible to define the "imagePath" property to point the folder where are stored custom 1.png, 2.png, etc. marker clusters icons, such as: "imagePath":"\/themes\/custom\/THEMENAME\/images\/"'),
       '#default_value' => isset($settings['map_markercluster']['markercluster_additional_options']) ? $settings['map_markercluster']['markercluster_additional_options'] : $default_settings['map_markercluster']['markercluster_additional_options'],
       '#placeholder' => '{"maxZoom":12,"gridSize":50}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],

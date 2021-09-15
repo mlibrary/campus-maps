@@ -29,4 +29,13 @@ class GeofieldBackend extends Plugin {
    */
   public $admin_label = '';
 
+  /**
+   * The description of the geofield backend.
+   *
+   * @var \Drupal\Core\Annotation\Translation
+   *
+   * @ingroup plugin_translatable
+   */
+  public $description = '';
+
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\leaflet\Plugin\Field\FieldWidget;
 
+use Drupal\geofield\Plugin\GeofieldBackendManager;
 use Drupal\leaflet\LeafletSettingsElementsTrait;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -87,6 +88,8 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
    *   The geoPhpWrapper.
    * @param \Drupal\geofield\WktGeneratorInterface $wkt_generator
    *   The WKT format Generator service.
+   * @param \Drupal\geofield\Plugin\GeofieldBackendManager $geofield_backend_manager
+   *   The geofieldBackendManager.
    * @param \Drupal\leaflet\LeafletService $leaflet_service
    *   The Leaflet service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
@@ -104,6 +107,7 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
     array $third_party_settings,
     GeoPHPInterface $geophp_wrapper,
     WktGeneratorInterface $wkt_generator,
+    GeofieldBackendManager $geofield_backend_manager,
     LeafletService $leaflet_service,
     ModuleHandlerInterface $module_handler,
     LinkGeneratorInterface $link_generator,
@@ -116,7 +120,8 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
       $settings,
       $third_party_settings,
       $geophp_wrapper,
-      $wkt_generator
+      $wkt_generator,
+      $geofield_backend_manager
     );
     $this->leafletService = $leaflet_service;
     $this->moduleHandler = $module_handler;
@@ -136,6 +141,7 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
       $configuration['third_party_settings'],
       $container->get('geofield.geophp'),
       $container->get('geofield.wkt_generator'),
+      $container->get('plugin.manager.geofield_backend'),
       $container->get('leaflet.service'),
       $container->get('module_handler'),
       $container->get('link_generator'),
@@ -311,13 +317,6 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
       '#disabled' => TRUE,
     ];
 
-//    $form['toolbar']['drawCircleMarker'] = [
-//      '#type' => 'checkbox',
-//      '#title' => $this->t('Adds button to draw circle marker. (unsupported by GeoJSON'),
-//      '#default_value' => $toolbar_settings['drawCircleMarker'] ?? $default_settings['toolbar']['drawCircleMarker'],
-//      '#disabled' => TRUE,
-//    ];
-
     $form['toolbar']['editMode'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Adds button to toggle edit mode for all layers.'),
@@ -373,8 +372,6 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
     // Determine map settings and add map element.
     $map_settings = $this->getSetting('map');
     $default_settings = self::defaultSettings();
-
-
     $input_settings = $this->getSetting('input');
     $js_settings = [];
     $map = leaflet_map_get_info($map_settings['leaflet_map'] ?? $default_settings['map']['leaflet_map']);

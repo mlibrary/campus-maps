@@ -940,11 +940,12 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
                   break;
 
                 case '#rendered_view_fields':
-                  // Normal rendering via view/row fields (with labels options, formatters, classes, etc.).
+                  // Normal rendering via view/row fields (with labels options,
+                  // formatters, classes, etc.).
                   $renderedRow = [
                     $this->view->rowPlugin->render($result),
                   ];
-                  $description[]= $this->renderer->renderPlain($renderedRow);
+                  $description[] = $this->renderer->renderPlain($renderedRow);
                   break;
 
                 case '#rendered_entity_ajax':

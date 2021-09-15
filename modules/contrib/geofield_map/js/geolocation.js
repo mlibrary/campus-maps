@@ -51,6 +51,4 @@
     }
   };
 
-
 })(jQuery, Drupal);
-

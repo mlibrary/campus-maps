@@ -276,7 +276,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
     else {
       $elements['replacement_patterns']['#description'] = $this->t('The @token_link is needed to browse and use @entity_type entity token replacements.', [
-        '@token_link' => $this->link->generate(t('Token module'), Url::fromUri('https://www.drupal.org/project/token', [
+        '@token_link' => $this->link->generate($this->t('Token module'), Url::fromUri('https://www.drupal.org/project/token', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
@@ -311,8 +311,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#title' => $this->t('Custom Icon definition mode'),
       '#type' => 'select',
       '#options' => [
-        'icon_file' => 'Icon File',
-        'icon_image_path' => 'Icon Image Path',
+        'icon_file' => $this->t('Icon File'),
+        'icon_image_path' => $this->t('Icon Image Path'),
       ],
       '#default_value' => $selected_icon_image_mode,
       '#description' => [
