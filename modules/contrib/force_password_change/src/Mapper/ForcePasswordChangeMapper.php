@@ -73,8 +73,9 @@ class ForcePasswordChangeMapper implements ForcePasswordChangeMapperInterface
 	 */
 	public function updateLastChangeForRoles(array $rids)
 	{
+		$request_time = \Drupal::time()->getRequestTime();
 		$this->connection->update('force_password_change_roles')
-			->fields(['last_force' => REQUEST_TIME])
+			->fields(['last_force' => $request_time])
 			->condition('rid', $rids, 'IN')
 			->execute();
 	}

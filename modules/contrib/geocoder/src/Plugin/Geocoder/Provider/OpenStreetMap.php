@@ -2,7 +2,7 @@
 
 namespace Drupal\geocoder\Plugin\Geocoder\Provider;
 
-use Drupal\geocoder\ProviderUsingHandlerWithAdapterBase;
+use Drupal\geocoder\ConfigurableProviderUsingHandlerWithAdapterBase;
 
 /**
  * Provides an OpenStreetMap geocoder provider plugin.
@@ -10,7 +10,16 @@ use Drupal\geocoder\ProviderUsingHandlerWithAdapterBase;
  * @GeocoderProvider(
  *   id = "openstreetmap",
  *   name = "OpenStreetMap",
- *   handler = "\Geocoder\Provider\OpenStreetMap"
+ *   handler = "\Geocoder\Provider\Nominatim\Nominatim",
+ *   arguments = {
+ *     "rootUrl" = "https://nominatim.openstreetmap.org",
+ *     "userAgent" = "",
+ *     "referer" = ""
+ *   },
+ *   throttle = {
+ *     "period" = 2,
+ *     "limit" = 1
+ *   }
  * )
  */
-class OpenStreetMap extends ProviderUsingHandlerWithAdapterBase {}
+class OpenStreetMap extends ConfigurableProviderUsingHandlerWithAdapterBase {}

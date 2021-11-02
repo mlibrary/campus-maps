@@ -1,10 +1,6 @@
 ``split``
 =========
 
-.. versionadded:: 1.10.3
-
-    The ``split`` filter was added in Twig 1.10.3.
-
 The ``split`` filter splits a string by the given delimiter and returns a list
 of strings:
 
@@ -50,5 +46,5 @@ Arguments
 * ``delimiter``: The delimiter
 * ``limit``:     The limit argument
 
-.. _`explode`:   https://secure.php.net/explode
-.. _`str_split`: https://secure.php.net/str_split
+.. _`explode`:   https://www.php.net/explode
+.. _`str_split`: https://www.php.net/str_split

@@ -4,6 +4,7 @@ namespace Drupal\geocoder\Controller;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\geocoder\DumperPluginManager;
 use Drupal\geocoder\FormatterPluginManager;
 use Geocoder\Model\Address;
@@ -27,6 +28,13 @@ class GeocoderApiEnpoints extends ControllerBase {
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $config;
+
+  /**
+   * Entity manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * Geocoder Service.
@@ -187,6 +195,8 @@ class GeocoderApiEnpoints extends ControllerBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager service.
    * @param \Drupal\geocoder\Geocoder $geocoder
    *   The Geocoder service.
    * @param \Drupal\geocoder\DumperPluginManager $dumper_plugin_manager
@@ -196,11 +206,13 @@ class GeocoderApiEnpoints extends ControllerBase {
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
+    EntityTypeManagerInterface $entity_type_manager,
     Geocoder $geocoder,
     DumperPluginManager $dumper_plugin_manager,
     FormatterPluginManager $geocoder_formatter_plugin_manager
   ) {
     $this->config = $config_factory->get('geocoder.settings');
+    $this->entityTypeManager = $entity_type_manager;
     $this->geocoder = $geocoder;
     $this->dumperPluginManager = $dumper_plugin_manager;
     $this->geocoderFormatterPluginManager = $geocoder_formatter_plugin_manager;
@@ -215,6 +227,7 @@ class GeocoderApiEnpoints extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('entity_type.manager'),
       $container->get('geocoder'),
       $container->get('plugin.manager.geocoder.dumper'),
       $container->get('plugin.manager.geocoder.formatter')
@@ -225,11 +238,18 @@ class GeocoderApiEnpoints extends ControllerBase {
    * {@inheritdoc}
    */
   public function geocode(Request $request) {
-
     $address = $request->get('address');
     $geocoders_ids = $request->get('geocoder');
-    $geocoders = explode(',', str_replace(' ', '', $geocoders_ids));
     $format = $request->get('format');
+    $geocoders = [];
+
+    try {
+      $geocoders = $this->entityTypeManager->getStorage('geocoder_provider')
+        ->loadMultiple(explode(',', str_replace(' ', '', $geocoders_ids)));
+    }
+    catch (\Exception $e) {
+      watchdog_exception('geocoder', $e);
+    }
 
     $address_format = $request->get('address_format');
 
@@ -237,9 +257,7 @@ class GeocoderApiEnpoints extends ControllerBase {
 
       $options = $this->setGeocodersOptions($request);
       $dumper = $this->getDumper($format);
-
       $geo_collection = $this->geocoder->geocode($address, $geocoders, $options);
-
       if ($geo_collection && $geo_collection instanceof AddressCollection) {
         $this->getAddressCollectionResponse($geo_collection, $dumper, $address_format);
       }
@@ -254,13 +272,22 @@ class GeocoderApiEnpoints extends ControllerBase {
 
     $latlng = $request->get('latlng');
     $geocoders_ids = $request->get('geocoder');
-    $geocoders = explode(',', $geocoders_ids);
     $format = $request->get('format');
+    $geocoders = [];
+
+    try {
+      $geocoders = $this->entityTypeManager->getStorage('geocoder_provider')
+        ->loadMultiple(explode(',', $geocoders_ids));
+    }
+    catch (\Exception $e) {
+      watchdog_exception('geocoder', $e);
+    }
 
     if (isset($latlng)) {
 
       $latlng = explode(',', $request->get('latlng'));
 
+      // Retrieve plugins options from the module configurations.
       $options = $this->setGeocodersOptions($request);
       $dumper = $this->getDumper($format);
 

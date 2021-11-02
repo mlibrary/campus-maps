@@ -2,21 +2,21 @@ services:
 
   geocoder:
     class: Drupal\geocoder\Geocoder
-    arguments: ['@config.factory','@plugin.manager.geocoder.provider']
+    arguments: ['@config.factory','@plugin.manager.geocoder.provider', '@module_handler']
 
   geocoder.http_adapter:
-    class: Drupal\geocoder\GeocoderHttpAdapter
+    class: Http\Adapter\Guzzle6\Client
     arguments: ['@http_client']
 
   plugin.manager.geocoder.provider:
     class: Drupal\geocoder\ProviderPluginManager
     parent: default_plugin_manager
-    arguments: ['@config.factory', '@string_translation', '@renderer', '@link_generator']
+    arguments: ['@string_translation', '@renderer', '@link_generator', '@entity_type.manager', '@messenger']
 
   plugin.manager.geocoder.dumper:
     class: Drupal\geocoder\DumperPluginManager
     parent: default_plugin_manager
-    arguments: ['@logger.factory', '@messenger']
+    arguments: ['@country_manager', '@logger.factory', '@messenger']
 
   plugin.manager.geocoder.formatter:
     class: Drupal\geocoder\FormatterPluginManager
@@ -28,3 +28,6 @@ services:
       - { name: cache.bin }
     factory: cache_factory:get
     arguments: [geocoder]
+
+  geocoder.throttle:
+    class: Drupal\geocoder\GeocoderThrottle

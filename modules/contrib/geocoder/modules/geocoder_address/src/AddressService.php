@@ -153,9 +153,9 @@ class AddressService extends ServiceProviderBase {
     $address_string = str_replace("<br>", ' ', $address_string);
     $address_string = strip_tags($address_string);
 
+    // Add Country code suffix, if defined.
     $address_string .= isset($countrycode) ? ' ' . $countrycode : '';
 
-    // Add Country code suffix, if defined.
     return $address_string;
   }
 

@@ -2,7 +2,7 @@
 
 namespace Drupal\geocoder\Plugin\Geocoder\Provider;
 
-use Drupal\geocoder\ProviderUsingHandlerWithAdapterBase;
+use Drupal\geocoder\ConfigurableProviderUsingHandlerWithAdapterBase;
 
 /**
  * Provides a Yandex geocoder provider plugin.
@@ -10,7 +10,11 @@ use Drupal\geocoder\ProviderUsingHandlerWithAdapterBase;
  * @GeocoderProvider(
  *   id = "yandex",
  *   name = "Yandex",
- *   handler = "\Geocoder\Provider\Yandex"
+ *   handler = "\Geocoder\Provider\Yandex\Yandex",
+ *   arguments = {
+ *     "toponym" = "",
+ *     "apiKey" = ""
+ *   }
  * )
  */
-class Yandex extends ProviderUsingHandlerWithAdapterBase {}
+class Yandex extends ConfigurableProviderUsingHandlerWithAdapterBase {}

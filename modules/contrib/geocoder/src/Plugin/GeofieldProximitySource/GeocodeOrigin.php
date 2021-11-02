@@ -6,11 +6,11 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield\Plugin\GeofieldProximitySourceBase;
 use Drupal\geocoder\Geocoder;
+use Drupal\geocoder\Entity\GeocoderProvider;
 use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder\FormatterPluginManager;
 use Geocoder\Model\AddressCollection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Serialization\Json;
 
 /**
  * Defines 'Geocode Origin (with Autocomplete option)' proximity source plugin.
@@ -169,7 +169,7 @@ class GeocodeOrigin extends GeofieldProximitySourceBase implements ContainerFact
       $provider_plugins = $this->getEnabledProviderPlugins();
 
       // Try geocoding and extract coordinates of the first match.
-      $address_collection = $this->geocoder->geocode($address, array_keys($provider_plugins));
+      $address_collection = $this->geocoder->geocode($address, GeocoderProvider::loadMultiple(array_keys($provider_plugins)));
       if ($address_collection instanceof AddressCollection && count($address_collection) > 0) {
         $address = $address_collection->get(0);
         $coordinates = $address->getCoordinates();
@@ -243,28 +243,18 @@ class GeocodeOrigin extends GeofieldProximitySourceBase implements ContainerFact
         '#type' => 'details',
         '#title' => $this->t('Geocoder fine Settings'),
         '#open' => FALSE,
-      ];
-
-      $form['settings']['options'] = [
-        '#type' => 'textarea',
-        '#rows' => 4,
-        '#title' => $this->t('Geocoder Control Specific Options'),
-        '#description' => $this->t('This settings would override general Geocoder Providers options. (<u>Note: This would work only for Geocoder 2.x branch/version.</u>)<br>An object literal of specific Geocoder options.The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
-        '#default_value' => $this->options,
-        '#placeholder' => '{"googlemaps":{"locale": "it", "region": "it"}, "nominatim":{"locale": "it"}}',
-        '#element_validate' => [[get_class($this), 'jsonValidate']],
-      ];
-
-      $form['settings']['autocomplete'] = [
-        '#type' => 'details',
-        '#title' => $this->t('Autocomplete Settings'),
-        '#open' => TRUE,
         '#states' => [
           'invisible' => [
             [':input[name="options[source_configuration][use_autocomplete]"]' => ['checked' => FALSE]],
             [':input[name="options[expose_button][checkbox][checkbox]"]' => ['checked' => FALSE]],
           ],
         ],
+      ];
+
+      $form['settings']['autocomplete'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Autocomplete Settings'),
+        '#open' => TRUE,
       ];
 
       $form['settings']['autocomplete']['min_terms'] = [
@@ -307,12 +297,11 @@ class GeocodeOrigin extends GeofieldProximitySourceBase implements ContainerFact
           'providers' => array_keys($this->getEnabledProviderPlugins()),
           'minTerms' => $this->minTerms,
           'delay' => $this->delay,
-          'options' => $this->options,
           'address_format' => $this->addressFormat,
         ],
       ];
-    }
 
+    }
   }
 
   /**
@@ -361,22 +350,6 @@ class GeocodeOrigin extends GeofieldProximitySourceBase implements ContainerFact
 
     if (empty($plugins)) {
       $form_state->setError($element, t('The Geocode Origin option needs at least one geocoder plugin selected.'));
-    }
-  }
-
-  /**
-   * Form element json format validation handler.
-   *
-   * {@inheritdoc}
-   */
-  public static function jsonValidate($element, FormStateInterface &$form_state) {
-    $element_values_array = JSON::decode($element['#value']);
-    // Check the jsonValue.
-    if (!empty($element['#value']) && $element_values_array == NULL) {
-      $form_state->setError($element, t('The @field field is not valid Json Format.', ['@field' => $element['#title']]));
-    }
-    elseif (!empty($element['#value'])) {
-      $form_state->setValueForElement($element, ['options' => $element_values_array]);
     }
   }
 

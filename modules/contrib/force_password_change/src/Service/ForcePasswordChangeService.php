@@ -335,6 +335,7 @@ class ForcePasswordChangeService implements ForcePasswordChangeServiceInterface
 	 */
 	protected function getRequestTime()
 	{
-		return REQUEST_TIME;
+		$request_time = \Drupal::time()->getRequestTime();
+		return $request_time;
 	}
 }

@@ -1,6 +1,26 @@
 <?php
 
-function custom_uml_mail_send_mail($recipient, $reply_to, $subject, $message, $key, $files = array(), $cc = NULL, $from_name = NULL, $from_email = NULL, $bcc = NULL){
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Ensure custom_uml_mail runs last when hook_mail_alter is invoked.
+ */
+function custom_uml_mail_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'mail_alter' || $hook == 'mail') {
+    $group = $implementations['custom_uml_mail'];
+    unset($implementations['custom_uml_mail']);
+    $implementations['custom_uml_mail'] = $group;
+    // If the reroute_email module is installed, ensure that comes after ours so
+    // rerouted emails are still rerouted.
+    if (isset($implementations['reroute_email'])) {
+      $group = $implementations['reroute_email'];
+      unset($implementations['reroute_email']);
+      $implementations['reroute_email'] = $group;
+    }
+  }
+}
+
+function custom_uml_mail_send_mail($recipient, $reply_to, $subject, $message, $key, $files = array(), $cc = '', $from_name = '', $from_email = '', $bcc = ''){
   if (empty($from_name)) { $from_name = \Drupal::config('system.site')->get('name'); }
   if (empty($from_email) || \Drupal::service('email.validator')->isValid($from_email) != TRUE) {
     $from_email = \Drupal::config('system.site')->get('mail');
@@ -39,9 +59,48 @@ function custom_uml_mail_send_mail($recipient, $reply_to, $subject, $message, $k
   if ($cc) {
     $recipients = $recipient.','.$cc;
   }
-  drupal_set_message('Email sent to '.$recipients);
+  \Drupal::messenger()->addStatus(t('Email sent to '.$recipients));
 }
 
+/**
+ * Implements hook_mail_alter().
+ *
+ * Alter destination of outgoing emails if reroute_email is enabled.
+ */
+function custom_uml_mail_mail_alter(&$message) {
+  $message['headers']['cc'] = trim($message['headers']['cc'], ',');
+  $message['headers']['bcc'] = trim($message['headers']['bcc'], ',');
+  if (empty($message['headers']['cc'])) {
+    if (!empty($message['params']['cc'])) {
+      $message['headers']['cc'] = trim($message['params']['cc'], ',');
+    }
+    elseif (!empty($message['cc'])) {
+      $message['headers']['cc'] = trim($message['cc'], ',');
+    }
+    else {
+      unset($message['headers']['cc']);
+      unset($message['cc']);
+      unset($message['params']['cc']);
+    }
+  }
+  if (empty($message['headers']['bcc'])) {
+    if (!empty($message['params']['bcc'])) {
+      $message['headers']['bcc'] = trim($message['params']['bcc'], ',');
+    }
+    elseif (!empty($message['bcc'])) {
+      $message['headers']['bcc'] = trim($message['bcc'], ',');
+    }
+    else {
+      unset($message['headers']['bcc']);
+      unset($message['bcc']);
+      unset($message['params']['bcc']);
+    }
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
 function custom_uml_mail_mail($key, &$message, $params){
   $message['from'] = $params['from'];
   $message['subject'] = $params['subject'];
@@ -54,6 +113,13 @@ function custom_uml_mail_mail($key, &$message, $params){
   if (isset($params['files'])) {
     $message['files'] = $params['files'];
   }
-  $message['headers']['Cc'] = $params['cc'];
-  $message['headers']['Bcc'] = $params['bcc'];
+  if (isset($params['cc']) && !empty($params['cc'])) {
+    $message['headers']['Cc'] = trim($params['cc'], ',');
+  }
+  if (isset($params['bcc']) && !empty($params['bcc'])) {
+    $message['headers']['Bcc'] = trim($params['bcc'], ',');
+  }
+  $message['headers']['From'] = $params['from'];
+  //$message['headers']['Sender'] = $params['from'];
+  //$message['headers']['Reply-to'] = $params['from'];
 }

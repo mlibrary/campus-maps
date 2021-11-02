@@ -11,13 +11,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class AllowIframedSiteConfigForm extends ConfigFormBase {
 
   /**
-   * The condition manager.
-   *
-   * @var \Drupal\Component\Plugin\Factory\FactoryInterface
-   */
-  protected $conditionManager;
-
-  /**
    * The conditions.
    *
    * @var array $conditions

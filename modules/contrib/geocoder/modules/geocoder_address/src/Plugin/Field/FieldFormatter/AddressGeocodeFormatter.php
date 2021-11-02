@@ -2,17 +2,19 @@
 
 namespace Drupal\geocoder_address\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\geocoder\Geocoder;
 use Drupal\geocoder_field\Plugin\Field\FieldFormatter\GeocodeFormatter;
+use Geocoder\Model\AddressCollection;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\geocoder\GeocoderInterface;
 use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder\DumperPluginManager;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\geocoder_address\AddressService;
 
 /**
@@ -52,10 +54,8 @@ class AddressGeocodeFormatter extends GeocodeFormatter {
    *   The view mode.
    * @param array $third_party_settings
    *   Any third party settings.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   A config factory for retrieving required config objects.
-   * @param \Drupal\geocoder\Geocoder $geocoder
-   *   The geocoder service.
+   * @param \Drupal\geocoder\GeocoderInterface $geocoder
+   *   The gecoder service.
    * @param \Drupal\geocoder\ProviderPluginManager $provider_plugin_manager
    *   The provider plugin manager service.
    * @param \Drupal\geocoder\DumperPluginManager $dumper_plugin_manager
@@ -64,6 +64,10 @@ class AddressGeocodeFormatter extends GeocodeFormatter {
    *   The renderer.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\geocoder_address\AddressService $address_service
    *   The Geocoder Address service.
    */
@@ -75,15 +79,16 @@ class AddressGeocodeFormatter extends GeocodeFormatter {
     $label,
     $view_mode,
     array $third_party_settings,
-    ConfigFactoryInterface $config_factory,
-    Geocoder $geocoder,
+    GeocoderInterface $geocoder,
     ProviderPluginManager $provider_plugin_manager,
     DumperPluginManager $dumper_plugin_manager,
     RendererInterface $renderer,
     LinkGeneratorInterface $link_generator,
+    LoggerChannelFactoryInterface $logger_factory,
+    EntityTypeManagerInterface $entity_type_manager,
     AddressService $address_service
   ) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings, $config_factory, $geocoder, $provider_plugin_manager, $dumper_plugin_manager, $renderer, $link_generator);
+    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings, $geocoder, $provider_plugin_manager, $dumper_plugin_manager, $renderer, $link_generator, $logger_factory, $entity_type_manager);
     $this->addressService = $address_service;
   }
 
@@ -99,12 +104,13 @@ class AddressGeocodeFormatter extends GeocodeFormatter {
       $configuration['label'],
       $configuration['view_mode'],
       $configuration['third_party_settings'],
-      $container->get('config.factory'),
       $container->get('geocoder'),
       $container->get('plugin.manager.geocoder.provider'),
       $container->get('plugin.manager.geocoder.dumper'),
       $container->get('renderer'),
       $container->get('link_generator'),
+      $container->get('logger.factory'),
+      $container->get('entity_type.manager'),
       $container->get('geocoder_address.address')
     );
   }
@@ -118,16 +124,16 @@ class AddressGeocodeFormatter extends GeocodeFormatter {
       $dumper = $this->dumperPluginManager->createInstance($this->getSetting('dumper'));
     }
     catch (PluginException $e) {
-      watchdog_exception('Geocode Address Dumper', $e);
+      $this->loggerFactory->get('geocoder')->error('No Dumper has been set');
     }
-    $provider_plugins = $this->getEnabledProviderPlugins();
+    $providers = $this->getEnabledGeocoderProviders();
 
     foreach ($items as $delta => $item) {
       $value = $item->getValue();
       $address_string = $this->addressService->addressArrayToGeoString($value);
-      if ($address_collection = $this->geocoder->geocode($address_string, array_keys($provider_plugins))) {
+      if ($address_collection = $this->geocoder->geocode($address_string, $providers)) {
         $elements[$delta] = [
-          '#plain_text' => $dumper->dump($address_collection->first()),
+          '#markup' => $address_collection instanceof AddressCollection && !$address_collection->isEmpty() ? $dumper->dump($address_collection->first()) : "",
         ];
       }
     }

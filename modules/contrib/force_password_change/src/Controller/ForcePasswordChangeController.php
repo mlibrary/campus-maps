@@ -129,19 +129,19 @@ class ForcePasswordChangeController extends ControllerBase implements ForcePassw
 			$pending_users = $this->forcePasswordChangeService->getPendingUsersForRole($rid);
 
 			// build the header for the table
-			$header = array($this->t('Username'), $this->t('Last Force'), $this->t('Last Change'));
+			$header = [$this->t('Username'), $this->t('Last Force'), $this->t('Last Change')];
 
 			// Next build the rows of the table, and the stats that will be included for each user shown
-			$rows = array();
+			$rows = [];
 			$force_password_change_installation_date = $this->configFactory->get('force_password_change.settings')->get('installation_date');
 			$first_time_uids = $this->forcePasswordChangeService->getFirstTimeLoginUids();
 			foreach($pending_users as $pending_user)
 			{
-				$row = array();
+				$row = [];
 
 				if($this->currentUser->hasPermission('access user profiles'))
 				{
-					$url = Url::fromRoute('entity.user.canonical', array('user' => $pending_user->id()));
+					$url = Url::fromRoute('entity.user.canonical', ['user' => $pending_user->id()]);
 					$row[] = Link::fromTextAndUrl($pending_user->getDisplayName(), $url);
 				}
 				else
@@ -204,14 +204,14 @@ class ForcePasswordChangeController extends ControllerBase implements ForcePassw
 
 			// Perform the same steps as the previous table, for users who do not have a pending forced password change
 			$nonpending_users = $this->forcePasswordChangeService->getNonPendingUsersForRole($rid);
-			$header = array($this->t('Username'), $this->t('Last Force'), $this->t('Last Change'));
-			$rows = array();
+			$header = [$this->t('Username'), $this->t('Last Force'), $this->t('Last Change')];
+			$rows = [];
 			foreach($nonpending_users as $nonpending_user)
 			{
-				$row = array();
+				$row = [];
 				if($this->currentUser->hasPermission('access user profiles'))
 				{
-					$url = Url::fromRoute('entity.user.canonical', array('user' => $nonpending_user->id()));
+					$url = Url::fromRoute('entity.user.canonical', ['user' => $nonpending_user->id()]);
 					$row[] = Link::fromTextAndUrl($nonpending_user->getDisplayName(), $url);
 				}
 				else

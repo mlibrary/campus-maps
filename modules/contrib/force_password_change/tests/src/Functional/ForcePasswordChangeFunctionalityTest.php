@@ -219,9 +219,10 @@ class ForcePasswordChangeFunctionalityTest extends ForcePasswordChangeBrowserTes
 		$this->selectSelectOption('#edit-table-authenticated-weight', '1');
 
 		// Edit the value in the database so we don't have to wait an hour
+		$request_time = \Drupal::time()->getRequestTime();
 		\Drupal::database()->query(
 			'UPDATE {force_password_change_expiry} SET expiry = :expiry WHERE rid = :authenticated',
-			[':expiry' => REQUEST_TIME - 1, ':authenticated' => 'authenticated']
+			[':expiry' => $request_time - 1, ':authenticated' => 'authenticated']
 		);
 
 		// Reload the page. Our password should not have expired since the admin user has a longer

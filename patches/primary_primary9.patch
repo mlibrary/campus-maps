@@ -1,0 +1,120 @@
+commit 9f320e410966ef5af81fdd6f5f3b5c48d2d451c5
+Author: Albert Bertram <bertrama@umich.edu>
+Date:   Wed Nov 16 17:55:05 2016 -0500
+
+    Restoring the primary_primary driver.
+
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Connection.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Connection.php
+new file mode 100644
+index 0000000..9d03053
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Connection.php
+@@ -0,0 +1,22 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Connection as MysqlConnection;
++
++class Connection extends MysqlConnection {
++
++  /**
++   * {@inheritdoc}
++   */
++  public function __construct(\PDO $connection, array $connection_options) {
++    // @see https://www.drupal.org/project/drupal/issues/3218978
++    // @todo Remove this when the above issue is committed.
++    if ($this->identifierQuotes === ['"', '"'] && strpos($connection_options['init_commands']['sql_mode'], 'ANSI') === FALSE) {
++      $this->identifierQuotes = ['`', '`'];
++    }
++    parent::__construct($connection, $connection_options);
++  }
++
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Insert.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Insert.php
+new file mode 100644
+index 0000000..61fb530
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Insert.php
+@@ -0,0 +1,31 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Insert as MysqlInsert;
++
++class Insert extends MysqlInsert {
++  public function __toString() {
++    // Create a sanitized comment string to prepend to the query.
++    $comments = $this->connection->makeComment($this->comments);
++
++    // Default fields are always placed first for consistency.
++    $insert_fields = array_merge($this->defaultFields, $this->insertFields);
++
++    // If we're selecting from a SelectQuery, finish building the query and
++    // pass it back, as any remaining options are irrelevant.
++    if (!empty($this->fromQuery)) {
++      $insert_fields_string = $insert_fields ? ' (' . implode(', ', $insert_fields) . ') ' : ' ';
++      return $comments . 'REPLACE INTO {' . $this->table . '}' . $insert_fields_string . $this->fromQuery;
++    }
++
++    $query = $comments . 'REPLACE INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') VALUES ';
++
++    $values = $this->getInsertPlaceholderFragment($this->insertValues, $this->defaultFields);
++    $query .= implode(', ', $values);
++
++    return $query;
++  }
++
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Install/Tasks.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Install/Tasks.php
+new file mode 100644
+index 0000000..9b5dded
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Install/Tasks.php
+@@ -0,0 +1,13 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary\Install;
++
++use Drupal\Core\Database\Driver\mysql\Install\Tasks as MysqlTasks;
++
++class Tasks extends MysqlTasks {
++
++  const MYSQL_MINIMUM_VERSION = '5.6';
++  const MARIADB_MINIMUM_VERSION = '10.0';
++
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Schema.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Schema.php
+new file mode 100644
+index 0000000..5509758
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Schema.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Schema as MysqlSchema;
++
++class Schema extends MysqlSchema {
++}
++
+diff --git a/core/lib/Drupal/Core/Database/Driver/primary_primary/Upsert.php b/core/lib/Drupal/Core/Database/Driver/primary_primary/Upsert.php
+new file mode 100644
+index 0000000..9ac2fa5
+--- /dev/null
++++ b/lib/Drupal/Core/Database/Driver/primary_primary/Upsert.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\Core\Database\Driver\primary_primary;
++
++use Drupal\Core\Database\Driver\mysql\Upsert as MysqlUpsert;
++
++class Upsert extends MysqlUpsert {
++}
++

@@ -10,7 +10,7 @@ use Drupal\Core\Url;
 use Drupal\force_password_change\Service\ForcePasswordChangeServiceInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 class ForcePasswordChangeEventSubscriber implements EventSubscriberInterface
@@ -85,7 +85,7 @@ class ForcePasswordChangeEventSubscriber implements EventSubscriberInterface
 	 * 
 	 * If either of the two conditions above returns true, they are redirected to the change password page
 	 */
-	public function checkForPasswordForce(GetResponseEvent $event)
+	public function checkForPasswordForce(RequestEvent $event)
 	{
 		// Only do something if the module is set to be enabled. This can only be changed
 		// in settings.php, and is added to allow users to disable the module if a problem arises.

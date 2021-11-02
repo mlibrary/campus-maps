@@ -17,7 +17,7 @@ class ForcePasswordChangeRoleListBuilder extends RoleListBuilder
 
 		if($entity->id() != 'anonymous' && \Drupal::currentUser()->hasPermission('administer force password change'))
 		{
-			$url = Url::fromRoute('force_password_change.admin.role.list', array('rid' => $entity->id()));
+			$url = Url::fromRoute('force_password_change.admin.role.list', ['rid' => $entity->id()]);
 			$operations['force_password_change'] = array
 			(
 				'title' => t('Force password change options'),

@@ -77,7 +77,6 @@ class File extends PreprocessorBase {
         catch (\Exception $e) {
           watchdog_exception('geocoder', $e);
         }
-
       }
     }
 

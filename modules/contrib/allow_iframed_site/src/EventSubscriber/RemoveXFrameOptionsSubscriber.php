@@ -50,23 +50,33 @@ class RemoveXFrameOptionsSubscriber implements EventSubscriberInterface {
    */
   public function RemoveXFrameOptions(FilterResponseEvent $event) {
     $xframe = TRUE;
-
-    foreach($this->config->getRawData()as $key => $config) {
-      try {
-        /* @var \Drupal\system\Plugin\Condition\RequestPath $condition */
-        $condition = $this->conditionManager->createInstance($key);
-        $condition->setConfiguration($this->config->get($key));
-        if (
-          ($condition->evaluate() && $condition->isNegated()) ||
-          (!$condition->evaluate() && !$condition->isNegated())
-        ) {
-          $xframe = FALSE;
+    /**
+     * Don't remove X-Frame-Options if pages and negate fields are not configured.
+     */
+    $rowData = $this->config->getRawData();
+    if(!empty($rowData)) {
+      if(empty($rowData['request_path']['pages']) && $rowData['request_path']['negate'] == 0) {
+        $xframe = FALSE;
+      }
+      else {
+        foreach ($this->config->getRawData() as $key => $config) {
+          try {
+            /* @var \Drupal\system\Plugin\Condition\RequestPath $condition */
+            $condition = $this->conditionManager->createInstance($key);
+            $condition->setConfiguration($this->config->get($key));
+            if (
+                ($condition->evaluate() && $condition->isNegated()) ||
+                (!$condition->evaluate() && !$condition->isNegated())
+              ) {
+                $xframe = FALSE;
+            }
+          } catch (PluginException $exception) {
+            // Just ignore it, there's probably not much else to do.
+          }
         }
       }
-      catch (PluginException $exception) {
-        // Just ignore it, there's probably not much else to do.
-      }
     }
+
     // If we got here we should be fine, but check it anyway.
     if ($xframe) {
       $response = $event->getResponse();

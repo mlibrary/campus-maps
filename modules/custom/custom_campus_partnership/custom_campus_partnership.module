@@ -8,7 +8,7 @@ use Drupal\paragraphs\Entity\Paragraph;
 
 function _custom_campus_partnership_create_node($title, $bundle, $body = '', $fields = []) {
   if (empty($title)) {
-    drupal_set_message('Could not create a '.$bundle.' as no title was provided.', 'error');
+    \Drupal::messenger()->addError(t('Could not create a @bundle as no title was provided.', ['@bundle' => $bundle]));
     return;
   }
   $node = Node::create([
@@ -47,7 +47,7 @@ function _custom_campus_partnership_lookup_node($name, $bundle) {
     ->loadByProperties(['title' => $name, 'type' => $bundle]);
   $node = NULL;
   if (count($node_existing) > 0) {
-    drupal_set_message(t('@name already exists. The item will be set to the existing @bundle.', ['@bundle' => $bundle, '@name' => $name]),'warning');
+    \Drupal::messenger()->addWarning(t('@name already exists. The item will be set to the existing @bundle.', ['@bundle' => $bundle, '@name' => $name]));
     $node = array_values($node_existing)[0];
   }
   if (count($node_existing) > 1) {
@@ -61,7 +61,7 @@ function _custom_campus_partnership_lookup_term($name, $vid) {
   $term_existing = taxonomy_term_load_multiple_by_name($name, $vid);
   $term = NULL;
   if (count($term_existing) > 0) {
-    drupal_set_message(t('The @vid term @name already exists. The item will be set to the existing unit.', ['@vid' => $vid, '@name' => $name]),'warning');
+    \Drupal::messenger()->addWarning(t('The @vid term @name already exists. The item will be set to the existing unit.', ['@vid' => $vid, '@name' => $name]));
     $term = array_values($term_existing)[0];
   }
   if (count($term_existing) > 1) {
@@ -165,8 +165,10 @@ function custom_campus_partnership_node_presave(NodeInterface $node) {
       if (!empty($author['field_author_title']) && isset($author['field_author_title'][0]['value'])) {
         //needed for labels
         $paragraph = Paragraph::load($node->get('field_new_author_s_')->getValue()[$key]['target_id']);
-        $p_labels = options_allowed_values($paragraph->getFieldDefinition('field_author_title')->getFieldStorageDefinition(), $paragraph);
-        $author_name = $author_name.', '.$p_labels[$author['field_author_title'][$key]['value']];
+        if ($paragraph) {
+          $p_labels = options_allowed_values($paragraph->getFieldDefinition('field_author_title')->getFieldStorageDefinition(), $paragraph);
+          $author_name = $author_name.', '.$p_labels[$author['field_author_title'][$key]['value']];
+        }
       }
       if (!empty($author['field_author_title_other']) && isset($author['field_author_title_other'][0]['value'])) {
         $author_name = $author_name.' - '.$author['field_author_title_other'][$key]['value'];

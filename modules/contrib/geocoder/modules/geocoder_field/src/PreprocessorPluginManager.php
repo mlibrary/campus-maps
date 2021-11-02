@@ -30,6 +30,9 @@ class PreprocessorPluginManager extends GeocoderPluginManagerBase {
    *
    * @param \Drupal\Core\Field\FieldItemListInterface $field
    *   The field item list to be processed.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   *   If the instance cannot be created, such as if the ID is invalid.
    */
   public function preprocess(FieldItemListInterface &$field) {
     $type = $field->getFieldDefinition()->getType();
@@ -103,7 +106,7 @@ class PreprocessorPluginManager extends GeocoderPluginManagerBase {
 
   /**
    * Check if the source and the original fields are the same.
-
+   *
    * @param \Drupal\Core\Field\FieldItemListInterface $source_field
    *   The Source Field.
    * @param \Drupal\Core\Field\FieldItemListInterface $original_field
