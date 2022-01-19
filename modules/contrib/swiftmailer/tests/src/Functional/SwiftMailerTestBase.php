@@ -54,7 +54,7 @@ abstract class SwiftMailerTestBase extends BrowserTestBase {
   protected function assertBodyContains($value) {
     $captured_emails = $this->container->get('state')->get('system.test_mail_collector') ?: [];
     $email = end($captured_emails);
-    $this->assertContains($value, (string) $email['body']);
+    $this->assertStringContainsString($value, (string) $email['body']);
   }
 
   /**

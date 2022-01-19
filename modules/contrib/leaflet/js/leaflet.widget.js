@@ -42,10 +42,6 @@
       this.set_leaflet_map(lMap);
     }, this));
 
-    if (this.settings.fullscreenControl) {
-      lMap.addControl(new L.Control.Fullscreen());
-    }
-
     // Update map whenever the input field is changed.
     this.container.on('change', this.json_selector, $.proxy(this.update_map, this));
 

@@ -87,7 +87,7 @@ class LeafletService {
     $attached_libraries = ['leaflet/general', 'leaflet/leaflet-drupal'];
 
     // Add the Leaflet Fullscreen library, if requested.
-    if (!empty($map['settings']['fullscreen_control'])) {
+    if (isset($map['settings']['fullscreen']) && $map['settings']['fullscreen']['control']) {
       $attached_libraries[] = 'leaflet/leaflet.fullscreen';
     }
 
@@ -363,13 +363,16 @@ class LeafletService {
    * @param string $fileUrl
    *   The file url.
    *
+   * @see https://stackoverflow.com/questions/10444059/file-exists-returns-false-even-if-file-exist-remote-url
+   *
    * @return bool
    *   The bool result.
    */
   public function fileExists($fileUrl) {
     $file_headers = @get_headers($fileUrl);
     if ((stripos($file_headers[0], "404 Not Found") == 0)
-      && (stripos($file_headers[0], "302 Found") == 0 && stripos($file_headers[7], "404 Not Found") == 0)) {
+      && (stripos($file_headers[0], "403 Forbidden") == 0)
+      && (stripos($file_headers[0], "302 Found") == 0 && isset($file_headers[7]) && stripos($file_headers[7], "404 Not Found") == 0)) {
       return TRUE;
     }
     return FALSE;

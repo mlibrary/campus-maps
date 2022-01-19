@@ -53,7 +53,6 @@ trait LeafletSettingsElementsTrait {
       'height_unit' => 'px',
       'hide_empty_map' => FALSE,
       'disable_wheel' => FALSE,
-      'fullscreen_control' => TRUE,
       'gesture_handling' => FALSE,
       'reset_map' => [
         'control' => FALSE,
@@ -91,6 +90,10 @@ trait LeafletSettingsElementsTrait {
         'control' => FALSE,
         'options' => '{"spiderfyOnMaxZoom":true,"showCoverageOnHover":true,"removeOutsideVisibleBounds": false}',
         'include_path' => FALSE,
+      ],
+      'fullscreen' => [
+        'control' => FALSE,
+        'options' => '{"position":"topleft","pseudoFullscreen":false}',
       ],
       'path' => '{"color":"#3388ff","opacity":"1.0","stroke":true,"weight":3,"fill":"depends","fillColor":"*","fillOpacity":"0.2","radius":"6"}',
       'geocoder' => [
@@ -171,14 +174,6 @@ trait LeafletSettingsElementsTrait {
       '#title' => $this->t('Disable zoom using mouse wheel'),
       '#description' => $this->t("If enabled, the mouse wheel won't change the zoom level of the map."),
       '#default_value' => $settings['disable_wheel'],
-      '#return_value' => 1,
-    ];
-
-    $elements['fullscreen_control'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Fullscreen Control'),
-      '#description' => $this->t('Enable the Fullscreen View of the Map.'),
-      '#default_value' => $settings['fullscreen_control'],
       '#return_value' => 1,
     ];
 
@@ -739,7 +734,13 @@ trait LeafletSettingsElementsTrait {
     $map['settings']['scrollWheelZoom'] = !empty($options['disable_wheel']) ? !(bool) $options['disable_wheel'] : (isset($map['settings']['scrollWheelZoom']) ? $map['settings']['scrollWheelZoom'] : TRUE);
     $map['settings']['path'] = isset($options['path']) && !empty($options['path']) ? $options['path'] : (isset($map['path']) ? Json::encode($map['path']) : Json::encode($default_settings['path']));
     $map['settings']['leaflet_markercluster'] = isset($options['leaflet_markercluster']) ? $options['leaflet_markercluster'] : NULL;
-    $map['settings']['fullscreen_control'] = isset($options['fullscreen_control']) ? $options['fullscreen_control'] : $default_settings['fullscreen_control'];
+
+    // For "fullscreen" element/option, eventually fallback to previous
+    // "fullscreen_control" settings, if existing.
+    if (!$options["fullscreen"]["control"] && !empty($options["fullscreen_control"])) {
+      $options["fullscreen"]["control"] = TRUE;
+    }
+    $map['settings']['fullscreen'] = isset($options['fullscreen']) ? $options['fullscreen'] : NULL;
     $map['settings']['gestureHandling'] = isset($options['gesture_handling']) ? $options['gesture_handling'] : $default_settings['gesture_handling'];
     $map['settings']['reset_map'] = isset($options['reset_map']) ? $options['reset_map'] : $default_settings['reset_map'];
     $map['settings']['geocoder'] = isset($options['geocoder']) ? $options['geocoder'] : $default_settings['geocoder'];
@@ -823,6 +824,47 @@ trait LeafletSettingsElementsTrait {
         ]),
       ];
     }
+  }
+
+  /**
+   * Set Fullscreen Element.
+   *
+   * @param array $element
+   *   The Form element to alter.
+   * @param array $settings
+   *   The Form Settings.
+   */
+  protected function setFullscreenElement(array &$element, array $settings) {
+
+    $default_settings = $this::getDefaultSettings();
+
+    $element['fullscreen'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Fullscreen'),
+    ];
+
+    $element['fullscreen']['control'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable the functionality of the @fullscreen_api_link.', [
+        '@fullscreen_api_link' => $this->link->generate($this->t('Leaflet Fullscreen JS Library'), Url::fromUri('https://github.com/Leaflet/Leaflet.fullscreen', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+      // For "fullscreen" element/option, eventually fallback to previous
+      // "fullscreen_control" settings, if existing.
+      '#default_value' => $settings['fullscreen']['control'] ?: $settings["fullscreen_control"] ?? $default_settings['fullscreen']['control'],
+      '#return_value' => 1,
+    ];
+    $element['fullscreen']['options'] = [
+      '#type' => 'textarea',
+      '#rows' => 4,
+      '#title' => $this->t('Fullscreen Additional Options'),
+      '#description' => $this->t('An object literal of additional fullscreen options, that comply with the Leaflet Fullscreen JS Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#default_value' => $settings['fullscreen']['options'] ?? $default_settings['fullscreen']['options'],
+      '#placeholder' => $default_settings['fullscreen']['options'],
+      '#element_validate' => [[get_class($this), 'jsonValidate']],
+    ];
   }
 
   /**

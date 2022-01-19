@@ -213,6 +213,13 @@ class Conversion {
    *   TRUE if the provided header is a mailbox header, and otherwise FALSE.
    */
   public static function swiftmailer_is_mailbox_header($key, $value) {
+    // Remove line breaks, which are legitimate within a mime header.
+    // A line break within the header does not mean
+    // a line break within the header value.
+    // See RFC 2047, the related RFCs.
+    // @see https://www.drupal.org/project/drupal/issues/84883.
+    $value = str_replace(["\n", "\r"], '', $value);
+
     if (preg_match('/' . static::SWIFTMAILER_MAILBOX_PATTERN . '/', $value)) {
       return TRUE;
     }
@@ -365,6 +372,13 @@ class Conversion {
    */
   public static function swiftmailer_parse_mailboxes($value) {
     $validator = \Drupal::service('email.validator');
+
+    // Remove line breaks, which are legitimate within a mime header.
+    // A line break within the header does not mean
+    // a line break within the header value.
+    // See RFC 2047, the related RFCs.
+    // @see https://www.drupal.org/project/drupal/issues/84883.
+    $value = str_replace(["\n", "\r"], '', $value);
 
     // Split mailboxes by ',' (comma) and ';' (semicolon).
     $mailboxes_raw = [];

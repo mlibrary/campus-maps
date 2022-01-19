@@ -7,6 +7,7 @@ namespace Drupal\geocoder;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Geocoder\Model\AddressCollection;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\geocoder\Entity\GeocoderProvider;
 
 /**
  * Provides a geocoder factory class.
@@ -60,6 +61,16 @@ class Geocoder implements GeocoderInterface {
     /** @var \Drupal\geocoder\GeocoderProviderInterface $provider */
     foreach ($providers as $provider) {
       try {
+        // Manage a side case in which the provider is still coming by 2.x
+        // branch as string.
+        // @see: https://www.drupal.org/project/geocoder/issues/3202941
+        if (is_string($provider)) {
+          $provider_id = $provider;
+          $provider = GeocoderProvider::load($provider);
+          if (!$provider instanceof GeocoderProviderInterface) {
+            throw new \Exception(sprintf("Unable to define a GeocoderProvider from string '%s'", $provider_id));
+          }
+        }
         $result = $provider->getPlugin()->geocode($address_string);
         if (!isset($result) || $result->isEmpty()) {
           throw new \Exception(sprintf('Unable to geocode "%s" with the %s provider.', $address_string, $provider->id()));
@@ -83,6 +94,16 @@ class Geocoder implements GeocoderInterface {
     /** @var \Drupal\geocoder\GeocoderProviderInterface $provider */
     foreach ($providers as $provider) {
       try {
+        // Manage a side case in which the provider is still coming by 2.x
+        // branch as string.
+        // @see: https://www.drupal.org/project/geocoder/issues/3202941
+        if (is_string($provider)) {
+          $provider_id = $provider;
+          $provider = GeocoderProvider::load($provider);
+          if (!$provider instanceof GeocoderProviderInterface) {
+            throw new \Exception(sprintf("Unable to define a GeocoderProvider from string '%s'", $provider_id));
+          }
+        }
         $result = $provider->getPlugin()->reverse($latitude, $longitude);
         if (!isset($result) || $result->isEmpty()) {
           throw new \Exception(sprintf('Unable to reverse geocode coordinates %s and %s with the %s provider.', $latitude, $longitude, $provider->id()));

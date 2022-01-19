@@ -45,6 +45,7 @@ class Geofield extends FieldPluginBase {
    */
   public function getFieldFormatterMap() {
     return [
+      'geofield_map_map' => 'geofield_default',
       'geofield_wkt' => 'geofield_default',
       'geofield_latlon' => 'geofield_latlon',
       'geofield_geojson' => 'geofield_default',

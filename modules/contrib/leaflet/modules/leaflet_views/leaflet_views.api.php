@@ -11,6 +11,20 @@ use Drupal\leaflet_views\Plugin\views\style\MarkerDefault;
 use Drupal\leaflet_views\Plugin\views\style\LeafletMap;
 
 /**
+ * Allow other modules to add/alter the $geofield_value.
+ *
+ * @param array $geofield_value
+ *   The original Geofield Value (aways as array, also for single value).
+ * @param array $map
+ *   The map array definition.
+ * @param array $leaflet_view_geofield_value_alter_context
+ *   The leaflet_view_geofield_value_alter_context array.
+ */
+function hook_leaflet_map_view_geofield_value_alter(array &$geofield_value, array &$map, array $leaflet_view_geofield_value_alter_context) {
+  // Make custom alterations to $geofield_value.
+}
+
+/**
  * Adjust the array representing a leaflet view feature/marker.
  *
  * @param array $feature

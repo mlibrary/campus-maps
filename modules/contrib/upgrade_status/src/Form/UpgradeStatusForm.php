@@ -225,8 +225,22 @@ class UpgradeStatusForm extends FormBase {
     catch (\Exception $e) {
       $analyzer_ready = FALSE;
       // Message and impact description is not translated as the message
-      // is sourced from an exception thrown.
+      // is sourced from an exception thrown. Adding it to both the set
+      // of standard Drupal messages and to the bottom around the buttons.
       $this->messenger()->addError($e->getMessage() . ' Scanning is not possible until this is resolved.');
+      $form['warning'] = [
+        [
+          '#theme' => 'status_messages',
+          '#message_list' => [
+            'error' => [$e->getMessage() . ' Scanning is not possible until this is resolved.'],
+          ],
+          '#status_headings' => [
+            'error' => t('Error message'),
+          ],
+        ],
+        // Set weight lower than the "actions" element's 100.
+        '#weight' => 90,
+      ];
     }
 
     $environment = $this->buildEnvironmentChecks();
@@ -268,21 +282,23 @@ class UpgradeStatusForm extends FormBase {
       }
     }
 
-    $form['drupal_upgrade_status_form']['action']['submit'] = [
+
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Scan selected'),
       '#weight' => 2,
       '#button_type' => 'primary',
       '#disabled' => !$analyzer_ready,
     ];
-    $form['drupal_upgrade_status_form']['action']['export'] = [
+    $form['actions']['export'] = [
       '#type' => 'submit',
       '#value' => $this->t('Export selected as HTML'),
       '#weight' => 5,
       '#submit' => [[$this, 'exportReport']],
       '#disabled' => !$analyzer_ready,
     ];
-    $form['drupal_upgrade_status_form']['action']['export_ascii'] = [
+    $form['actions']['export_ascii'] = [
       '#type' => 'submit',
       '#value' => $this->t('Export selected as text'),
       '#weight' => 6,
@@ -491,7 +507,6 @@ class UpgradeStatusForm extends FormBase {
         ];
       }
       else {
-        $plan = (string) $this->projectCollector->getPlan($name);
         $option['issues'] = [
           'data' => [
             'label' => [
@@ -707,6 +722,43 @@ MARKUP
           ],
         ]
       ];
+
+      // Check database version.
+      $type = $this->database->databaseType();
+      $version = $this->database->version();
+      $addendum = '';
+      if ($type == 'pgsql') {
+        $type = 'PostgreSQL';
+        $requirement = $this->t('When using PostgreSQL, minimum version is 12 <a href=":trgm">with the pg_trgm extension</a> created.', [':trgm' => 'https://www.postgresql.org/docs/10/pgtrgm.html']);
+        $has_trgm = $this->database->query("SELECT installed_version FROM pg_available_extensions WHERE name = 'pg_trgm'")->fetchField();
+        if (version_compare($version, '12') >= 0 && $has_trgm) {
+          $class = 'no-known-error';
+          $addendum = $this->t('Has pg_trgm extension.');
+        }
+        else {
+          $status = FALSE;
+          $class = 'known-error';
+          if (!$has_trgm) {
+            $addendum = $this->t('No pg_trgm extension.');
+          }
+        }
+        $build['data']['#rows'][] = [
+          'class' => [$class],
+          'data' => [
+            'requirement' => [
+              'class' => 'requirement-label',
+              'data' => [
+                '#type' => 'markup',
+                '#markup' => $requirement
+              ],
+            ],
+            'status' => [
+              'data' => trim($type . ' ' . $version . ' ' . $addendum),
+              'class' => 'status-info',
+            ],
+          ]
+        ];
+      }
 
       // Check JSON support in database.
       $class = 'no-known-error';

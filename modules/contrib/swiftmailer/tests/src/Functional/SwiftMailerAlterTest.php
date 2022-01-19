@@ -49,8 +49,8 @@ class SwiftMailerAlterTest extends SwiftMailerTestBase {
     ];
 
     \Drupal::service('plugin.manager.mail')->mail('swiftmailer_test', 'test-2', 'test@example.com', \Drupal::languageManager()->getDefaultLanguage()->getId(), $params);
-    $this->assertContains('string_from_template', (string) $this->logger->dump()[0]['body']);
-    $this->assertContains('variable_from_preprocess', (string) $this->logger->dump()[0]['body']);
+    $this->assertStringContainsString('string_from_template', (string) $this->logger->dump()[0]['body']);
+    $this->assertStringContainsString('variable_from_preprocess', (string) $this->logger->dump()[0]['body']);
   }
 
   /**
@@ -75,7 +75,7 @@ class SwiftMailerAlterTest extends SwiftMailerTestBase {
     ];
 
     $message = $plugin->format($message);
-    $this->assertContains('<strong>Hello World</strong>', (string) $message['body']);
+    $this->assertStringContainsString('<strong>Hello World</strong>', (string) $message['body']);
     $this->assertEquals('HELLO WORLD', $message['plain']);
   }
 
@@ -102,7 +102,7 @@ class SwiftMailerAlterTest extends SwiftMailerTestBase {
     ];
 
     $message = $plugin->format($message);
-    $this->assertContains('<strong>Hello World</strong>', (string) $message['body']);
+    $this->assertStringContainsString('<strong>Hello World</strong>', (string) $message['body']);
     $this->assertEquals('Original Plain Text Version', $message['plain']);
   }
 
@@ -125,7 +125,7 @@ class SwiftMailerAlterTest extends SwiftMailerTestBase {
     ];
 
     $message = $plugin->format($message);
-    $this->assertContains('<strong>Hello World</strong>', (string) $message['body']);
+    $this->assertStringContainsString('<strong>Hello World</strong>', (string) $message['body']);
     $this->assertEquals('HELLO WORLD', $message['plain']);
 
     // Keep original plain text version.
@@ -140,7 +140,7 @@ class SwiftMailerAlterTest extends SwiftMailerTestBase {
     ];
 
     $message = $plugin->format($message);
-    $this->assertContains('<strong>Hello World</strong>', (string) $message['body']);
+    $this->assertStringContainsString('<strong>Hello World</strong>', (string) $message['body']);
     $this->assertEquals('Original Plain Text Version', $message['plain']);
   }
 

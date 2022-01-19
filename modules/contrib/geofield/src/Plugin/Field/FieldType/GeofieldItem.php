@@ -215,9 +215,15 @@ class GeofieldItem extends FieldItemBase {
    * Populates computed variables.
    */
   protected function populateComputedValues() {
-
-    /* @var \Geometry $geom */
-    $geom = \Drupal::service('geofield.geophp')->load($this->value);
+    // Populate values only if $this->>value is not NULL.
+    // @see https://www.drupal.org/project/geofield/issues/3256644
+    // As passing null to parameter #2 ($data) of type string is deprecated in
+    // fwrite() of geoPHP::detectFormat()
+    // @see https://php.watch/versions/8.1/internal-func-non-nullable-null-deprecation
+    if ($this->value !== NULL) {
+      /* @var \Geometry $geom */
+      $geom = \Drupal::service('geofield.geophp')->load($this->value);
+    }
 
     if (!empty($geom) && !$geom->isEmpty()) {
       /* @var \Point $centroid */

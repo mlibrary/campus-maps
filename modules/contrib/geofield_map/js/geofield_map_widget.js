@@ -271,7 +271,7 @@
       else if (self.map_data[mapid].gmap_geocoder === 1) {
         let providers = self.map_data[mapid].gmap_geocoder_settings.providers.toString();
         let options = self.map_data[mapid].gmap_geocoder_settings.options;
-        self.geocoder_reverse_geocode(latlng, providers, options).done(function (results, status, jqXHR) {
+        Drupal.geoFieldMapGeocoder.reverse_geocode(latlng, providers, options).done(function (results, status, jqXHR) {
           if(status === 'success' && results[0]) {
             self.set_reverse_geocode_result(mapid, latlng, results[0].formatted_address)
           }
@@ -565,8 +565,8 @@
         // If it is defined the Geocode address Search field (dependant on the Gmaps API key)
         if (self.map_data[params.mapid].search) {
 
-          if (self.map_data[params.mapid].gmap_geocoder === 1) {
-            Drupal.geoFieldMap.map_geocoder_control.autocomplete(params.mapid, self.map_data[params.mapid].gmap_geocoder_settings, self.map_data[params.mapid].search, 'widget', params.map_library);
+          if (Drupal.geoFieldMapGeocoder && self.map_data[params.mapid].gmap_geocoder === 1) {
+            Drupal.geoFieldMapGeocoder.map_control_autocomplete(params.mapid, self.map_data[params.mapid].gmap_geocoder_settings, self.map_data[params.mapid].search, 'widget', params.map_library);
           }
           // If the Google Places Autocomplete is not requested/enabled.
           else if (!self.map_data[params.mapid].gmap_places) {
@@ -631,7 +631,7 @@
               e.preventDefault();
               let input = self.map_data[params.mapid].search.val();
               // Execute the geocoder.
-              self.geocoder.geocode({address: input}, function (results, status) {
+              Drupal.geoFieldMapGeocoder.geocode({address: input}, function (results, status) {
                 if (status === google.maps.GeocoderStatus.OK && results[0]) {
                   // Triggers the Geocode on the Geofield Map Widget.
                   let position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());

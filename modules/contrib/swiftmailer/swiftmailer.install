@@ -18,6 +18,16 @@ function swiftmailer_requirements($phase) {
       ];
     }
   }
+  elseif ($phase === 'runtime') {
+    if (empty(\Drupal::state()->get('swiftmailer.skip_warning'))) {
+      $requirements['swiftmailer_unsupported'] = [
+        'title' => t('Swift Mailer unsupported'),
+        'value' => t('The Swift Mailer library is no longer maintained. '),
+        'description' => t('Replacement module: <a href="/project/symfony_mailer">Symfony Mailer</a>'),
+        'severity' => REQUIREMENT_WARNING,
+      ];
+    }
+  }
 
   return $requirements;
 }

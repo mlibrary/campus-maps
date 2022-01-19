@@ -4,7 +4,7 @@
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "require": {
-      "egulias/email-validator": "^2.0",
+      "egulias/email-validator": "^2.0||^3",
       "drupal/mailsystem": "^4.1.0",
       "html2text/html2text": "^4.0.1",
       "php": ">=7.0.0",

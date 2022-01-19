@@ -16,4 +16,4 @@ use Drupal\geocoder\ConfigurableProviderUsingHandlerWithAdapterBase;
  *   }
  * )
  */
-class ArcGisOnline extends ConfigurableProviderUsingHandlerWithAdapterBase {}
+class ArcGISOnline extends ConfigurableProviderUsingHandlerWithAdapterBase {}

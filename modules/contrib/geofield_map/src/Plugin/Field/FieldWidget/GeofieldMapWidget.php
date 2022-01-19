@@ -535,17 +535,19 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     ];
 
     // Filter out the not acceptable values from the options.
-    foreach ($fields_list[$form['#entity_type']] as $k => $field) {
-      if (in_array(
-          $form['#bundle'], $field['bundles']) &&
-        !in_array($k, [
-          'revision_log',
-          'behavior_settings',
-          'parent_id',
-          'parent_type',
-          'parent_field_name',
-        ])) {
-        $string_fields_options[$k] = $k;
+    if (!empty($fields_list[$form['#entity_type']])) {
+      foreach ($fields_list[$form['#entity_type']] as $k => $field) {
+        if (in_array(
+            $form['#bundle'], $field['bundles']) &&
+          !in_array($k, [
+            'revision_log',
+            'behavior_settings',
+            'parent_id',
+            'parent_type',
+            'parent_field_name',
+          ])) {
+          $string_fields_options[$k] = $k;
+        }
       }
     }
 

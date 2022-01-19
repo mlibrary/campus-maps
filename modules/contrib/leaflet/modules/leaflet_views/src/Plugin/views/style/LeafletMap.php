@@ -606,6 +606,9 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
     // Set Map Marker Cluster Element.
     $this->setMapMarkerclusterElement($form, $this->options);
 
+    // Set Fullscreen Element.
+    $this->setFullscreenElement($form, $this->options);
+
     // Set Map Geometries Options Element.
     $this->setMapPathOptionsElement($form, $this->options);
 
@@ -695,8 +698,15 @@ class LeafletMap extends StylePluginBase implements ContainerFactoryPluginInterf
         // an array, also if single value.
         $geofield_value = (array) $this->getFieldValue($result->index, $geofield_name);
 
-        if (!empty($geofield_value)) {
+        // Allow other modules to add/alter the $geofield_value and the $map.
+        $leaflet_view_geofield_value_alter_context = [
+          'leaflet_map_style' => $leaflet_map_style,
+          'result' => $result,
+          'leaflet_view_style' => $this,
+        ];
+        $this->moduleHandler->alter('leaflet_map_view_geofield_value', $geofield_value, $map, $leaflet_view_geofield_value_alter_context);
 
+        if (!empty($geofield_value)) {
           $features = $this->leafletService->leafletProcessGeofield($geofield_value);
 
           if (!empty($result->_entity)) {

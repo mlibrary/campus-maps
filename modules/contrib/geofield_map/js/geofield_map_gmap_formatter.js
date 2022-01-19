@@ -384,13 +384,13 @@
           map.controls[google.maps.ControlPosition[mapResetControlPosition]].push(mapResetControlDiv);
         }
 
-        if (Drupal.geoFieldMapFormatter.map_geocoder_control && map_settings.map_geocoder.control) {
+        if (Drupal.geoFieldMapGeocoder && map_settings.map_geocoder.control) {
           let mapGeocoderControlPosition = map_settings.map_geocoder.settings.position || 'TOP_RIGHT';
           let mapGeocoderControlDiv = document.createElement('div');
-          Drupal.geoFieldMapFormatter.map_data[mapid].geocoder_control = new Drupal.geoFieldMapFormatter.map_geocoder_control(mapGeocoderControlDiv, mapid);
+          Drupal.geoFieldMapFormatter.map_data[mapid].geocoder_control = new Drupal.geoFieldMapGeocoder.map_control(mapGeocoderControlDiv, mapid);
           mapGeocoderControlDiv.index = 1;
           map.controls[google.maps.ControlPosition[mapGeocoderControlPosition]].push(Drupal.geoFieldMapFormatter.map_data[mapid].geocoder_control);
-          Drupal.geoFieldMapFormatter.map_geocoder_control.autocomplete(mapid, map_settings.map_geocoder.settings, $(Drupal.geoFieldMapFormatter.map_data[mapid].geocoder_control), 'formatter', 'gmap');
+          Drupal.geoFieldMapGeocoder.map_control_autocomplete(mapid, map_settings.map_geocoder.settings, $(Drupal.geoFieldMapFormatter.map_data[mapid].geocoder_control), 'formatter', 'gmap');
         }
 
         // If defined a Custom Map Style, associate the styled map with

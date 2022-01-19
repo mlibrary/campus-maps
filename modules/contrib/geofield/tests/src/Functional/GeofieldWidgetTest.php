@@ -171,6 +171,24 @@ class GeofieldWidgetTest extends FieldTestBase {
     $this->submitForm($edit, 'Save');
     $this->assertFieldValues($entity, 'geofield_field', ['POINT (-2.1021 42.2257)']);
 
+    // Add a valid point with lat 0.
+    $edit = [
+      'name[0][value]' => 'Arnedo',
+      'geofield_field[0][value][lat]' => 0,
+      'geofield_field[0][value][lon]' => -2.1021,
+    ];
+    $this->submitForm($edit, 'Save');
+    $this->assertFieldValues($entity, 'geofield_field', ['POINT (-2.1021 0)']);
+
+    // Add a valid point with lon 0.
+    $edit = [
+      'name[0][value]' => 'Arnedo',
+      'geofield_field[0][value][lat]' => 42.2257,
+      'geofield_field[0][value][lon]' => 0,
+    ];
+    $this->submitForm($edit, 'Save');
+    $this->assertFieldValues($entity, 'geofield_field', ['POINT (0 42.2257)']);
+
     // Add values out of range.
     $edit = [
       'name[0][value]' => 'Out of bounds',

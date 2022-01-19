@@ -5,7 +5,7 @@ base theme: stable
 core: 8.x
 core_version_requirement: ^8 || ^9
 
-# Information added by Drupal.org packaging script on 2021-01-02
-version: '8.x-2.0'
+# Information added by Drupal.org packaging script on 2021-12-10
+version: '8.x-2.2'
 project: 'swiftmailer'
-datestamp: 1609585508
+datestamp: 1639141918
