@@ -2808,17 +2808,17 @@
         },
         {
             "name": "drupal/core",
-            "version": "9.3.3",
-            "version_normalized": "9.3.3.0",
+            "version": "9.3.6",
+            "version_normalized": "9.3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/drupal/core.git",
-                "reference": "a9bd68be9a4e39724ea555f8040114759a8faf7f"
+                "reference": "2c0c89a0f49fab56f8322721888cdfa28fe98c3a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/drupal/core/zipball/a9bd68be9a4e39724ea555f8040114759a8faf7f",
-                "reference": "a9bd68be9a4e39724ea555f8040114759a8faf7f",
+                "url": "https://api.github.com/repos/drupal/core/zipball/2c0c89a0f49fab56f8322721888cdfa28fe98c3a",
+                "reference": "2c0c89a0f49fab56f8322721888cdfa28fe98c3a",
                 "shasum": ""
             },
             "require": {
@@ -2985,7 +2985,7 @@
                 "drupal/workflows": "self.version",
                 "drupal/workspaces": "self.version"
             },
-            "time": "2022-01-19T00:13:54+00:00",
+            "time": "2022-02-15T20:26:28+00:00",
             "type": "drupal-core",
             "extra": {
                 "drupal-scaffold": {
@@ -3026,10 +3026,14 @@
             },
             "installation-source": "dist",
             "autoload": {
+                "files": [
+                    "includes/bootstrap.inc",
+                    "includes/guzzle_php81_shim.php"
+                ],
                 "psr-4": {
                     "Drupal\\Core\\": "lib/Drupal/Core",
-                    "Drupal\\Component\\": "lib/Drupal/Component",
-                    "Drupal\\Driver\\": "../drivers/lib/Drupal/Driver"
+                    "Drupal\\Driver\\": "../drivers/lib/Drupal/Driver",
+                    "Drupal\\Component\\": "lib/Drupal/Component"
                 },
                 "classmap": [
                     "lib/Drupal.php",
@@ -3058,10 +3062,6 @@
                     "lib/Drupal/Core/Http/InputBag.php",
                     "lib/Drupal/Core/Installer/InstallerRedirectTrait.php",
                     "lib/Drupal/Core/Site/Settings.php"
-                ],
-                "files": [
-                    "includes/bootstrap.inc",
-                    "includes/guzzle_php81_shim.php"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -3070,7 +3070,7 @@
             ],
             "description": "Drupal is an open source content management platform powering millions of websites and applications.",
             "support": {
-                "source": "https://github.com/drupal/core/tree/9.3.3"
+                "source": "https://github.com/drupal/core/tree/9.3.6"
             },
             "install-path": "../../core"
         },
