@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'c126218f0e7abe380796c784620e75a811eef71d',
+    'reference' => '1a769c68cd68230ed94c1cc72db49b8199bf15fe',
     'name' => 'drupal/recommended-project',
   ),
   'versions' => 
@@ -1161,7 +1161,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'c126218f0e7abe380796c784620e75a811eef71d',
+      'reference' => '1a769c68cd68230ed94c1cc72db49b8199bf15fe',
     ),
     'drupal/responsive_image' => 
     array (
@@ -1405,12 +1405,12 @@
     ),
     'enshrined/svg-sanitize' => 
     array (
-      'pretty_version' => '0.14.1',
-      'version' => '0.14.1.0',
+      'pretty_version' => '0.15.3',
+      'version' => '0.15.3.0',
       'aliases' => 
       array (
       ),
-      'reference' => '307b42066fb0b76b5119f5e1f0826e18fefabe95',
+      'reference' => '50c0f86ab08d8f3a986ac4f57874492a22171708',
     ),
     'geocoder-php/common-http' => 
     array (
