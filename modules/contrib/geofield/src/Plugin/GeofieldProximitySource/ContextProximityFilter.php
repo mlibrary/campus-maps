@@ -70,20 +70,18 @@ class ContextProximityFilter extends GeofieldProximitySourceBase implements Cont
     if (isset($this->viewHandler)) {
       /** @var \Drupal\geofield\Plugin\views\argument\GeofieldProximityArgument $geofield_proximity_argument */
       $geofield_proximity_argument = $this->viewHandler->view->argument;
-      foreach ($this->viewHandler->view->argument as $k => $argument) {
+      foreach ($this->viewHandler->view->argument as $argument) {
         if ($argument instanceof GeofieldProximityArgument) {
           $geofield_proximity_argument = $argument;
         }
       }
 
-      if (isset($geofield_proximity_argument)) {
-        $argument_values = $geofield_proximity_argument->getParsedReferenceLocation();
+      if (isset($geofield_proximity_argument) && $argument_values = $geofield_proximity_argument->getParsedReferenceLocation()) {
         $origin = [
           'lat' => $argument_values['lat'],
           'lon' => $argument_values['lon'],
         ];
       }
-
     }
     return $origin;
   }

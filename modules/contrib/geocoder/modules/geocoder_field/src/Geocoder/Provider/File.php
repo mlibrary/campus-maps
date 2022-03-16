@@ -45,7 +45,8 @@ class File extends AbstractProvider implements Provider {
         return new AddressCollection([$result]);
       }
     }
-    throw new LogicException(sprintf('Could not find geo data in file: "%s".', basename($filename)));;
+    throw new LogicException(sprintf('Could not find geo data in file: "%s".', basename($filename)));
+    ;
   }
 
   /**

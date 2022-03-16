@@ -649,14 +649,13 @@ trait LeafletSettingsElementsTrait {
    *   The Form element to alter.
    */
   protected function setReplacementPatternsElement(array &$element) {
+    $element['replacement_patterns'] = [
+      '#type' => 'details',
+      '#title' => 'Replacement patterns',
+      '#description' => $this->t('The following replacement tokens are available for the "Popup Content and the Icon Options":'),
+    ];
+
     if ($this->moduleHandler->moduleExists('token')) {
-
-      $element['replacement_patterns'] = [
-        '#type' => 'details',
-        '#title' => 'Replacement patterns',
-        '#description' => $this->t('The following replacement tokens are available for the "Popup Content and the Icon Options":'),
-      ];
-
       $element['replacement_patterns']['token_help'] = [
         '#theme' => 'token_tree_link',
         '#token_types' => [$this->fieldDefinition->getTargetEntityTypeId()],

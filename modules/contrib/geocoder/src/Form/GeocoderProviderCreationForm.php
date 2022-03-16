@@ -98,7 +98,7 @@ class GeocoderProviderCreationForm extends FormBase {
       '#value' => $this->t('Add'),
     ];
 
-    $providers = $this->link->generate(t('list of all available Geocoder providers'), Url::fromUri('https://packagist.org/providers/geocoder-php/provider-implementation', [
+    $providers = $this->link->generate($this->t('list of all available Geocoder providers'), Url::fromUri('https://packagist.org/providers/geocoder-php/provider-implementation', [
       'absolute' => TRUE,
       'attributes' => ['target' => 'blank'],
     ]));

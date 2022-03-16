@@ -22,9 +22,9 @@ use Geocoder\Model\AddressCollection;
  */
 function geocoder_field_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   if ($form_state->getFormObject() instanceof ContentEntityFormInterface) {
-    /* @var \Drupal\Core\Entity\EntityForm $entity_form */
+    /** @var \Drupal\Core\Entity\EntityForm $entity_form */
     $entity_form = $form_state->getFormObject();
-    /* @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $entity_form->getEntity();
 
     _geocoder_field_alter_form_fields($entity, $form);
@@ -38,7 +38,7 @@ function geocoder_field_form_alter(array &$form, FormStateInterface $form_state,
  */
 function geocoder_field_inline_entity_form_entity_form_alter(&$entity_form, FormStateInterface &$form_state) {
 
-  /* @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+  /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
   $entity = $entity_form['#entity'];
 
   _geocoder_field_alter_form_fields($entity, $entity_form);
@@ -200,7 +200,7 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
 
     $original_field = NULL;
     if (isset($entity->original) && isset($geocoder['field'])) {
-      /* @var Drupal\Core\Field\FieldItemListInterface $original_field */
+      /** @var Drupal\Core\Field\FieldItemListInterface $original_field */
       $original_field = $entity->original->get($geocoder['field']);
     }
 
@@ -241,7 +241,7 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
         $value['value'] = $country_manager->getList()[$value['value']];
       }
 
-      /* @var \Geocoder\Model\AddressCollection|\Geometry $geo_collection */
+      /** @var \Geocoder\Model\AddressCollection|\Geometry $geo_collection */
       switch ($geocoder['method']) {
         case 'geocode':
           // Allow others modules to adjust the address string.
@@ -306,10 +306,10 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
           // Single-to-multiple handling - if we can, explode out the
           // component geometries.
           if ($geo_collection instanceof GeometryCollection && $geocoder['delta_handling'] == 's_to_m') {
-            /* @var \GeometryCollection $geo_collection */
+            /** @var \GeometryCollection $geo_collection */
             if ($geo_collection instanceof GeometryCollection) {
               $components = $geo_collection->getComponents();
-              /* @var \Geometry $component */
+              /** @var \Geometry $component */
               foreach ($components as $component) {
                 $this_result = $component->out($dumper->getPluginId());
                 // Check|Fix some incompatibility between Dumper output and

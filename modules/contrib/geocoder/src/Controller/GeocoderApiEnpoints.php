@@ -105,7 +105,7 @@ class GeocoderApiEnpoints extends ControllerBase {
    *   The Address Geometry Property.
    */
   protected function addGeometryProperty(Address $address) {
-    /* @var array $address_array */
+    /** @var array $address_array */
     $address_array = $address->toArray();
 
     return [

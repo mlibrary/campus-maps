@@ -184,13 +184,13 @@ abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
     $adapters = $this->geoPhpWrapper->getAdapterMap();
     $adapter = $this->getSetting('adapter');
     try {
-      /* @var \Drupal\geocoder_field\PreprocessorInterface $preprocessor */
+      /** @var \Drupal\geocoder_field\PreprocessorInterface $preprocessor */
       $preprocessor = $this->preprocessorManager->createInstance('file');
       $preprocessor->setField($items)->preprocess();
       $providers = $this->getEnabledGeocoderProviders();
       if (array_key_exists($adapter, $adapters)) {
         foreach ($items as $delta => $item) {
-          /* @var \Geometry $collection */
+          /** @var \Geometry $collection */
           if ($collection = $this->geocoder->geocode($item->value, $providers)) {
             $elements[$delta] = [
               '#markup' => $collection->out($adapter),

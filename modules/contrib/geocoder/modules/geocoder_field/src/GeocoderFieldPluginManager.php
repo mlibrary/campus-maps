@@ -108,7 +108,7 @@ class GeocoderFieldPluginManager extends DefaultPluginManager {
   public function getPluginByFieldType($field_type) {
     foreach ($this->getDefinitions() as $definition) {
       if (in_array($field_type, $definition['field_types'])) {
-        /* @var \Drupal\geocoder_field\GeocoderFieldPluginInterface $geocoder_field_plugin */
+        /** @var \Drupal\geocoder_field\GeocoderFieldPluginInterface $geocoder_field_plugin */
         $geocoder_field_plugin = $this->createInstance($definition['id']);
         return $geocoder_field_plugin;
       }

@@ -813,7 +813,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       'data' => [],
     ];
 
-    $data = [];
+    $geojson_data = [];
     // Collect bubbleable metadata when doing early rendering.
     $build_for_bubbleable_metadata = [];
 
@@ -838,12 +838,12 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
       /* @var \Drupal\views\ResultRow  $result */
       foreach ($this->view->result as $id => $result) {
-        // For proper processing make sure the geofield_value is created as an
+        // For proper processing make sure the features is created as an
         // array, also if single value.
-        $geofield_value = (array) $this->getFieldValue($id, $geofield_name);
+        $features = (array) $this->getFieldValue($id, $geofield_name);
 
         // In case the result is not null.
-        if (!empty($geofield_value)) {
+        if (!empty($features)) {
           if (empty($this->options['entity_source']) || $this->options['entity_source'] == '__base_table') {
             if (!empty($result->_entity)) {
               // Entity API provides a plain entity object.
@@ -903,8 +903,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
             ];
             if (isset($dynamic_renderers[$rendering_language])) {
               /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-              $langcode = isset($result->$entity_type_langcode_attribute) ? $result->$entity_type_langcode_attribute : $entity->language()
-                ->getId();
+              $langcode = $result->$entity_type_langcode_attribute ?? $entity->language()->getId();
             }
             else {
               if (strpos($rendering_language, '***LANGUAGE_') !== FALSE) {
@@ -1001,54 +1000,54 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
               $tokens[$field_name] = $field_value;
             }
 
-            // Generate GeoJsonData.
-            $geojson_data = $this->getGeoJsonData($geofield_value, $entity->id(), $description, $tooltip, $view_data);
+            foreach ($features as $k => &$feature) {
+              // Generate GeoJsonData Feature.
+              $info_window_description = $description[$k] ?? (!empty($description) ? $description[0] : NULL);
+              $feature = $this->getGeoJsonData($feature, $entity->id(), $info_window_description, $tooltip, $view_data);
 
-            // Add Theming Icon based on the $theming plugin.
-            $theming = NULL;
-            if (isset($map_settings['map_marker_and_infowindow']['theming']) && $map_settings['map_marker_and_infowindow']['theming']['plugin_id'] != 'none') {
-              $theming = $map_settings['map_marker_and_infowindow']['theming'];
-              try {
-                /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
-                $map_themer = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
-                $map_theming = $theming[$map_themer->getPluginId()]['values'];
-                foreach ($geojson_data as $k => $datum) {
-                  if ($datum['geometry']->type === 'Point') {
-                    $geojson_data[$k]['properties']['icon'] = $map_themer->getIcon($datum, $this, $entity, $map_theming);
+              // Add Theming Icon based on the $theming plugin.
+              $theming = NULL;
+              if (isset($map_settings['map_marker_and_infowindow']['theming']) && $map_settings['map_marker_and_infowindow']['theming']['plugin_id'] != 'none') {
+                $theming = $map_settings['map_marker_and_infowindow']['theming'];
+                try {
+                  /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
+                  $map_themer = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
+                  $map_theming = $theming[$map_themer->getPluginId()]['values'];
+                  if ($feature['geometry']->type === 'Point') {
+                    $feature['properties']['icon'] = $map_themer->getIcon($feature, $this, $entity, $map_theming);
                     // Flag the data with theming, for later rendering logic.
-                    $geojson_data[$k]['properties']['theming'] = TRUE;
+                    $feature['properties']['theming'] = TRUE;
                   }
                 }
-              }
-              catch (PluginException $e) {
-                watchdog_exception('geofield_map', $e);
-              }
-            }
-            elseif ($map_settings['map_marker_and_infowindow']['icon_image_mode'] == 'icon_file' && strlen($map_settings['map_marker_and_infowindow']['icon_image_path']) > 0) {
-              foreach ($geojson_data as $k => $datum) {
-                if ($datum['geometry']->type === 'Point') {
-                  $geojson_data[$k]['properties']['icon'] = $this->viewsTokenReplace($this->options['map_marker_and_infowindow']['icon_image_path'], $tokens);
+                catch (PluginException $e) {
+                  watchdog_exception('geofield_map', $e);
                 }
               }
-            }
-
-            // Associate dynamic path properties (token based) to each feature,
-            // in case of not point.
-            foreach ($geojson_data as $k => $datum) {
-              if ($datum['geometry']->type !== 'Point') {
-                $geojson_data[$k]['properties']['path_options'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['map_geometries_options'], $tokens));
+              elseif ($map_settings['map_marker_and_infowindow']['icon_image_mode'] == 'icon_file' && strlen($map_settings['map_marker_and_infowindow']['icon_image_path']) > 0) {
+                if ($feature['geometry']->type === 'Point') {
+                  $feature['properties']['icon'] = $this->viewsTokenReplace($this->options['map_marker_and_infowindow']['icon_image_path'], $tokens);
+                }
               }
-            }
 
-            // Generate incremental GeoJsonData.
-            $data = array_merge($data, $geojson_data);
+              // Associate dynamic path properties (token) to each feature,
+              // in case of not point.
+              if ($feature['geometry']->type !== 'Point') {
+                $feature['properties']['path_options'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['map_geometries_options'], $tokens));
+              }
+
+              // Allow modules to adjust the single feature (marker).
+              $this->moduleHandler->alter('geofield_map_views_feature', $feature, $result, $this->view->rowPlugin);
+
+            }
+            // Generate incremental Features.
+            $geojson_data = array_merge($geojson_data, $features);
           }
         }
       }
 
       $js_settings['data'] = [
         'type' => 'FeatureCollection',
-        'features' => $data,
+        'features' => $geojson_data,
       ];
 
       // Allow other modules to add/alter the map js settings.

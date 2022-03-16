@@ -313,6 +313,15 @@ the Response result output is empty, with a 204 ("No content") response
 status code. See the Drupal logs for information regarding possible Geocoder
 wrong configurations causes.
 
+## Persistent cache for geocoded points
+Ref: Geocoder issue:
+[#2994249](https://www.drupal.org/project/geocoder/issues/2994249)
+It is possible to persist the geocode cache when drupal caches are cleared,
+enabling support and configuration for the
+.
+- install [Permanent Cache Bin module](https://www.drupal.org/project/pcb)
+- in your *settings.php add:
+  `$settings['cache']['bins']['geocoder'] = 'cache.backend.permanent_database'`
 
 # Upgrading from Geocoder 2.x to 3.x
 

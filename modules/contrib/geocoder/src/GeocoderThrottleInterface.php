@@ -18,7 +18,7 @@ interface GeocoderThrottleInterface {
    *   - limit: number of requests allowed in the period
    *   or null not to limit the requests.
    *
-   * @return void|NULL
+   * @return void|null
    */
   public function waitForAvailability(string $key, array $throttle_info);
 

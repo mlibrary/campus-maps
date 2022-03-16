@@ -11,6 +11,33 @@ use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\leaflet\Plugin\Field\FieldWidget\LeafletDefaultWidget;
 
 /**
+ * Returns leaflet map info default settings.
+ */
+function leaflet_map_info_default_settings() {
+  return [
+    'dragging' => TRUE,
+    'touchZoom' => TRUE,
+    'scrollWheelZoom' => TRUE,
+    'doubleClickZoom' => TRUE,
+    'zoomControl' => TRUE,
+    'attributionControl' => TRUE,
+    'trackResize' => TRUE,
+    'fadeAnimation' => TRUE,
+    'zoomAnimation' => TRUE,
+    'closePopupOnClick' => TRUE,
+    'minZoom' => 2,
+    'maxZoom' => 20,
+    'zoom' => 15,
+    // Specific of the Drupal Leaflet module
+    // Enables Layer Control in case of multiple layers, and add options.
+    'layerControl' => TRUE,
+    'layerControlOptions' => [
+      'position' => 'topright',
+    ],
+  ];
+}
+
+/**
  * Define map definitions to be used when rendering a map.
  *
  * The leaflet_map_get_info() will grab every defined map, and the returned
@@ -32,29 +59,7 @@ function hook_leaflet_map_info() {
     'OSM Mapnik' => [
       'label' => 'OSM Mapnik',
       'description' => t('Leaflet default map.'),
-      'settings' => [
-        'dragging' => TRUE,
-        'touchZoom' => TRUE,
-        'scrollWheelZoom' => TRUE,
-        'doubleClickZoom' => TRUE,
-        'zoomControl' => TRUE,
-        'attributionControl' => TRUE,
-        'trackResize' => TRUE,
-        'fadeAnimation' => TRUE,
-        'zoomAnimation' => TRUE,
-        'closePopupOnClick' => TRUE,
-        // Sets the map min max and starting zoom,
-        // 'minZoom' => 10,
-        // 'maxZoom' => 15,
-        // 'zoom' => 15,
-        //
-        // Specific of the Drupal Leaflet module
-        // Enables Layer Control in case of multiple layers, and add options.
-        'layerControl' => TRUE,
-        'layerControlOptions' => [
-          'position' => 'topright',
-        ],
-      ],
+      'settings' => leaflet_map_info_default_settings(),
       'layers' => [
         'earth' => [
           'urlTemplate' => '//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -84,6 +89,40 @@ function hook_leaflet_map_info() {
       ),*/
       // Enable and configure plugins in the plugins array.
       'plugins' => [],
+    ],
+    'multilayers' => [
+      'label' => 'Multilayers',
+      'description' => t('Multilayers'),
+      'settings' => leaflet_map_info_default_settings(),
+      'layers' => [
+        'Google Roads' => [
+          'type' => 'google',
+          'urlTemplate' => '//mt{s}.googleapis.com/vt?x={x}&y={y}&z={z}',
+          'options' => [
+            'attribution' => 'Map data &copy; <a href="http://googlemaps.com">Google</a>',
+            'detectRetina' => FALSE,
+            'subdomains' => [0, 1, 2, 3],
+          ],
+        ],
+        'Hydda Base' => [
+          'urlTemplate' => '//{s}.tile.openstreetmap.se/hydda/base/{z}/{x}/{y}.png',
+          'options' => [
+            "minZoom" => 0,
+            "maxZoom" => 18,
+            "attribution" => "\"Tiles courtesy of <a href='http://openstreetmap.se/' target='_blank'>OpenStreetMap Sweden</a> &mdash; Map data &copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>",
+          ],
+        ],
+        'Stamen_Terrain' => [
+          'urlTemplate' => '//stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}',
+          'options' => [
+            "minZoom" => 0,
+            "maxZoom" => 18,
+            "ext" => "png",
+            "subdomains" => "abcd",
+            "attribution" => "Map tiles by <a href='http://stamen.com'>Stamen Design</a>, <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a> &mdash; Map data &copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>",
+          ],
+        ],
+      ],
     ],
   ];
 }
@@ -135,7 +174,7 @@ function hook_leaflet_default_widget_alter(array &$map_settings, LeafletDefaultW
  *   The Content Entity base of the formatter.
  */
 function hook_leaflet_formatter_feature_alter(array $feature, GeofieldItem $item, ContentEntityBase $entity) {
-  // Make custom alterations to $map_settings, eventually using the $items
+  // Make custom alterations to $feature, eventually using the $items
   // context.
 }
 

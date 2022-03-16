@@ -760,50 +760,59 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     // Define a Tooltip for the Feature.
     $tooltip = isset($map_settings['map_marker_and_infowindow']['tooltip_field']) && $map_settings['map_marker_and_infowindow']['tooltip_field'] == 'title' ? $entity->label() : '';
 
-    $geojson_data = $this->getGeoJsonData($items, $entity->id(), $description, $tooltip);
+    $features = [];
+    foreach ($items as $k => $item) {
 
-    // Add Custom Icon, if set.
-    if (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
-      && $map_settings['map_marker_and_infowindow']['icon_image_mode'] === 'icon_file') {
-      $image_style = 'none';
-      $fid = NULL;
+      // Generate GeoJsonData Feature.
+      $info_window_description = $description[$k] ?? (!empty($description) ? $description[0] : NULL);
+      $feature = $this->getGeoJsonData($item, $entity->id(), $info_window_description, $tooltip);
 
-      if (isset($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'])) {
-        $image_style = $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'];
-      }
+      // Add Custom Icon, if set.
+      if (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
+        && $map_settings['map_marker_and_infowindow']['icon_image_mode'] === 'icon_file') {
+        $image_style = 'none';
+        $fid = NULL;
 
-      if ((integer) !empty($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'])) {
-        $fid = $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'];
-      }
+        if (isset($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'])) {
+          $image_style = $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'];
+        }
 
-      foreach ($geojson_data as $k => $datum) {
-        if ($datum['geometry']->type === 'Point') {
-          $geojson_data[$k]['properties']['icon'] = $this->markerIcon->getFileManagedUrl($fid, $image_style);
+        if ((integer) !empty($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'])) {
+          $fid = $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'];
+        }
+
+        if ($feature['geometry']->type === 'Point') {
+          $feature['properties']['icon'] = $this->markerIcon->getFileManagedUrl($fid, $image_style);
           // Flag the data with theming, for later rendering logic.
-          $geojson_data[$k]['properties']['theming'] = TRUE;
+          $feature['properties']['theming'] = TRUE;
+        }
+
+      }
+      elseif (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
+        && $map_settings['map_marker_and_infowindow']['icon_image_mode'] === 'icon_image_path') {
+        if ($feature['geometry']->type === 'Point') {
+          $feature['properties']['icon'] = !empty($map_settings['map_marker_and_infowindow']['icon_image_path']) ? $this->token->replace($map_settings['map_marker_and_infowindow']['icon_image_path'], $token_context) : '';
+          // Flag the data with theming, for later rendering logic.
+          $feature['properties']['theming'] = TRUE;
+        }
+
+        // Associate dynamic path properties (token based) to the feature,
+        // in case of not point.
+        if ($feature['geometry']->type !== 'Point') {
+          $feature['properties']['path_options'] = !empty($map_settings['map_geometries_options']) ? str_replace([
+            "\n",
+            "\r",
+          ], "", $this->token->replace($map_settings['map_geometries_options'], $token_context)) : '';
         }
       }
-    }
-    elseif (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
-      && $map_settings['map_marker_and_infowindow']['icon_image_mode'] === 'icon_image_path') {
-      foreach ($geojson_data as $k => $datum) {
-        if ($datum['geometry']->type === 'Point') {
-          $geojson_data[$k]['properties']['icon'] = !empty($map_settings['map_marker_and_infowindow']['icon_image_path']) ? $this->token->replace($map_settings['map_marker_and_infowindow']['icon_image_path'], $token_context) : '';
-          // Flag the data with theming, for later rendering logic.
-          $geojson_data[$k]['properties']['theming'] = TRUE;
-        }
-      }
+
+      // Allow modules to adjust the feature/marker.
+      $this->moduleHandler->alter('geofield_map_formatter_feature', $feature, $item, $entity);
+
+      $features[] = $feature;
     }
 
-    // Associate dynamic path properties (token based) to the feature,
-    // in case of not point.
-    foreach ($geojson_data as $k => $datum) {
-      if ($datum['geometry']->type !== 'Point') {
-        $geojson_data[$k]['properties']['path_options'] = !empty($map_settings['map_geometries_options']) ? str_replace(["\n", "\r"], "", $this->token->replace($map_settings['map_geometries_options'], $token_context)) : '';
-      }
-    }
-
-    if (empty($geojson_data) && $map_settings['map_empty']['empty_behaviour'] !== '2') {
+    if (empty($features) && $map_settings['map_empty']['empty_behaviour'] !== '2') {
       $view_in_progress = FALSE;
       return [
         '#type' => 'html_tag',
@@ -817,7 +826,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     else {
       $js_settings['data'] = [
         'type' => 'FeatureCollection',
-        'features' => $geojson_data,
+        'features' => $features,
       ];
     }
 

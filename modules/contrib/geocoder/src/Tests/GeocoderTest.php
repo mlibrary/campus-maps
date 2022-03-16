@@ -79,7 +79,7 @@ class GeocoderTest extends BrowserTestBase {
 
     $this->drupalPostForm(NULL, [
       'cache' => FALSE,
-    ], t('Save configuration'));
+    ], 'Save configuration');
 
     $this->drupalGet('admin/config/system/geocoder');
     $this->assertResponse(200);

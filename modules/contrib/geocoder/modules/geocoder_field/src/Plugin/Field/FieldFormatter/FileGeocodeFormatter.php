@@ -155,9 +155,9 @@ class FileGeocodeFormatter extends GeocodeFormatterBase {
     // Formatter action.
     $compatible_providers = array_filter($element['providers'], function ($e) {
       $geocoder_providers = $this->geocoderProviders;
-      /* @var \Drupal\geocoder\Entity\GeocoderProvider $geocoder_provider */
+      /** @var \Drupal\geocoder\Entity\GeocoderProvider $geocoder_provider */
       if (isset($geocoder_providers[$e]) && $geocoder_provider = $geocoder_providers[$e]) {
-        /* @var \Drupal\Component\Plugin\PluginBase $plugin */
+        /** @var \Drupal\Component\Plugin\PluginBase $plugin */
         $plugin = $geocoder_provider->getPlugin();
         return $plugin->getPluginId() == $this->formatterPlugin;
       }
@@ -193,9 +193,9 @@ class FileGeocodeFormatter extends GeocodeFormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $elements = [];
     try {
-      /* @var \Drupal\geocoder\DumperInterface $dumper */
+      /** @var \Drupal\geocoder\DumperInterface $dumper */
       $dumper = $this->dumperPluginManager->createInstance($this->getSetting('dumper'));
-      /* @var \Drupal\geocoder_field\PreprocessorInterface $preprocessor */
+      /** @var \Drupal\geocoder_field\PreprocessorInterface $preprocessor */
       $preprocessor = $this->preprocessorManager->createInstance('file');
       $preprocessor->setField($items)->preprocess();
       $providers = $this->getEnabledGeocoderProviders();
@@ -223,7 +223,7 @@ class FileGeocodeFormatter extends GeocodeFormatterBase {
   public function getEnabledGeocoderProviders(): array {
 
     $providers = array_filter(parent::getEnabledGeocoderProviders(), function (GeocoderProvider $geocoder_provider) {
-      /* @var \Drupal\Component\Plugin\PluginBase $plugin */
+      /** @var \Drupal\Component\Plugin\PluginBase $plugin */
       $plugin = $geocoder_provider->getPlugin();
       return $plugin->getPluginId() == $this->formatterPlugin;
     });

@@ -44,9 +44,9 @@ class GeocodeFormatter extends GeocodeFormatterBase {
     // Formatter action.
     $compatible_providers = array_filter($element['providers'], function ($e) {
       $geocoder_providers = $this->geocoderProviders;
-      /* @var \Drupal\geocoder\Entity\GeocoderProvider $geocoder_provider */
+      /** @var \Drupal\geocoder\Entity\GeocoderProvider $geocoder_provider */
       if (isset($geocoder_providers[$e]) && $geocoder_provider = $geocoder_providers[$e]) {
-        /* @var \Drupal\Component\Plugin\PluginBase $plugin */
+        /** @var \Drupal\Component\Plugin\PluginBase $plugin */
         $plugin = $geocoder_provider->getPlugin();
         return !in_array($plugin->getPluginId(), $this->incompatiblePlugins);
       }

@@ -57,6 +57,7 @@
         "geocoder-php/pelias-provider": "^1.1",
         "geocoder-php/photon-provider": "^0.1.0",
         "geocoder-php/tomtom-provider": "^4.0",
-        "geocoder-php/yandex-provider": "^4.0"
+        "geocoder-php/yandex-provider": "^4.0",
+        "geo6/geocoder-php-bpost-provider":  "^1.3.0"
     }
 }

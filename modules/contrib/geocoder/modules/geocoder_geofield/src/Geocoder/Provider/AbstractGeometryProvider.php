@@ -2,7 +2,6 @@
 
 namespace Drupal\geocoder_geofield\Geocoder\Provider;
 
-use Geometry;
 use Geocoder\Exception\LogicException;
 use Geocoder\Exception\UnsupportedOperation;
 
@@ -42,10 +41,10 @@ abstract class AbstractGeometryProvider implements GeometryProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function geocode($filename): Geometry {
+  public function geocode($filename): \Geometry {
     if (file_exists($filename)) {
       $geophp_string = file_get_contents($filename);
-      /* @var \Geometry $geometry */
+      /** @var \Geometry $geometry */
       $geometry = $this->geophp->load($geophp_string, $this->geophpType);
       if (!empty($geometry->components) || $geometry instanceof \Geometry) {
         return $geometry;

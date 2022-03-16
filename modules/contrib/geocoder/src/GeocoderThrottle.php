@@ -24,7 +24,7 @@ class GeocoderThrottle implements GeocoderThrottleInterface {
    */
   public function __construct() {
     $this->throttle = new LeakyBucket();
-    // TODO For now, we use a per-process storage, which means that requests
+    // @todo For now, we use a per-process storage, which means that requests
     // sent at the same time by another process (like another user on the
     // website) will be throttled separately, so that the actual limit of the
     // provider could still be reached.

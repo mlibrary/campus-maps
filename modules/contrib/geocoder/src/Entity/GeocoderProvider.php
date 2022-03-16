@@ -132,7 +132,7 @@ class GeocoderProvider extends ConfigEntityBase implements GeocoderProviderInter
    * {@inheritdoc}
    */
   public function getPluginDefinition(): array {
-    /* @var \Drupal\Component\Plugin\PluginBase $plugin */
+    /** @var \Drupal\Component\Plugin\PluginBase $plugin */
     $plugin = $this->getPlugin();
     return $plugin->getPluginDefinition() ?: [];
   }

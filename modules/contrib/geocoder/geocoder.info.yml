@@ -6,7 +6,7 @@ package: Geocoding
 configure: geocoder.settings
 php: 7.1.0
 
-# Information added by Drupal.org packaging script on 2021-11-29
-version: '8.x-3.24'
+# Information added by Drupal.org packaging script on 2022-01-21
+version: '8.x-3.25'
 project: 'geocoder'
-datestamp: 1638225452
+datestamp: 1642803152
