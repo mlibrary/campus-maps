@@ -99,3 +99,6 @@ field.formatter.settings.geofield_latlon:
     output_format:
       type: string
       label: 'Output format'
+    output_escape:
+      type: boolean
+      label: 'Output escape'

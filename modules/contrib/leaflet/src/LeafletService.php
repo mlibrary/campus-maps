@@ -343,17 +343,19 @@ class LeafletService {
     if (isset($feature["icon"]["iconSize"])
       && (empty(intval($feature["icon"]["iconSize"]["x"])) && empty(intval($feature["icon"]["iconSize"]["y"])))
       && (!empty($feature["icon"]["iconUrl"]) && $this->fileExists($feature["icon"]["iconUrl"]))) {
-      $iconSize = getimagesize($feature["icon"]["iconUrl"]);
-      $feature["icon"]["iconSize"]["x"] = $iconSize[0];
-      $feature["icon"]["iconSize"]["y"] = $iconSize[1];
+      if ($iconSize = getimagesize($feature["icon"]["iconUrl"])) {
+        $feature["icon"]["iconSize"]["x"] = $iconSize[0];
+        $feature["icon"]["iconSize"]["y"] = $iconSize[1];
+      }
     }
 
     if (isset($feature["icon"]["shadowSize"])
       && (empty(intval($feature["icon"]["shadowSize"]["x"])) && empty(intval($feature["icon"]["shadowSize"]["y"])))
       && (!empty($feature["icon"]["shadowUrl"]) && $this->fileExists($feature["icon"]["shadowUrl"]))) {
-      $shadowSize = getimagesize($feature["icon"]["iconUrl"]);
-      $feature["icon"]["shadowSize"]["x"] = $shadowSize[0];
-      $feature["icon"]["shadowSize"]["y"] = $shadowSize[1];
+      if ($shadowSize = getimagesize($feature["icon"]["iconUrl"])) {
+        $feature["icon"]["shadowSize"]["x"] = $shadowSize[0];
+        $feature["icon"]["shadowSize"]["y"] = $shadowSize[1];
+      }
     }
   }
 
@@ -370,7 +372,8 @@ class LeafletService {
    */
   public function fileExists($fileUrl) {
     $file_headers = @get_headers($fileUrl);
-    if ((stripos($file_headers[0], "404 Not Found") == 0)
+    if (isset($file_headers)
+      && (stripos($file_headers[0], "404 Not Found") == 0)
       && (stripos($file_headers[0], "403 Forbidden") == 0)
       && (stripos($file_headers[0], "302 Found") == 0 && isset($file_headers[7]) && stripos($file_headers[7], "404 Not Found") == 0)) {
       return TRUE;

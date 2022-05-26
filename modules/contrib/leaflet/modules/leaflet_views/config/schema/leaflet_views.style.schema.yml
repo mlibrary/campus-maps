@@ -5,8 +5,11 @@ views.style.leaflet_map:
   label: 'Leaflet map'
   mapping:
     data_source:
-      type: string
-      label: 'Data source'
+      type: sequence
+      label: 'Data sources'
+      sequence:
+        type: string
+        label: 'Data source'
     entity_source:
       type: string
       label: 'Entity source'
@@ -167,6 +170,9 @@ views.style.leaflet_map:
         options:
           type: text
           label: 'Options'
+        include_path:
+          type: boolean
+          label: 'Include Path'
     fullscreen:
       type: mapping
       label: 'Leaflet Fullscreen'

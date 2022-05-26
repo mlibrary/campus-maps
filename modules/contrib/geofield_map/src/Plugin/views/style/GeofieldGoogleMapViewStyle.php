@@ -1013,7 +1013,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
                   /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
                   $map_themer = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
                   $map_theming = $theming[$map_themer->getPluginId()]['values'];
-                  if ($feature['geometry']->type === 'Point') {
+                  if ($feature['geometry'] && $feature['geometry']->type === 'Point') {
                     $feature['properties']['icon'] = $map_themer->getIcon($feature, $this, $entity, $map_theming);
                     // Flag the data with theming, for later rendering logic.
                     $feature['properties']['theming'] = TRUE;
@@ -1024,14 +1024,14 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
                 }
               }
               elseif ($map_settings['map_marker_and_infowindow']['icon_image_mode'] == 'icon_file' && strlen($map_settings['map_marker_and_infowindow']['icon_image_path']) > 0) {
-                if ($feature['geometry']->type === 'Point') {
+                if ($feature['geometry'] && $feature['geometry']->type === 'Point') {
                   $feature['properties']['icon'] = $this->viewsTokenReplace($this->options['map_marker_and_infowindow']['icon_image_path'], $tokens);
                 }
               }
 
               // Associate dynamic path properties (token) to each feature,
               // in case of not point.
-              if ($feature['geometry']->type !== 'Point') {
+              if ($feature['geometry'] && $feature['geometry']->type !== 'Point') {
                 $feature['properties']['path_options'] = str_replace(["\n", "\r"], "", $this->viewsTokenReplace($this->options['map_geometries_options'], $tokens));
               }
 

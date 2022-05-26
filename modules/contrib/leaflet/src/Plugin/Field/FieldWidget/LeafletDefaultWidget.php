@@ -2,6 +2,7 @@
 
 namespace Drupal\leaflet\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\geofield\Plugin\GeofieldBackendManager;
 use Drupal\leaflet\LeafletSettingsElementsTrait;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -56,9 +57,16 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
   /**
    * The token service.
    *
-   * @var \Drupal\core\Utility\Token
+   * @var \Drupal\Core\Utility\Token
    */
   protected $token;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  private $languageManager;
 
   /**
    * Get maps available for use with Leaflet.
@@ -96,8 +104,10 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
    *   The module handler.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
-   * @param \Drupal\core\Utility\Token $token
+   * @param \Drupal\Core\Utility\Token $token
    *   The token service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
+   *   The language manager.
    */
   public function __construct(
     $plugin_id,
@@ -111,7 +121,8 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
     LeafletService $leaflet_service,
     ModuleHandlerInterface $module_handler,
     LinkGeneratorInterface $link_generator,
-    Token $token
+    Token $token,
+    LanguageManagerInterface $languageManager
   ) {
     parent::__construct(
       $plugin_id,
@@ -127,6 +138,7 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
     $this->moduleHandler = $module_handler;
     $this->link = $link_generator;
     $this->token = $token;
+    $this->languageManager = $languageManager;
   }
 
   /**
@@ -145,7 +157,8 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
       $container->get('leaflet.service'),
       $container->get('module_handler'),
       $container->get('link_generator'),
-      $container->get('token')
+      $container->get('token'),
+      $container->get('language_manager')
     );
   }
 
@@ -213,13 +226,13 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
     $form['map']['locate'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Automatically locate user current position'),
-      '#description' => t("This option initially centers the map to the user position (only in case of empty map)."),
+      '#description' => $this->t("This option initially centers the map to the user position (only in case of empty map)."),
       '#default_value' => $map_settings['locate'] ?? $default_settings['map']['locate'],
     ];
     $form['map']['auto_center'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Automatically center map on existing features'),
-      '#description' => t("This option overrides the widget's default center (in case of not empty map)."),
+      '#description' => $this->t("This option overrides the widget's default center (in case of not empty map)."),
       '#default_value' => $map_settings['auto_center'] ?? $default_settings['map']['auto_center'],
     ];
 
@@ -230,7 +243,7 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
     $form['map']['scroll_zoom_enabled'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable Scroll Wheel Zoom on click'),
-      '#description' => t("This option enables zooming by mousewheel as soon as the user clicked on the map."),
+      '#description' => $this->t("This option enables zooming by mousewheel as soon as the user clicked on the map."),
       '#default_value' => $map_settings['scroll_zoom_enabled'] ?? $default_settings['map']['scroll_zoom_enabled'],
     ];
 
@@ -266,10 +279,10 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
       '#type' => 'select',
       '#title' => $this->t('Toolbar position.'),
       '#options' => [
-        'topleft' => 'topleft',
-        'topright' => 'topright',
-        'bottomleft' => 'bottomleft',
-        'bottomright' => 'bottomright',
+        'topleft' => $this->t('topleft'),
+        'topright' => $this->t('topright'),
+        'bottomleft' => $this->t('bottomleft'),
+        'bottomright' => $this->t('bottomright'),
       ],
       '#default_value' => $toolbar_settings['position'] ?? $default_settings['toolbar']['position'],
     ];
@@ -305,7 +318,7 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
 
     $form['toolbar']['drawCircle'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Adds button to draw circle. (unsupported by GeoJSON'),
+      '#title' => $this->t('Adds button to draw circle. (unsupported by GeoJSON)'),
       '#default_value' => $toolbar_settings['drawCircle'] ?? $default_settings['toolbar']['drawCircle'],
       '#disabled' => TRUE,
     ];
@@ -435,6 +448,7 @@ class LeafletDefaultWidget extends GeofieldDefaultWidget {
     $js_settings['path'] = str_replace(["\n", "\r"], "", $this->token->replace($this->getSetting('path'), $token_context));
     $js_settings['geocoder'] = $this->getSetting('geocoder');
     $js_settings['map_position'] = $map_settings['map_position'] ?? [];
+    $js_settings['langcode'] = $this->languageManager->getCurrentLanguage()->getId();
 
     // Leaflet.widget plugin.
     $element['map']['#attached']['library'][] = 'leaflet/leaflet-widget';

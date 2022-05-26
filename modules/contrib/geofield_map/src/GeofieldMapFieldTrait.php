@@ -1558,7 +1558,7 @@ trait GeofieldMapFieldTrait {
       $geocoder_control = $form_state_input['fields'][$element['#array_parents'][1]]['settings_edit_form']['settings']['map_geocoder']['control'];
     }
     if (isset($geocoder_control) && $geocoder_control) {
-      $providers = is_array($element['#value']) ? array_filter($element['#value'], function ($value) {
+      $providers = isset($element['#value']) && is_array($element['#value']) ? array_filter($element['#value'], function ($value) {
         return isset($value['checked']) && TRUE == $value['checked'];
       }) : [];
 

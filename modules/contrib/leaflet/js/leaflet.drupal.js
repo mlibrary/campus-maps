@@ -385,13 +385,16 @@
       icon_options.iconSize = new L.Point(parseInt(options.iconSize.x), parseInt(options.iconSize.y));
     }
     if (options.iconAnchor && options.iconAnchor.x && options.iconAnchor.y) {
-      icon_options.iconAnchor = new L.Point(parseFloat(options.iconAnchor.x), parseFloat(options.iconAnchor.y));
+      icon_options.iconAnchor = new L.Point(parseInt(options.iconAnchor.x), parseInt(options.iconAnchor.y));
     }
     if (options.popupAnchor && options.popupAnchor.x && options.popupAnchor.y) {
       icon_options.popupAnchor = new L.Point(parseInt(options.popupAnchor.x), parseInt(options.popupAnchor.y));
     }
     if (options.shadowUrl) {
       icon_options.shadowUrl = options.shadowUrl;
+    }
+    if (options.iconRetinaUrl) {
+      icon_options.iconRetinaUrl = options.iconRetinaUrl;
     }
     if (options.shadowSize && options.shadowSize.x && options.shadowSize.y) {
       icon_options.shadowSize = new L.Point(parseInt(options.shadowSize.x), parseInt(options.shadowSize.y));
@@ -414,11 +417,11 @@
     if (options.iconSize) {
       icon.options.iconSize = new L.Point(parseInt(options.iconSize.x, 10), parseInt(options.iconSize.y, 10));
     }
-    if (options.iconAnchor && !isNaN(options.iconAnchor.x) && !isNaN(options.iconAnchor.y)) {
-      icon.options.iconAnchor = new L.Point(parseFloat(options.iconAnchor.x), parseFloat(options.iconAnchor.y));
+    if (options.iconAnchor && options.iconAnchor.x && options.iconAnchor.y) {
+      icon.options.iconAnchor = new L.Point(parseInt(options.iconAnchor.x), parseInt(options.iconAnchor.y));
     }
     if (options.popupAnchor && !isNaN(options.popupAnchor.x) && !isNaN(options.popupAnchor.y)) {
-      icon.options.popupAnchor = new L.Point(parseFloat(options.popupAnchor.x), parseFloat(options.popupAnchor.y));
+      icon.options.popupAnchor = new L.Point(parseInt(options.popupAnchor.x), parseInt(options.popupAnchor.y));
     }
 
     return icon;

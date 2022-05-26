@@ -7,170 +7,197 @@ use Drupal\Tests\BrowserTestBase;
 /**
  * Provides some helper functions for functional tests.
  */
-class ForcePasswordChangeBrowserTestBase extends BrowserTestBase
-{
-	public function assertStatusCodeEquals($statusCode)
-	{
-		$this->assertSession()->statusCodeEquals($statusCode);
-	}
+abstract class ForcePasswordChangeBrowserTestBase extends BrowserTestBase {
 
-	public function assertElementExists($selector)
-	{
-		$this->assertSession()->elementExists('css', $selector);
-	}
+  /**
+   *
+   */
+  public function assertStatusCodeEquals($statusCode) {
+    $this->assertSession()->statusCodeEquals($statusCode);
+  }
 
-	public function assertElementNotExists($selector)
-	{
-		$this->assertSession()->elementNotExists('css', $selector);
-	}
+  /**
+   *
+   */
+  public function assertElementExists($selector) {
+    $this->assertSession()->elementExists('css', $selector);
+  }
 
-	public function assertElementExistsXpath($selector)
-	{
-		$this->assertSession()->elementExists('xpath', $selector);
-	}
+  /**
+   *
+   */
+  public function assertElementNotExists($selector) {
+    $this->assertSession()->elementNotExists('css', $selector);
+  }
 
-	public function assertElementNotExistsXpath($selector)
-	{
-		$this->assertSession()->elementNotExists('xpath', $selector);
-	}
+  /**
+   *
+   */
+  public function assertElementExistsXpath($selector) {
+    $this->assertSession()->elementExists('xpath', $selector);
+  }
 
-	public function assertElementAttributeExists($selector, $attribute)
-	{
-		$this->assertSession()->elementAttributeExists('css', $selector, $attribute);
-	}
+  /**
+   *
+   */
+  public function assertElementNotExistsXpath($selector) {
+    $this->assertSession()->elementNotExists('xpath', $selector);
+  }
 
-	public function assertElementAttributeContains($selector, $attribute, $value)
-	{
-		$this->assertSession()->elementAttributeContains('css', $selector, $attribute, $value);
-	}
+  /**
+   *
+   */
+  public function assertElementAttributeExists($selector, $attribute) {
+    $this->assertSession()->elementAttributeExists('css', $selector, $attribute);
+  }
 
-	public function getHtml()
-	{
-		$this->assertEquals('', $this->getSession()->getPage()->getHTML());
-	}
+  /**
+   *
+   */
+  public function assertElementAttributeContains($selector, $attribute, $value) {
+    $this->assertSession()->elementAttributeContains('css', $selector, $attribute, $value);
+  }
 
-	public function assertRadioExists($htmlID)
-	{
-		if(!preg_match('/^#/', $htmlID))
-		{
-			$htmlID = '#' . $htmlID;
-		}
+  /**
+   *
+   */
+  public function getHtml() {
+    $this->assertEquals('', $this->getSession()->getPage()->getHTML());
+  }
 
-		$this->assertElementExists($htmlID);
-		$this->assertElementAttributeExists($htmlID, 'type');
-		$this->assertElementAttributeContains($htmlID, 'type', 'radio');
-	}
+  /**
+   *
+   */
+  public function assertRadioExists($htmlID) {
+    if (!preg_match('/^#/', $htmlID)) {
+      $htmlID = '#' . $htmlID;
+    }
 
-	public function selectRadio($htmlID)
-	{
-		if(preg_match('/^#/', $htmlID))
-		{
-			$htmlID = substr($htmlID, 1);
-		}
+    $this->assertElementExists($htmlID);
+    $this->assertElementAttributeExists($htmlID, 'type');
+    $this->assertElementAttributeContains($htmlID, 'type', 'radio');
+  }
 
-		$radio = $this->getSession()->getPage()->findField($htmlID);
-		$name = $radio->getAttribute('name');
-		$option = $radio->getAttribute('value');
-		$this->getSession()->getPage()->selectFieldOption($name, $option);
-	}
+  /**
+   *
+   */
+  public function selectRadio($htmlID) {
+    if (preg_match('/^#/', $htmlID)) {
+      $htmlID = substr($htmlID, 1);
+    }
 
-	public function assertRadioSelected($htmlID)
-	{
-		if(!preg_match('/^#/', $htmlID))
-		{
-			$htmlID = '#' . $htmlID;
-		}
+    $radio = $this->getSession()->getPage()->findField($htmlID);
+    $name = $radio->getAttribute('name');
+    $option = $radio->getAttribute('value');
+    $this->getSession()->getPage()->selectFieldOption($name, $option);
+  }
 
-		$selected_radio = $this->getSession()->getPage()->find('css', 'input[type="radio"]:checked' . $htmlID);
+  /**
+   *
+   */
+  public function assertRadioSelected($htmlID) {
+    if (!preg_match('/^#/', $htmlID)) {
+      $htmlID = '#' . $htmlID;
+    }
 
-		if(!$selected_radio)
-		{
-			throw new \Exception('Radio button with ID ' . $htmlID . ' is not selected');
-		}
-	}
+    $selected_radio = $this->getSession()->getPage()->find('css', 'input[type="radio"]:checked' . $htmlID);
 
-	public function assertSelectExists($htmlID)
-	{
-		$this->assertSession()->selectExists($htmlID);
-	}
+    if (!$selected_radio) {
+      throw new \Exception('Radio button with ID ' . $htmlID . ' is not selected');
+    }
+  }
 
-	public function selectSelectOption($selectElementHtmlID, $value)
-	{
-		if(preg_match('/^#/', $selectElementHtmlID))
-		{
-			$selectElementHtmlID = substr($selectElementHtmlID, 1);
-		}
+  /**
+   *
+   */
+  public function assertSelectExists($htmlID) {
+    $this->assertSession()->selectExists($htmlID);
+  }
 
-		$this->getSession()->getDriver()->selectOption(
-			'//select[@id="' . $selectElementHtmlID . '"]',
-			$value
-		);
-	}
+  /**
+   *
+   */
+  public function selectSelectOption($selectElementHtmlID, $value) {
+    if (preg_match('/^#/', $selectElementHtmlID)) {
+      $selectElementHtmlID = substr($selectElementHtmlID, 1);
+    }
 
-	public function assertSelectOption($selectElementHtmlID, $value)
-	{
-		if(preg_match('/^#/', $selectElementHtmlID))
-		{
-			$selectElementHtmlID = substr($selectElementHtmlID, 1);
-		}
+    $this->getSession()->getDriver()->selectOption(
+    '//select[@id="' . $selectElementHtmlID . '"]',
+    $value
+     );
+  }
 
-		$selected_option = $this->getSession()->getPage()->find('xpath', '//select[@id="' . $selectElementHtmlID . '"]/option[@value="' . $value . '" and @selected="selected"]');
+  /**
+   *
+   */
+  public function assertSelectOption($selectElementHtmlID, $value) {
+    if (preg_match('/^#/', $selectElementHtmlID)) {
+      $selectElementHtmlID = substr($selectElementHtmlID, 1);
+    }
 
-		if(!$selected_option)
-		{
-			throw new \Exception('Select ' . $selectElementHtmlID . ' does not have value "' . $value . '" selected');
-		}
-	}
+    $selected_option = $this->getSession()->getPage()->find('xpath', '//select[@id="' . $selectElementHtmlID . '"]/option[@value="' . $value . '" and @selected="selected"]');
 
-	public function assertCheckboxExists($htmlID)
-	{
-		if(!preg_match('/^#/', $htmlID))
-		{
-			$htmlID = '#' . $htmlID;
-		}
+    if (!$selected_option) {
+      throw new \Exception('Select ' . $selectElementHtmlID . ' does not have value "' . $value . '" selected');
+    }
+  }
 
-		$this->assertElementExists($htmlID);
-		$this->assertElementAttributeExists($htmlID, 'type');
-		$this->assertElementAttributeContains($htmlID, 'type', 'checkbox');
-	}
+  /**
+   *
+   */
+  public function assertCheckboxExists($htmlID) {
+    if (!preg_match('/^#/', $htmlID)) {
+      $htmlID = '#' . $htmlID;
+    }
 
-	public function checkCheckbox($htmlID)
-	{
-		if(preg_match('/^#/', $htmlID))
-		{
-			$htmlID = substr($htmlID, 1);
-		}
+    $this->assertElementExists($htmlID);
+    $this->assertElementAttributeExists($htmlID, 'type');
+    $this->assertElementAttributeContains($htmlID, 'type', 'checkbox');
+  }
 
-		$this->getSession()->getPage()->checkField($htmlID);
-	}
+  /**
+   *
+   */
+  public function checkCheckbox($htmlID) {
+    if (preg_match('/^#/', $htmlID)) {
+      $htmlID = substr($htmlID, 1);
+    }
 
-	public function assertCheckboxChecked($htmlID)
-	{
-		if(preg_match('/^#/', $htmlID))
-		{
-			$htmlID = substr($htmlID, 1);
-		}
+    $this->getSession()->getPage()->checkField($htmlID);
+  }
 
-		$this->assertSession()->checkboxChecked($htmlID);
-	}
+  /**
+   *
+   */
+  public function assertCheckboxChecked($htmlID) {
+    if (preg_match('/^#/', $htmlID)) {
+      $htmlID = substr($htmlID, 1);
+    }
 
-	public function fillTextValue($htmlID, $value)
-	{
-		if(preg_match('/^#/', $htmlID))
-		{
-			$htmlID = substr($htmlID, 1);
-		}
+    $this->assertSession()->checkboxChecked($htmlID);
+  }
 
-		$this->getSession()->getPage()->fillField($htmlID, $value);
-	}
+  /**
+   *
+   */
+  public function fillTextValue($htmlID, $value) {
+    if (preg_match('/^#/', $htmlID)) {
+      $htmlID = substr($htmlID, 1);
+    }
 
-	public function assertTextValue($htmlID, $value)
-	{
-		if(preg_match('/^#/', $htmlID))
-		{
-			$htmlID = substr($htmlID, 1);
-		}
+    $this->getSession()->getPage()->fillField($htmlID, $value);
+  }
 
-		$this->assertSession()->fieldValueEquals($htmlID, $value);
-	}
+  /**
+   *
+   */
+  public function assertTextValue($htmlID, $value) {
+    if (preg_match('/^#/', $htmlID)) {
+      $htmlID = substr($htmlID, 1);
+    }
+
+    $this->assertSession()->fieldValueEquals($htmlID, $value);
+  }
+
 }

@@ -781,7 +781,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
           $fid = $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'];
         }
 
-        if ($feature['geometry']->type === 'Point') {
+        if ($feature['geometry'] && $feature['geometry']->type === 'Point') {
           $feature['properties']['icon'] = $this->markerIcon->getFileManagedUrl($fid, $image_style);
           // Flag the data with theming, for later rendering logic.
           $feature['properties']['theming'] = TRUE;
@@ -790,7 +790,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       }
       elseif (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
         && $map_settings['map_marker_and_infowindow']['icon_image_mode'] === 'icon_image_path') {
-        if ($feature['geometry']->type === 'Point') {
+        if ($feature['geometry'] && $feature['geometry']->type === 'Point') {
           $feature['properties']['icon'] = !empty($map_settings['map_marker_and_infowindow']['icon_image_path']) ? $this->token->replace($map_settings['map_marker_and_infowindow']['icon_image_path'], $token_context) : '';
           // Flag the data with theming, for later rendering logic.
           $feature['properties']['theming'] = TRUE;
@@ -798,7 +798,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
         // Associate dynamic path properties (token based) to the feature,
         // in case of not point.
-        if ($feature['geometry']->type !== 'Point') {
+        if ($feature['geometry'] && $feature['geometry']->type !== 'Point') {
           $feature['properties']['path_options'] = !empty($map_settings['map_geometries_options']) ? str_replace([
             "\n",
             "\r",

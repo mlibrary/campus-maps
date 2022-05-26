@@ -34,6 +34,10 @@
     this.json_selector = this.settings.jsonElement;
     this.layers = [];
 
+    if (widgetSettings['langcode']) {
+      lMap.pm.setLang(widgetSettings['langcode']);
+    }
+
     this.map = undefined;
     this.set_leaflet_map(lMap);
 

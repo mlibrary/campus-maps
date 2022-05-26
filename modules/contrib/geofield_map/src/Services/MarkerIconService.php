@@ -22,6 +22,7 @@ use Symfony\Component\Yaml\Exception\ParseException;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\File\Exception\NotRegularDirectoryException;
 
 /**
@@ -116,6 +117,13 @@ class MarkerIconService {
   protected $fileSystem;
 
   /**
+   * The logger factory.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected $logger;
+
+  /**
    * Set Geofield Map Default Icon Style.
    */
   protected function setDefaultIconStyle() {
@@ -175,7 +183,15 @@ class MarkerIconService {
       }
     }
     catch (NotRegularDirectoryException $e) {
-      watchdog_exception('geofield map set markers fiel list', $e);
+      // Theming.markers_location folder path.
+      $theming_folder = $security . $rel_path;
+      // Try to generate the theming.markers_location folder,
+      // otherwise logs a warning.
+      if (!$this->fileSystem->mkdir($theming_folder)) {
+        $this->logger->warning($this->t('The "@folder" folder couldn\'t be created', [
+          '@folder' => $theming_folder,
+        ]));
+      }
     }
 
     return $markers_files_list;
@@ -198,6 +214,8 @@ class MarkerIconService {
    *   The Link Generator service.
    * @param \Drupal\Core\Render\ElementInfoManagerInterface $element_info
    *   The element info manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger factory.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -206,7 +224,8 @@ class MarkerIconService {
     EntityTypeManagerInterface $entity_manager,
     ModuleHandlerInterface $module_handler,
     LinkGeneratorInterface $link_generator,
-    ElementInfoManagerInterface $element_info
+    ElementInfoManagerInterface $element_info,
+    LoggerChannelFactoryInterface $logger_factory
   ) {
     $this->config = $config_factory;
     $this->stringTranslation = $string_translation;
@@ -216,6 +235,7 @@ class MarkerIconService {
     $this->elementInfo = $element_info;
     $this->geofieldMapSettings = $config_factory->get('geofield_map.settings');
     $this->fileSystem = $file_system;
+    $this->logger = $logger_factory->get('geofield_map');
     $this->fileUploadValidators = [
       'file_validate_extensions' => !empty($this->geofieldMapSettings->get('theming.markers_extensions')) ? [$this->geofieldMapSettings->get('theming.markers_extensions')] : ['gif png jpg jpeg'],
       'geofield_map_file_validate_is_image' => [],
@@ -274,7 +294,7 @@ class MarkerIconService {
       $file->save();
     }
     catch (EntityStorageException $e) {
-      Drupal::logger('Geofield Map Themer')->log('warning', t("The file couldn't be saved: @message", [
+      Drupal::logger('geofield_map')->warning(t("The file couldn't be saved: @message", [
         '@message' => $e->getMessage(),
       ])
       );
@@ -532,7 +552,7 @@ class MarkerIconService {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('geofield_map', $e);
+      $this->logger->warning($e->getMessage());
     }
     return $icon_element;
   }
@@ -576,7 +596,7 @@ class MarkerIconService {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('geofield_map', $e);
+      $this->logger->warning($e->getMessage());
     }
     return NULL;
   }
@@ -617,7 +637,7 @@ class MarkerIconService {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('geofield_map', $e);
+      $this->logger->warning($e->getMessage());
     }
     return NULL;
   }

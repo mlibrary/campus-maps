@@ -4,21 +4,19 @@
 
 (function ($) {
   Drupal.Leaflet.prototype.add_features = function (mapid, features, initial) {
+    const leaflet_markercluster_options = this.settings.leaflet_markercluster.options && this.settings.leaflet_markercluster.options.length > 0 ? JSON.parse(this.settings.leaflet_markercluster.options) : {};
+    const leaflet_markercluster_inlcude_path = this.settings.leaflet_markercluster.include_path;
 
-    var leaflet_markercluster_options = this.settings.leaflet_markercluster.options && this.settings.leaflet_markercluster.options.length > 0 ? JSON.parse(this.settings.leaflet_markercluster.options) : {};
-    var leaflet_markercluster_inlcude_path = this.settings.leaflet_markercluster.include_path;
-
-    var cluster_layer = new L.MarkerClusterGroup(leaflet_markercluster_options);
-    var collections_cluster_layers = {};
-    for (var i = 0; i < features.length; i++) {
-      var feature = features[i];
-      var lFeature;
+    const cluster_layer = new L.MarkerClusterGroup(leaflet_markercluster_options);
+    for (let i = 0; i < features.length; i++) {
+      let feature = features[i];
+      let lFeature;
 
       // dealing with a layer group
       if (feature.group) {
-        var lGroup = this.create_feature_group(feature);
-        for (var groupKey in feature.features) {
-          var groupFeature = feature.features[groupKey];
+        let lGroup = new L.MarkerClusterGroup(leaflet_markercluster_options);
+        for (let groupKey in feature.features) {
+          let groupFeature = feature.features[groupKey];
           lFeature = this.create_feature(groupFeature);
           if (lFeature !== undefined) {
             if (lFeature.setStyle) {
@@ -32,8 +30,8 @@
           }
         }
 
-        // @todo we need to correctly handle the groups here
-        cluster_layer.addLayer(lGroup);
+        // Correctly handle the groups here
+        this.add_overlay(feature.label, lGroup, false, mapid);
       }
       else {
         lFeature = this.create_feature(feature);

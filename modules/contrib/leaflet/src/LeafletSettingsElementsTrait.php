@@ -329,10 +329,10 @@ trait LeafletSettingsElementsTrait {
   protected function generateWeightElement($weight) {
     $default_settings = $this::getDefaultSettings();
     return [
-      '#title' => $this->t('weight / zIndex Offset'),
+      '#title' => $this->t('Weight / zIndex Offset'),
       '#type' => 'textfield',
       '#size' => 30,
-      '#description' => $this->t('This option supports <b>Replacement Patterns</b> and should end up into an Integer (positive or negative value).<br>This will apply to each Leaflet Feature/Marker result, and might be used to dynamically set its position/visibility on top (or below) of each others.'),
+      '#description' => $this->t('This option supports <b>Replacement Patterns</b> and should end up into an Integer (positive or negative value).<br>This will apply to each Leaflet Feature/Marker result, and might be used to dynamically set its position/visibility on top (or below) of each others (features with higher value will be rendered as last, and thus on top)<br>Note: this is not driving the "zIndex" css style of the features output on the Map, but only setting their rendering order.'),
       '#default_value' => isset($weight) ? $weight : $default_settings['weight'],
     ];
   }

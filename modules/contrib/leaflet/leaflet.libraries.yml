@@ -44,6 +44,7 @@ leaflet-widget:
   dependencies:
     - core/jquery
     - leaflet/general
+    - leaflet/leaflet-drupal
     - leaflet/leaflet-geoman
 
 # Control Fullscreen
@@ -74,9 +75,9 @@ leaflet.gesture_handling:
     gpl-compatible: no
   css:
     component:
-      'https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css': { type: external}
+      'https://unpkg.com/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.css': { type: external}
   js:
-    'https://unpkg.com/leaflet-gesture-handling': { type: external, minified: true }
+    'https://unpkg.com/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.js': { type: external, minified: true }
   dependencies:
     - leaflet/leaflet
 

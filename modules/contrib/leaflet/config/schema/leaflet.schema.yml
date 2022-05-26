@@ -69,6 +69,9 @@ field.widget.settings.leaflet_widget_default:
         position:
           type: string
           label: 'Position'
+        marker:
+          type: string
+          label: 'Marker'
         drawMarker:
           type: boolean
           label: 'Draw marker'
@@ -242,9 +245,6 @@ field.formatter.settings.leaflet_formatter_default:
         zoomFiner:
           type: integer
           label: 'Zoom finer'
-    weight:
-      type: string
-      label: 'Weight'
     icon:
       type: mapping
       label: 'Map icon'

@@ -228,9 +228,6 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
     $map_position_options = $settings['map_position'];
     $elements['map_position'] = $this->generateMapPositionElement($map_position_options);
 
-    // Generate the Leaflet Map weight/zIndex Form Element.
-    $elements['weight'] = $this->generateWeightElement($settings['weight']);
-
     // Generate Icon form element.
     $icon_options = $settings['icon'];
     $elements['icon'] = $this->generateIconFormElement($icon_options);
@@ -315,10 +312,6 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
       $points = $this->leafletService->leafletProcessGeofield($item->value);
       $feature = $points[0];
       $feature['entity_id'] = $entity_id;
-
-      // Generate the weight feature property
-      // (falls back to natural result ordering).
-      $feature['weight'] = !empty($settings['weight']) ? intval(str_replace(["\n", "\r"], "", $this->token->replace($settings['weight'], $tokens))) : $delta;
 
       // Eventually set the popup content.
       if ($settings['popup']) {
@@ -428,12 +421,8 @@ class LeafletDefaultFormatter extends FormatterBase implements ContainerFactoryP
 
       // Allow modules to adjust the marker.
       $this->moduleHandler->alter('leaflet_formatter_feature', $feature, $item, $entity);
-
       $features[] = $feature;
     }
-
-    // Order the data features based on the 'weight' element.
-    uasort($features, ['Drupal\Component\Utility\SortArray', 'sortByWeightElement']);
 
     $js_settings = [
       'map' => $map,
