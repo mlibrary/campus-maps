@@ -1,6 +1,6 @@
 {
     "name": "drupal/geocoder",
-    "description": "A Drupal module and a services based API to perform Geocode & Reverse Geocode operations among GIS data and addresses types & formats.",
+    "description": "Module and services based API to perform Geocode & Reverse Geocode operations among GIS data and addresses types & formats.",
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "minimum-stability": "dev",
@@ -51,6 +51,7 @@
         "geocoder-php/ip-info-db-provider": "^4.0",
         "geocoder-php/mapbox-provider": "^0.1",
         "geocoder-php/mapquest-provider": "^4.0",
+        "geocoder-php/maptiler-provider": "^1.0",
         "geocoder-php/maxmind-provider": "^4.1",
         "geocoder-php/nominatim-provider": "^5.0",
         "geocoder-php/open-cage-provider": "^4.0",
