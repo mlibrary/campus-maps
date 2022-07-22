@@ -69,6 +69,7 @@ class geoPHP
 
     if (!$processor_type) {
       throw new exception('geoPHP could not find an adapter of type '.htmlentities($type));
+      exit;
     }
 
     $processor = new $processor_type();
@@ -77,7 +78,7 @@ class geoPHP
     if (!is_array($data)) {
       $result = call_user_func_array(array($processor, "read"), array_merge(array($data), $args));
     }
-    // Data is an array, combine all passed in items into a single geometry
+    // Data is an array, combine all passed in items into a single geomtetry
     else {
       $geoms = array();
       foreach ($data as $item) {
@@ -223,7 +224,7 @@ class geoPHP
   // It could make a mistake in XML detection if you are mixing or using namespaces in weird ways (ie, KML inside an RSS feed)
   static function detectFormat(&$input) {
     $mem = fopen('php://memory', 'r+');
-    fwrite($mem, (string) $input, 11); // Write 11 bytes - we can detect the vast majority of formats in the first 11 bytes
+    fwrite($mem, $input, 11); // Write 11 bytes - we can detect the vast majority of formats in the first 11 bytes
     fseek($mem, 0);
 
     $bytes = unpack("c*", fread($mem, 11));

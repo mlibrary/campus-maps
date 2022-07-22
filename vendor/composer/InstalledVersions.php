@@ -32,7 +32,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '493767a3eab5cb175e4bf2a768733c328df60821',
+    'reference' => '760a833ae1676ab5e7d80cc3a63f19ce06076185',
     'name' => 'drupal/recommended-project',
   ),
   'versions' => 
@@ -102,12 +102,12 @@ private static $installed = array (
     ),
     'consolidation/annotated-command' => 
     array (
-      'pretty_version' => '4.5.6',
-      'version' => '4.5.6.0',
+      'pretty_version' => '4.5.5',
+      'version' => '4.5.5.0',
       'aliases' => 
       array (
       ),
-      'reference' => '3968070538761628546270935f0733a0cc408e1f',
+      'reference' => '67cea8e8e7656b74da651ea6f49321853996c0fd',
     ),
     'consolidation/config' => 
     array (
@@ -385,12 +385,12 @@ private static $installed = array (
     ),
     'drupal/better_exposed_filters' => 
     array (
-      'pretty_version' => '5.2.0',
-      'version' => '5.2.0.0',
+      'pretty_version' => '5.1.0',
+      'version' => '5.1.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '8.x-5.2',
+      'reference' => '8.x-5.1',
     ),
     'drupal/big_pipe' => 
     array (
@@ -871,30 +871,30 @@ private static $installed = array (
     ),
     'drupal/geocoder' => 
     array (
-      'pretty_version' => '3.29.0',
-      'version' => '3.29.0.0',
+      'pretty_version' => '3.28.0',
+      'version' => '3.28.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '8.x-3.29',
+      'reference' => '8.x-3.28',
     ),
     'drupal/geofield' => 
     array (
-      'pretty_version' => '1.41.0',
-      'version' => '1.41.0.0',
+      'pretty_version' => '1.39.0',
+      'version' => '1.39.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '8.x-1.41',
+      'reference' => '8.x-1.39',
     ),
     'drupal/geofield_map' => 
     array (
-      'pretty_version' => '2.85.0',
-      'version' => '2.85.0.0',
+      'pretty_version' => '2.75.0',
+      'version' => '2.75.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '8.x-2.85',
+      'reference' => '8.x-2.75',
     ),
     'drupal/hal' => 
     array (
@@ -1022,12 +1022,12 @@ private static $installed = array (
     ),
     'drupal/leaflet' => 
     array (
-      'pretty_version' => '2.2.3',
-      'version' => '2.2.3.0',
+      'pretty_version' => '2.2.2',
+      'version' => '2.2.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => '2.2.3',
+      'reference' => '2.2.2',
     ),
     'drupal/link' => 
     array (
@@ -1045,12 +1045,12 @@ private static $installed = array (
     ),
     'drupal/mailsystem' => 
     array (
-      'pretty_version' => '4.4.0',
-      'version' => '4.4.0.0',
+      'pretty_version' => '4.3.0',
+      'version' => '4.3.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '8.x-4.4',
+      'reference' => '8.x-4.3',
     ),
     'drupal/media' => 
     array (
@@ -1187,7 +1187,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '493767a3eab5cb175e4bf2a768733c328df60821',
+      'reference' => '760a833ae1676ab5e7d80cc3a63f19ce06076185',
     ),
     'drupal/responsive_image' => 
     array (
@@ -1517,15 +1517,6 @@ private static $installed = array (
       ),
       'reference' => '61ad68e934066a6f8df29a3d23a6460536d0855c',
     ),
-    'itamair/geophp' => 
-    array (
-      'pretty_version' => '1.3',
-      'version' => '1.3.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'd7bccf9902a62430ceb2ac0771bb1e9d1deac4e9',
-    ),
     'laminas/laminas-diactoros' => 
     array (
       'pretty_version' => '2.13.0',
@@ -1695,6 +1686,15 @@ private static $installed = array (
       ),
       'reference' => 'b14fbe2ddb0b9f94f5b24cf08783d599f776fff0',
     ),
+    'phayes/geophp' => 
+    array (
+      'pretty_version' => '1.2',
+      'version' => '1.2.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '015404e85b602e0df1f91441f8db0f9e98f7e567',
+    ),
     'php-http/async-client-implementation' => 
     array (
       'provided' => 
@@ -1711,12 +1711,12 @@ private static $installed = array (
     ),
     'php-http/discovery' => 
     array (
-      'pretty_version' => '1.14.3',
-      'version' => '1.14.3.0',
+      'pretty_version' => '1.14.2',
+      'version' => '1.14.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => '31d8ee46d0215108df16a8527c7438e96a4d7735',
+      'reference' => 'c8d48852fbc052454af42f6de27635ddd916b959',
     ),
     'php-http/guzzle6-adapter' => 
     array (
@@ -1772,12 +1772,12 @@ private static $installed = array (
     ),
     'phpstan/phpstan' => 
     array (
-      'pretty_version' => '1.8.2',
-      'version' => '1.8.2.0',
+      'pretty_version' => '1.7.13',
+      'version' => '1.7.13.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'c53312ecc575caf07b0e90dee43883fdf90ca67c',
+      'reference' => '86ffc063bfd8f264c9eba568e84b0225a6090d09',
     ),
     'phpstan/phpstan-deprecation-rules' => 
     array (
