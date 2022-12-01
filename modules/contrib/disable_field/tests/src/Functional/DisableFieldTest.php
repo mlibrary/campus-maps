@@ -31,6 +31,11 @@ class DisableFieldTest extends BrowserTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * The admin user.
    *
    * @var \Drupal\user\Entity\User
@@ -68,7 +73,7 @@ class DisableFieldTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalPlaceBlock('system_breadcrumb_block');

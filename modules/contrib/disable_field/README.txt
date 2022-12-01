@@ -31,7 +31,7 @@ CONFIGURATION
 MAINTAINER
 -----------
 Current maintainers:
- * A AjayKumar Reddy (ajaykumarreddy1392) - https://www.drupal.org/u/virajrajankar
+ * A Ajay Kumar Reddy (ajay_reddy) - https://www.drupal.org/u/ajay_reddy
  * Viraj Rajankar (virajrajankar) - https://www.drupal.org/u/virajrajankar
  * Eugene Ilyin (eugene.ilyin) - https://www.drupal.org/u/eugeneilyin
  * Jeroen Tubex (JeroenT) - https://www.drupal.org/u/jeroent

@@ -7,33 +7,58 @@
 
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ *
+ * {@inheritdoc}
+ */
+function disable_field_help(string $route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the disable_field module.
+    case 'help.page.disable_field':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t("This module help(s) you to disable the field of any content type.") . '</p>';
+      return $output;
+
+    default:
+  }
+}
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter() for 'field_config_edit_form'.
  */
-function disable_field_form_field_config_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+function disable_field_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state, string $form_id) {
   \Drupal::service('disable_field.config_form_builder')->addDisableFieldConfigFormToEntityForm($form, $form_state, $form_id);
 }
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter() for 'base_field_override_edit_form'.
  */
-function disable_field_form_base_field_override_edit_form_alter(&$form, &$form_state, $form_id) {
+function disable_field_form_base_field_override_edit_form_alter(array &$form, FormStateInterface $form_state, string $form_id) {
   \Drupal::service('disable_field.config_form_builder')->addDisableFieldConfigFormToEntityForm($form, $form_state, $form_id);
 }
 
 /**
- * Implements hook_field_widget_multivalue_form_alter().
+ * Implements hook_field_widget_complete_form_alter().
  */
-function disable_field_field_widget_multivalue_form_alter(&$elements, FormStateInterface $form_state, array $context) {
+function disable_field_field_widget_complete_form_alter(array &$field_widget_complete_form, FormStateInterface $form_state, array $context) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof FormInterface) {
+    return;
+  }
+
   // Don't disable fields on the field config edit form.
-  if ($form_state->getFormObject()->getFormId() === 'field_config_edit_form') {
+  if ($form_object->getFormId() === 'field_config_edit_form') {
     return;
   }
 
   // Don't disable fields when we're not on an entity form.
-  if (!$form_state->getFormObject() instanceof EntityFormInterface) {
+  if (!$form_object instanceof EntityFormInterface) {
     return;
   }
 
@@ -44,7 +69,7 @@ function disable_field_field_widget_multivalue_form_alter(&$elements, FormStateI
 
   $user_roles = \Drupal::currentUser()->getRoles();
   $disable_field = $context['items']->getFieldDefinition()->getThirdPartySettings('disable_field');
-  $entity = $form_state->getFormObject()->getEntity();
+  $entity = $form_object->getEntity();
   $operation = $entity->id() ? 'edit' : 'add';
 
   if (empty($disable_field["{$operation}_disable"])) {
@@ -53,20 +78,20 @@ function disable_field_field_widget_multivalue_form_alter(&$elements, FormStateI
 
   switch ($disable_field["{$operation}_disable"]) {
     case 'all':
-      $elements['#disabled'] = TRUE;
+      $field_widget_complete_form['#disabled'] = TRUE;
       break;
 
     case 'roles':
       $disable_check = array_diff($disable_field["{$operation}_roles"], $user_roles);
       if (count($disable_check) < count($disable_field["{$operation}_roles"])) {
-        $elements['#disabled'] = TRUE;
+        $field_widget_complete_form['#disabled'] = TRUE;
       }
       break;
 
     case 'roles_enable':
       $enable_check = array_intersect($disable_field["{$operation}_roles"], $user_roles);
       if (empty($enable_check)) {
-        $elements['#disabled'] = TRUE;
+        $field_widget_complete_form['#disabled'] = TRUE;
         break;
       }
   }

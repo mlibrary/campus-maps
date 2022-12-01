@@ -5,14 +5,9 @@
  * Install and uninstall functions for the Disable field module.
  */
 
-use Drupal\Core\Database\Database;
-
 /**
- * Deletes useless table disable_field.
- *
- * Now settings of the module will be stored in fields entities.
+ * Implements hook_update_last_removed().
  */
-function disable_field_update_8001() {
-  $schema = Database::getConnection()->schema();
-  $schema->dropTable('disable_field');
+function disable_field_update_last_removed() {
+  return 8001;
 }

@@ -5,9 +5,12 @@
     "homepage": "https://drupal.org/project/disable_field",
     "license": "GPL-2.0+",
     "minimum-stability": "dev",
+    "require": {
+        "drupal/core": "^9.2 || ^10"
+    },
     "require-dev": {
-        "drupal/base_field_override_ui": "^1.0@beta",
-        "drupal/paragraphs": "^1.10"
+        "drupal/base_field_override_ui": "*",
+        "drupal/paragraphs": "*"
     },
     "authors": [
         {
