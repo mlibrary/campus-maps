@@ -32,7 +32,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '6e5007e7e4898238241a8bb65a8601d910ba5913',
+    'reference' => '95ed506964031f4193d47587ac507e99360f67de',
     'name' => 'drupal/recommended-project',
   ),
   'versions' => 
@@ -397,186 +397,186 @@ private static $installed = array (
     ),
     'drupal/core' => 
     array (
-      'pretty_version' => '9.4.8',
-      'version' => '9.4.8.0',
+      'pretty_version' => '9.5.2',
+      'version' => '9.5.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'a627d1b2a00f2cef0572e37b94dea298800541f4',
+      'reference' => '2ce2d9dbc3d248d7fd6bf9c9a50cce7e8dc799a6',
     ),
     'drupal/core-annotation' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-assertion' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-bridge' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-class-finder' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-datetime' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-dependency-injection' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-diff' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-discovery' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-event-dispatcher' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-file-cache' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-file-security' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-filesystem' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-front-matter' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-gettext' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-graph' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-http-foundation' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-php-storage' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-plugin' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-proxy-builder' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-render' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-serialization' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-transliteration' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-utility' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-uuid' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/core-version' => 
     array (
       'replaced' => 
       array (
-        0 => '9.4.8',
+        0 => '9.5.2',
       ),
     ),
     'drupal/devel' => 
@@ -739,7 +739,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '6e5007e7e4898238241a8bb65a8601d910ba5913',
+      'reference' => '95ed506964031f4193d47587ac507e99360f67de',
     ),
     'drupal/svg_image' => 
     array (
