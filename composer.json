@@ -52,7 +52,12 @@
     "prefer-stable": true,
     "config": {
         "preferred-install": "dist",
-        "autoloader-suffix": "Drupal8"
+        "autoloader-suffix": "Drupal8",
+        "allow-plugins": {
+            "composer/installers": true,
+            "drupal/console-extend-plugin": true,
+            "cweagans/composer-patches": true
+        }
     },
     "extra": {
         "enable-patching": true,
