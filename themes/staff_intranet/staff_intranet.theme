@@ -283,6 +283,7 @@ function staff_intranet_preprocess_table(&$variables) {
 // stoopid. no label when operator in use. grr. replace with field name.
 // see staff_intranet_theme_suggestions_form_element_alter also. works together.
 function staff_intranet_preprocess_form_element_label(&$variables) {
+/*
   $form_op_field_name = &drupal_static('form_op_field_name');
   if (strpos($variables['element']['#id'], $form_op_field_name) !== FALSE &&
       strpos($variables['element']['#id'], '-value-') !== FALSE) {
@@ -300,11 +301,13 @@ function staff_intranet_preprocess_form_element_label(&$variables) {
       drupal_static_reset('form_op_field_name');
     }
   }
+*/
 }
 
 // stoopid. operator and element it operates on not grouped.
 // see staff_intranet_preprocess_form_element_label also. works together.
 function staff_intranet_theme_suggestions_form_element_alter(array &$suggestions, array $variables) {
+/*
   $form_op_field_name = &drupal_static('form_op_field_name');
   if (strpos($variables['element']['#id'], 'value-op') !== FALSE || strpos($variables['element']['#id'], 'target-id-op') !== FALSE) {
     $form_op_field_name = str_replace('-op','',$variables['element']['#id']);
@@ -313,6 +316,7 @@ function staff_intranet_theme_suggestions_form_element_alter(array &$suggestions
   if (strpos($variables['element']['#id'], $form_op_field_name) !== FALSE && strpos($variables['element']['#id'], 'value-op') === FALSE && strpos($variables['element']['#id'], 'target-id-op') === FALSE) {
     $suggestions[] = 'form_element__wrap_exposed_filters_end';
   }
+*/
 }
 
 // add a suggestion for fields at the view mode
