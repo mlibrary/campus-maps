@@ -6,7 +6,7 @@ Extension for [PHPStan](https://phpstan.org/) to allow analysis of Drupal code.
 
 ## Sponsors
 
-<a href="https://www.undpaul.de/"><img src="https://www.undpaul.de/themes/custom/undpaul3/logo.svg" alt="undpaul" width="250" /></a> <a href="https://www.intracto.com/"><img src="https://digidak.be/wp-content/uploads/2020/03/logo-intracto-base-positief-grijs-blauw@4x-rgb.png" alt="Intracto" width="225" /></a> <a href="https://osinet.fr//"><img src="https://d3c0fbruclr8uq.cloudfront.net/sites/default/files/logo-osinet.png" alt="OSInet" width="250" /></a>
+<a href="https://www.undpaul.de/"><img src="https://www.undpaul.de/themes/custom/undpaul3/logo.svg" alt="undpaul" width="250" /></a>
 
 [Would you like to sponsor?](https://github.com/sponsors/mglaman)
 
@@ -14,28 +14,27 @@ Extension for [PHPStan](https://phpstan.org/) to allow analysis of Drupal code.
 
 When you are using [`phpstan/extension-installer`](https://github.com/phpstan/extension-installer), `phpstan.neon` will be automatically included.
 
-Otherwise add `phpstan.neon` to your Drupal project.
+<details>
+  <summary>Manual installation</summary>
 
-Make sure it has
+If you don't want to use `phpstan/extension-installer`, include `extension.neon` in your project's PHPStan config:
 
-```neon
+```
 includes:
-	- vendor/mglaman/phpstan-drupal/extension.neon
+    - vendor/mglaman/phpstan-drupal/extension.neon
 ```
 
-## Enabling rules one-by-one
-
-If you don't want to start using all the available strict rules at once but only one or two, you can! Just don't include
-the whole `rules.neon` from this package in your configuration, but look at its contents and copy only the rules you
-want to your configuration under the `services` key:
+To include Drupal specific analysis rules, include this file:
 
 ```
-services:
-	-
-		class: PHPStan\Rules\Drupal\PluginManager\PluginManagerSetsCacheBackendRule
-		tags:
-			- phpstan.rules.rule
+includes:
+    - vendor/mglaman/phpstan-drupal/rules.neon
 ```
+</details>
+
+## Getting help
+
+Ask for assistance in the [discussions](https://github.com/mglaman/phpstan-drupal/discussions) or [#phpstan](https://drupal.slack.com/archives/C033S2JUMLJ) channel on Drupal Slack.
 
 ## Excluding tests from analysis
 
@@ -50,19 +49,8 @@ parameters:
 
 ## Deprecation testing
 
-Add the deprecation rules to your Drupal project's dependencies
-
-```
-composer require --dev phpstan/phpstan-deprecation-rules
-```
-
-Edit your `phpstan.neon` to look like the following:
-
-```
-includes:
-	- vendor/mglaman/phpstan-drupal/extension.neon
-	- vendor/phpstan/phpstan-deprecation-rules/rules.neon
-```
+This project depends on `phpstan/phpstan-deprecation-rules` which adds deprecation rules. We provide Drupal-specific 
+deprecated scope resolvers.
 
 To only handle deprecation testing, use a `phpstan.neon` like this:
 
@@ -80,6 +68,22 @@ includes:
 	- vendor/mglaman/phpstan-drupal/extension.neon
 	- vendor/phpstan/phpstan-deprecation-rules/rules.neon
 ```
+
+To disable deprecation rules while using `phpstan/extension-installer`, you can do the following:
+
+```json
+{
+  "extra": {
+    "phpstan/extension-installer": {
+      "ignore": [
+        "phpstan/phpstan-deprecation-rules"
+      ]
+    }
+  }
+}
+```
+
+See the `extension-installer` documentation for more information: https://github.com/phpstan/extension-installer#ignoring-a-particular-extension
 
 ## Adapting to your project
 
@@ -134,13 +138,12 @@ example for adding a mapping for Search API:
 parameters:
 	drupal:
 		entityMapping:
-			block:
-				search_api_index:
-					class: Drupal\search_api\Entity\Index
-					storage: Drupal\search_api\Entity\SearchApiConfigEntityStorage
-				search_api_server:
-					class: Drupal\search_api\Entity\Server
-					storage: Drupal\search_api\Entity\SearchApiConfigEntityStorage			    
+			search_api_index:
+				class: Drupal\search_api\Entity\Index
+				storage: Drupal\search_api\Entity\SearchApiConfigEntityStorage
+			search_api_server:
+				class: Drupal\search_api\Entity\Server
+				storage: Drupal\search_api\Entity\SearchApiConfigEntityStorage			    
 ```
 
 Similarly, the `EntityStorageDynamicReturnTypeExtension` service helps to determine the type of the entity which is

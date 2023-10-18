@@ -16,8 +16,8 @@ use Drupal\geofield\Plugin\views\argument\GeofieldProximityArgument;
  * @GeofieldProximitySource(
  *   id = "geofield_context_filter",
  *   label = @Translation("Context Filter (By context filter)"),
- *   description = @Translation("Allow the contextual input of Distance and Origin (as couple of Latitude and Longitude in decimal degrees.)"),
- *   exposedDescription = @Translation("Contextual input of Distance and Origin (as couple of Latitude and Longitude in decimal degrees.)"),
+ *   description = @Translation("Allow the contextual input of Origin as couple of Latitude and Longitude in decimal degrees."),
+ *   exposedDescription = @Translation("Contextual input of Origin as couple of Latitude and Longitude in decimal degrees."),
  *   context = {
  *     "sort",
  *     "field",
@@ -68,19 +68,13 @@ class ContextProximityFilter extends GeofieldProximitySourceBase implements Cont
   public function getOrigin() {
     $origin = [];
     if (isset($this->viewHandler)) {
-      /** @var \Drupal\geofield\Plugin\views\argument\GeofieldProximityArgument $geofield_proximity_argument */
-      $geofield_proximity_argument = $this->viewHandler->view->argument;
       foreach ($this->viewHandler->view->argument as $argument) {
-        if ($argument instanceof GeofieldProximityArgument) {
-          $geofield_proximity_argument = $argument;
+        if ($argument instanceof GeofieldProximityArgument && $argument_values = $argument->getParsedReferenceLocation()) {
+          $origin = [
+            'lat' => $argument_values['lat'],
+            'lon' => $argument_values['lon'],
+          ];
         }
-      }
-
-      if (isset($geofield_proximity_argument) && $argument_values = $geofield_proximity_argument->getParsedReferenceLocation()) {
-        $origin = [
-          'lat' => $argument_values['lat'],
-          'lon' => $argument_values['lon'],
-        ];
       }
     }
     return $origin;

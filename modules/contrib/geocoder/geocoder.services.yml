@@ -5,7 +5,7 @@ services:
     arguments: ['@config.factory','@plugin.manager.geocoder.provider', '@module_handler']
 
   geocoder.http_adapter:
-    class: Http\Adapter\Guzzle6\Client
+    class: Http\Adapter\Guzzle7\Client
     arguments: ['@http_client']
 
   plugin.manager.geocoder.provider:

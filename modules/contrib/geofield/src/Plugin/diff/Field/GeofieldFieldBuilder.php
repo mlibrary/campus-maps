@@ -2,7 +2,6 @@
 
 namespace Drupal\geofield\Plugin\diff\Field;
 
-use Drupal\diff\FieldDiffBuilderBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\diff\Plugin\diff\Field\CoreFieldBuilder;
 
@@ -23,7 +22,7 @@ class GeofieldFieldBuilder extends CoreFieldBuilder {
    * {@inheritdoc}
    */
   public function build(FieldItemListInterface $field_items) {
-    $result = array();
+    $result = [];
 
     foreach ($field_items as $field_key => $field_item) {
       if (!$field_item->isEmpty()) {

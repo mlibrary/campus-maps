@@ -66,7 +66,7 @@ class ListFieldThemer extends ListFieldThemerUrl {
         ])
         && $field_storage_definitions[$field_id]->getCardinality() == 1
       ) {
-        $list_fields[$field_id] = ['options' => $field_storage_definitions[$field_id]->getSetting('allowed_values')];
+        $list_fields[$field_id] = ['options' => options_allowed_values($field_storage_definitions[$field_id])];
       }
     }
 

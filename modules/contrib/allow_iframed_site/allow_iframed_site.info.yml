@@ -1,12 +1,11 @@
 name: Allow site to be iframed
-description: Watch out for clickjacking...
+description: Allows certain paths to be embedded in iframes. Watch out for clickjacking!
 type: module
 package: Security
 configure: allow_iframed_site.settings
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^10
 
-# Information added by Drupal.org packaging script on 2020-06-11
-version: '3.0.1'
+# Information added by Drupal.org packaging script on 2023-09-25
+version: '3.0.3'
 project: 'allow_iframed_site'
-datestamp: 1591834517
+datestamp: 1695641759

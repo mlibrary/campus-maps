@@ -4,21 +4,29 @@ namespace PHPStan\Rules\Deprecations;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
+use PHPStan\Broker\FunctionNotFoundException;
 use PHPStan\Reflection\ReflectionProvider;
+use PHPStan\Rules\Rule;
+use function sprintf;
 
 /**
- * @implements \PHPStan\Rules\Rule<FuncCall>
+ * @implements Rule<FuncCall>
  */
-class CallToDeprecatedFunctionRule implements \PHPStan\Rules\Rule
+class CallToDeprecatedFunctionRule implements Rule
 {
 
 	/** @var ReflectionProvider */
 	private $reflectionProvider;
 
-	public function __construct(ReflectionProvider $reflectionProvider)
+	/** @var DeprecatedScopeHelper */
+	private $deprecatedScopeHelper;
+
+	public function __construct(ReflectionProvider $reflectionProvider, DeprecatedScopeHelper $deprecatedScopeHelper)
 	{
 		$this->reflectionProvider = $reflectionProvider;
+		$this->deprecatedScopeHelper = $deprecatedScopeHelper;
 	}
 
 	public function getNodeType(): string
@@ -28,17 +36,17 @@ class CallToDeprecatedFunctionRule implements \PHPStan\Rules\Rule
 
 	public function processNode(Node $node, Scope $scope): array
 	{
-		if (DeprecatedScopeHelper::isScopeDeprecated($scope)) {
+		if ($this->deprecatedScopeHelper->isScopeDeprecated($scope)) {
 			return [];
 		}
 
-		if (!($node->name instanceof \PhpParser\Node\Name)) {
+		if (!($node->name instanceof Name)) {
 			return [];
 		}
 
 		try {
 			$function = $this->reflectionProvider->getFunction($node->name, $scope);
-		} catch (\PHPStan\Broker\FunctionNotFoundException $e) {
+		} catch (FunctionNotFoundException $e) {
 			// Other rules will notify if the function is not found
 			return [];
 		}

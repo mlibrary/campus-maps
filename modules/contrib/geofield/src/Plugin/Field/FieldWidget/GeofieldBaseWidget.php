@@ -3,7 +3,9 @@
 namespace Drupal\geofield\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\geofield\Plugin\GeofieldBackendManager;
@@ -95,6 +97,18 @@ abstract class GeofieldBaseWidget extends WidgetBase implements ContainerFactory
       $container->get('geofield.wkt_generator'),
       $container->get('plugin.manager.geofield_backend')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    // Attach Geofield Libraries.
+    $element['#attached']['library'] = [
+      'geofield/geofield_general',
+    ];
+
+    return ['value' => $element];
   }
 
   /**

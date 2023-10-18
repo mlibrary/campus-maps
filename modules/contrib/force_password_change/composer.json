@@ -1,0 +1,12 @@
+{
+    "name": "drupal/force_password_change",
+    "description": "Allows administrators to force users to change their password",
+    "type": "drupal-module",
+    "homepage": "https://www.drupal.org/project/force_password_change",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/force_password_change"
+    },
+    "license": "GPL-2.0+",
+    "minimum-stability": "dev",
+    "require": { }
+}

@@ -726,7 +726,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $js_settings['map_settings']['geofield_cardinality'] = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
 
     // Get token context.
-    $token_context = [
+    $tokens = [
       'field' => $items,
       $this->fieldDefinition->getTargetEntityTypeId() => $items->getEntity(),
     ];
@@ -761,11 +761,15 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $tooltip = isset($map_settings['map_marker_and_infowindow']['tooltip_field']) && $map_settings['map_marker_and_infowindow']['tooltip_field'] == 'title' ? $entity->label() : '';
 
     $features = [];
-    foreach ($items as $k => $item) {
+    foreach ($items as $delta => $item) {
 
       // Generate GeoJsonData Feature.
-      $info_window_description = $description[$k] ?? (!empty($description) ? $description[0] : NULL);
+      $info_window_description = $description[$delta] ?? (!empty($description) ? $description[0] : NULL);
       $feature = $this->getGeoJsonData($item, $entity->id(), $info_window_description, $tooltip);
+
+      // Generate the weight feature property
+      // (falls back to natural result ordering).
+      $feature['weight'] = !empty($map_settings['weight']) ? intval(str_replace(["\n", "\r"], "", $this->token->replace($map_settings['weight'], $tokens))) : $delta;
 
       // Add Custom Icon, if set.
       if (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
@@ -781,7 +785,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
           $fid = $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'];
         }
 
-        if ($feature['geometry'] && $feature['geometry']->type === 'Point') {
+        if (isset($feature['geometry']) && $feature['geometry']->type === 'Point') {
           $feature['properties']['icon'] = $this->markerIcon->getFileManagedUrl($fid, $image_style);
           // Flag the data with theming, for later rendering logic.
           $feature['properties']['theming'] = TRUE;
@@ -790,20 +794,20 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       }
       elseif (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
         && $map_settings['map_marker_and_infowindow']['icon_image_mode'] === 'icon_image_path') {
-        if ($feature['geometry'] && $feature['geometry']->type === 'Point') {
-          $feature['properties']['icon'] = !empty($map_settings['map_marker_and_infowindow']['icon_image_path']) ? $this->token->replace($map_settings['map_marker_and_infowindow']['icon_image_path'], $token_context) : '';
+        if (isset($feature['geometry']) && $feature['geometry']->type === 'Point') {
+          $feature['properties']['icon'] = !empty($map_settings['map_marker_and_infowindow']['icon_image_path']) ? $this->token->replace($map_settings['map_marker_and_infowindow']['icon_image_path'], $tokens) : '';
           // Flag the data with theming, for later rendering logic.
           $feature['properties']['theming'] = TRUE;
         }
+      }
 
-        // Associate dynamic path properties (token based) to the feature,
-        // in case of not point.
-        if ($feature['geometry'] && $feature['geometry']->type !== 'Point') {
-          $feature['properties']['path_options'] = !empty($map_settings['map_geometries_options']) ? str_replace([
-            "\n",
-            "\r",
-          ], "", $this->token->replace($map_settings['map_geometries_options'], $token_context)) : '';
-        }
+      // Associate dynamic path properties (token based) to the feature,
+      // in case of not point.
+      if (isset($feature['geometry']) && $feature['geometry']->type !== 'Point') {
+        $feature['properties']['path_options'] = !empty($map_settings['map_geometries_options']) ? str_replace([
+          "\n",
+          "\r",
+        ], "", $this->token->replace($map_settings['map_geometries_options'], $tokens)) : '';
       }
 
       // Allow modules to adjust the feature/marker.
@@ -811,6 +815,9 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
       $features[] = $feature;
     }
+
+    // Order the data features based on the 'weight' element.
+    uasort($features, ['Drupal\Component\Utility\SortArray', 'sortByWeightElement']);
 
     if (empty($features) && $map_settings['map_empty']['empty_behaviour'] !== '2') {
       $view_in_progress = FALSE;
@@ -825,7 +832,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
     else {
       $js_settings['data'] = [
-        'type' => 'FeatureCollection',
         'features' => $features,
       ];
     }

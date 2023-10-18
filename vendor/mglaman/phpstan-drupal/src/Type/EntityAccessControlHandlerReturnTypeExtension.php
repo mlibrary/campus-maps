@@ -2,16 +2,12 @@
 
 namespace mglaman\PHPStanDrupal\Type;
 
-use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityAccessControlHandlerInterface;
-use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Type\BooleanType;
-use PHPStan\Type\Constant\ConstantBooleanType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -50,9 +46,9 @@ final class EntityAccessControlHandlerReturnTypeExtension implements DynamicMeth
         }
 
         $returnAsObjectArg = $scope->getType($arg->value);
-        if (!$returnAsObjectArg instanceof ConstantBooleanType) {
+        if (!$returnAsObjectArg->isBoolean()->yes()) {
             return $returnType;
         }
-        return $returnAsObjectArg->getValue() ? new ObjectType(AccessResultInterface::class) : new BooleanType();
+        return $returnAsObjectArg->isTrue()->yes() ? new ObjectType(AccessResultInterface::class) : new BooleanType();
     }
 }

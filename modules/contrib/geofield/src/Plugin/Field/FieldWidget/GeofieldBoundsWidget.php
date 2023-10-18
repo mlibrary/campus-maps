@@ -10,7 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @FieldWidget(
  *   id = "geofield_bounds",
- *   label = @Translation("Bounding box"),
+ *   label = @Translation("Bounding Box"),
  *   field_types = {
  *     "geofield"
  *   }
@@ -29,18 +29,20 @@ class GeofieldBoundsWidget extends GeofieldBaseWidget {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    $element = parent::formElement($items, $delta, $element, $form, $form_state);
+
     $bounds_value = [];
 
     foreach ($this->components as $component) {
       $bounds_value[$component] = isset($items[$delta]->{$component}) ? floatval($items[$delta]->{$component}) : '';
     }
 
-    $element += [
+    $element['value'] += [
       '#type' => 'geofield_bounds',
       '#default_value' => $bounds_value,
     ];
 
-    return ['value' => $element];
+    return $element;
   }
 
   /**

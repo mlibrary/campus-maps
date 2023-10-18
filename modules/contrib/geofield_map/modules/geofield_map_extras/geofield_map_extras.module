@@ -13,13 +13,15 @@ use Drupal\Core\Url;
  * Implements hook_help().
  */
 function geofield_map_extras_help($route_name, RouteMatchInterface $route_match) {
+  /** @var Drupal\Core\Extension\ExtensionPathResolver $extension_path_resolver */
+  $extension_path_resolver = Drupal::service('extension.path.resolver');
   $output = '';
   switch ($route_name) {
     case 'help.page.geofield_map_extras':
       $output .= '<h3>' . t('Geofield Map Extras Help') . '</h3>';
       $output .= '<p>' . t('Additional features to the main Geofield Map module.') . '</p>';
       $output .= '<p>' . t('For more info: @readme', [
-        '@readme' => Link::fromTextAndUrl(t('Readme.md'), Url::fromUri('base:/' . drupal_get_path('module', 'geofield_map_extras') . '/README.md', ['attributes' => ['target' => '_blank']]))->toString(),
+        '@readme' => Link::fromTextAndUrl(t('Readme.md'), Url::fromUri('base:/' . $extension_path_resolver->getPath('module', 'geofield_map_extras') . '/README.md', ['attributes' => ['target' => '_blank']]))->toString(),
       ]) . '</p>';
   }
   return $output;

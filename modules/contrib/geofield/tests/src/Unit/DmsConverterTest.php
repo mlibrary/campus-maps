@@ -80,7 +80,7 @@ class DmsConverterTest extends UnitTestCase {
             'seconds' => 2,
           ]
         ),
-        [-3.0508333333333333, -2.0338888888888889],
+        [-3.0508333333, -2.0338888889],
       ],
     ];
 

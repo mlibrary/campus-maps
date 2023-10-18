@@ -55,7 +55,7 @@
           });
         }
 
-        $(context).find('.geofield-google-map').once('geofield-processed').each(function (index, element) {
+        once('geofield-processed', 'html .geofield-google-map').forEach(function (element) {
           const mapId = $(element).attr('id');
           if (drupalSettings['geofield_google_map'][mapId]) {
             const map_settings = drupalSettings['geofield_google_map'][mapId]['map_settings'];
@@ -86,7 +86,7 @@
     maps_api_loading: false,
 
     /**
-     * Returns the re-coded google maps api language parameter, from html lang attribute.
+     * Returns the re-coded Google Maps api language parameter, from html lang attribute.
      *
      * @param {string} html_language - The language id string
      *
@@ -110,9 +110,9 @@
      */
     googleCallback: function () {
       let self = this;
-      // Wait until the window load event to try to use the maps library.
+      // Wait until the window load event to try to use the Maps library.
       $(document).ready(function (e) {
-        _.each(self.googleCallbacks, function (callback) {
+        self.googleCallbacks.forEach(function (callback) {
           callback.callback();
         });
         self.googleCallbacks = [];
@@ -146,16 +146,16 @@
       // Add the callback.
       self.addCallback(callback);
 
-      // Check for google maps.
+      // Check for Google Maps.
       if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
         if (self.maps_api_loading === true) {
           return;
         }
 
         self.maps_api_loading = true;
-        // Google maps isn't loaded so lazy load google maps.
+        // Google Maps isn't loaded so lazy load Google Maps.
         // Default script path.
-        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&language=' + self.googleMapsLanguage(html_language);
+        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&language=' + self.googleMapsLanguage(html_language) + '&callback=Drupal.geoFieldMapFormatter.googleCallback';
 
         // If a Google API key is set, use it.
         if (gmap_api_key) {
@@ -175,12 +175,11 @@
         $.getScript(scriptPath)
           .done(function () {
             self.maps_api_loading = false;
-            self.googleCallback();
           });
 
       }
       else {
-        // Google maps loaded. Run callback.
+        // Google Maps loaded. Run callback.
         self.googleCallback();
       }
     },
@@ -318,7 +317,7 @@
           mapTypeId: map_settings.map_controls.map_type_id || 'roadmap'
         };
 
-        // Manage the old scrollwheel & draggable settings (deprecated by google maps api).
+        // Manage the old scrollwheel & draggable settings (deprecated by Google Maps api).
         if (!map_settings.map_zoom_and_pan.scrollwheel && !map_settings.map_zoom_and_pan.gestureHandling) {
           mapOptions.scrollwheel = false;
         }
@@ -417,9 +416,12 @@
         self.map_data[mapid].center_force = !!map_settings.map_center.center_force;
 
         // Parse the Geojson data into Google Maps Locations.
-        let features = data.features && data.features.length > 0 ? Drupal.googleGeoJson(data) : null;
+        let features = [];
+        for (let i in data.features) {
+          features[i] = Drupal.googleGeoJson(data.features[i]);
+        }
 
-        if (features && features.length > 0 && (!features.type || features.type !== 'Error')) {
+        if (features.length > 0) {
 
           /**
            * Implement  OverlappingMarkerSpiderfier if its control set true.
@@ -446,12 +448,10 @@
             let content = $('[data-geofield-google-map-ajax-popup]', element);
             if (content.length) {
               let url = content.data('geofield-google-map-ajax-popup');
-              Drupal.ajax({url: url}).execute();
+              Drupal.ajax({url: url}).execute().done(function () {
+                Drupal.attachBehaviors(element, drupalSettings);
+              })
             }
-            // Attach drupal behaviors on new content.
-            $(element).each(function () {
-              Drupal.attachBehaviors(this, drupalSettings);
-            })
           });
 
           if (features.setMap) {
@@ -524,7 +524,7 @@
         google.maps.event.addListenerOnce(map, 'idle', function () {
 
           // Open the Feature infowindow, if so set.
-          if (self.map_data[mapid].map_marker_and_infowindow.force_open && parseInt(self.map_data[mapid].map_marker_and_infowindow.force_open) === 1) {
+          if (self.map_data[mapid].map_marker_and_infowindow.force_open) {
             // map.setCenter(features[0].getPosition());
             self.infowindow_open(mapid, features[0]);
           }

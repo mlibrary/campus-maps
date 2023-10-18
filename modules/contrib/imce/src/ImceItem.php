@@ -36,6 +36,13 @@ abstract class ImceItem {
   public $parent;
 
   /**
+   * Item uuid.
+   *
+   * @var string
+   */
+  public $uuid;
+
+  /**
    * File manager.
    *
    * @var \Drupal\imce\ImceFM
@@ -86,6 +93,13 @@ abstract class ImceItem {
         return Imce::joinPaths($path, $this->name);
       }
     }
+  }
+
+  /**
+   * Sets the item path.
+   */
+  public function setPath($path) {
+    $this->path = $path;
   }
 
   /**

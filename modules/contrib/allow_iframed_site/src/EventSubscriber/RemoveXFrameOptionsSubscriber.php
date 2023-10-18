@@ -2,9 +2,9 @@
 
 namespace Drupal\allow_iframed_site\EventSubscriber;
 
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Executable\ExecutableManagerInterface;
@@ -44,11 +44,11 @@ class RemoveXFrameOptionsSubscriber implements EventSubscriberInterface {
   /**
    * Remove the X-Frame-Options header.
    *
-   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\ResponseEvent $event
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
-  public function RemoveXFrameOptions(FilterResponseEvent $event) {
+  public function RemoveXFrameOptions(ResponseEvent $event) {
     $xframe = TRUE;
     /**
      * Don't remove X-Frame-Options if pages and negate fields are not configured.

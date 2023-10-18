@@ -366,7 +366,7 @@ class AdminForm extends FormBase {
         '#items' => $items,
       ];
 
-      $item_list = new FormattableMarkup('@item_list', ['@item_list' => render($list)]);
+      $item_list = new FormattableMarkup('@item_list', ['@item_list' => \Drupal::service('renderer')->render($list)]);
       // Set a message informing the user of the roles
       // that had a forced password change.
       if ($form_state->getValue('login_only')) {

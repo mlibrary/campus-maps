@@ -1,4 +1,4 @@
-<strong>Geofield Map</strong> is an advanced, complete and easy-to-use Geo Mapping solution for Drupal 8, based on and fully compatible with the <a href="https://www.drupal.org/project/geofield" title="Geofield" target="_blank">Geofield</a> module, that <strong>lets you manage the Geofield with an interactive Map both in back-end and in the front-end.</strong>
+<strong>Geofield Map</strong> is an advanced, complete and easy-to-use Geo Mapping solution for Drupal 8+, based on and fully compatible with the <a href="https://www.drupal.org/project/geofield" title="Geofield" target="_blank">Geofield</a> module, that <strong>lets you manage the Geofield with an interactive Map both in back-end and in the front-end.</strong>
 
 It represents the perfect solution to:
 <ul>
@@ -10,18 +10,7 @@ It represents the perfect solution to:
     Multipolygons, etc.), based on Google Maps Polygons APIs;</li>
 </ul>
 
-<h2><a href="http://www.geodemocracy.com/geofield_d8/web/" target="blank">>>>> Live Demo <<<<</a></h2>
-<hr>
-<h2 style="color: red;">New !!!</h2>
-<h3>The new 8.x-2.50 release implements Geocoder module integration for the Geofield Map Widget Search Address Functionality.</h3>
-<div>(get rid of mandatory Google Maps API Key).</div>
-<hr>
-<br>
-<h4>Geofield Map 2.x. What's New</h4>
-<h3><strong>Dynamic Map Markers Theming & Contextual Legends.</strong></h3>
-<p>The Geofield Map 2.x version allows the Geofield Map View definition of Custom Markers & Icons Images based on dynamic values of the Map features.</p>
-<p>Moreover, as an absolute novelty and uniqueness in the history of Drupal CMS (!), a custom Geofield Map Legend Block is defined by the module and is able to expose each Map Theming logics in the form of fully configurable and impressive Legends.</p>
-
+<h2><a href="https://www.geodemocracy.com/drupal_geofield_stack_demo/web/" target="blank">>>>> Live Demo <<<<</a></h2>
 
 <h3><strong>Technical Functionalities and specifications</strong></h3>
 
@@ -87,9 +76,11 @@ Both in Geofield Map Formatter and in the Geofield Map View style it is possible
   <li>The Geofield Map View style plugin will pass to the client js (as drupalSettings.geofield_google_map[mapid] & Drupal.geoFieldMap[mapid] variables) the un-hidden fields values of the View, as markers/features' properties data;</li>
 </ul>
 
-<h3><strong>Geofield Map 2.x Dynamic Markers Theming & Legends Specifications</strong></h3>
+<h3><strong>Geofield Map Dynamic Markers Theming & Legends Specifications</strong></h3>
 
-<p>Geofield Map 2.x introduces the MapThemer Plugin system that allows the definition of MapThemer Plugins able to dinamically differentiate Map Features/Markers based on Contents Types, Taxonomy Terms, Values, etc.
+<p>The Geofield Map (since 2.x version) allows the Geofield Map View definition of Custom Markers & Icons Images based on dynamic values of the Map features.</p>
+<p>Moreover a custom Geofield Map Legend Block is defined by the module and is able to expose each Map Theming logics in the form of fully configurable and impressive Legends.</p>
+<p>Geofield Map introduces the MapThemer Plugin system that allows the definition of MapThemer Plugins able to dinamically differentiate Map Features/Markers based on Contents Types, Taxonomy Terms, Values, etc.
   Each Plugin Type provides the automatic definition of a related Legend Build, that is able to fill the definition of a Custom GeofieldMapLegend block.</p>
 
 <p>At the moment the following two Geofield Map Themers plugin types have been defined:</p>
@@ -101,8 +92,8 @@ Both in Geofield Map Formatter and in the Geofield Map View style it is possible
   <li> List Type Field, allows the definition of different Marker Icons based on List (Options) Type fields in View;</li>
 </ul>
 
-<p>As Drupal 8 Plugin system based, the Geofield MapThemers Plugin and Legend block system is fully extendable and overridable.
-  You, as D8 developer, are free to override and extend the existing ones, or create your custom MapThemer based on your specific needs and logics.</p>
+<p>As Drupal 8+ Plugin system based, the Geofield MapThemers Plugin and Legend block system is fully extendable and overridable.
+  You, as Drupal 8+ developer, are free to override and extend the existing ones, or create your custom MapThemer based on your specific needs and logics.</p>
 
 <b>New: </b><u>SVG Image files are now supported for Marker Icons, via the <a href="https://www.drupal.org/project/svg_image">Svg Image module</a></u>
 
@@ -111,11 +102,11 @@ Both in Geofield Map Formatter and in the Geofield Map View style it is possible
 <p>In a Geofield Map View Display, just go into its settings and choose the wanted MapThemer in the new Map Theming Options section/fieldset.
   It is possible to associate a Drupal Managed File for each MapThemer plugin value and even the Icon Image style the Icon should be rendered on the Map. The Value labels and Icons might have an alias, might be reordered and might be hidden from the correspondent Legend Block.<p>
 
-<p>Once defined and configured the Legend you are free to place it, once or several times, as a normal Drupal 8 block on the pages, with your logics and contextual rules.</p>
+<p>Once defined and configured the Legend you are free to place it, once or several times, as a normal Drupal 8+ block on the pages, with your logics and contextual rules.</p>
 
 <h4><strong>Notes & Warnings</strong></h4>
 <ul>
-  <li>The Geofield Map module depends from the <a href="https://www.drupal.org/project/geofield" title="Geofield" target="_blank">Geofield</a> module;</li>
+  <li>The Geofield Map module depends on the <a href="https://www.drupal.org/project/geofield" title="Geofield" target="_blank">Geofield</a> module;</li>
   <li>A unique Gmap Api Key is required for both Google Mapping and Geocoding operations, all performed client-side by js. <a href="https://developers.google.com/maps/documentation/javascript/get-api-key#key-restrictions" target="_blank">It might/should be restricted using the Website Domain / HTTP referrers method</a>;</li>
   <li><b>NEW (!)</b>: The module integrates with the <a href="https://www.drupal.org/project/geocoder" title="Geocoder" target="_blank">Geocoder</a> module, thus skipping the need of Gmap Api Key for Geocoding operations;</li>
 </ul>

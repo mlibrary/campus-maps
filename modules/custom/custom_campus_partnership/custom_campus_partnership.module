@@ -58,7 +58,7 @@ function _custom_campus_partnership_lookup_node($name, $bundle) {
 }
 
 function _custom_campus_partnership_lookup_term($name, $vid) {
-  $term_existing = taxonomy_term_load_multiple_by_name($name, $vid);
+  $term_existing = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => $name, 'vid' => $vid]);
   $term = NULL;
   if (count($term_existing) > 0) {
     \Drupal::messenger()->addWarning(t('The @vid term @name already exists. The item will be set to the existing unit.', ['@vid' => $vid, '@name' => $name]));

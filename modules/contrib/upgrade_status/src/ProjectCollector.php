@@ -10,6 +10,7 @@ use Drupal\Core\Extension\ProfileExtensionList;
 use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Extension\Exception\UnknownExtensionException;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactory;
+use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -150,7 +151,7 @@ class ProjectCollector {
    *   The theme extension handler service.
    * @param \Drupal\Core\Extension\ProfileExtensionList $profile_extension_list
    *   The profile extension handler service.
-   * @param \Drupal\Core\KeyValueStore\KeyValueExpirableFactory $key_value_expirable
+   * @param \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $key_value_expirable
    *   The expirable key/value storage.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
@@ -161,7 +162,7 @@ class ProjectCollector {
     ModuleExtensionList $module_extension_list,
     ThemeExtensionList $theme_extension_list,
     ProfileExtensionList $profile_extension_list,
-    KeyValueExpirableFactory $key_value_expirable,
+    KeyValueExpirableFactoryInterface $key_value_expirable,
     ConfigFactoryInterface $config_factory,
     $install_profile
   ) {
@@ -480,7 +481,14 @@ class ProjectCollector {
     }
 
     // Read our shipped snapshot of Drupal 10 plans to find this one.
-    $file = fopen(drupal_get_path('module', 'upgrade_status') . '/project_plans.csv', 'r');
+    if (function_exists('drupal_get_path')) {
+      // @todo remove compatibility layer with Drupal 9.3.0 when removing Drupal 9 compatibility.
+      $module_path = drupal_get_path('module', 'upgrade_status');
+    }
+    else {
+      $module_path = \Drupal::service('extension.list.module')->getPath('upgrade_status');
+    }
+    $file = fopen($module_path . '/project_plans.csv', 'r');
     while ($line = fgetcsv($file, 0, ";")) {
       if ($line[0] == $project_machine_name) {
         fclose($file);
@@ -585,11 +593,11 @@ class ProjectCollector {
   public static function getOldestSupportedMinor(): string {
     $major = (int) \Drupal::VERSION;
     switch ($major) {
-      case 8:
-        return '8.9';
       case 9:
-        return '9.2';
-    }
+        return '9.4';
+      case 10:
+        return '10.0';
+      }
     return '';
   }
 

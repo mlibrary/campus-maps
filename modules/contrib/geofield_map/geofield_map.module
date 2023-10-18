@@ -16,13 +16,15 @@ use Drupal\image\Entity\ImageStyle;
  * Implements hook_help().
  */
 function geofield_map_help($route_name, RouteMatchInterface $route_match) {
+  /** @var Drupal\Core\Extension\ExtensionPathResolver $extension_path_resolver */
+  $extension_path_resolver = Drupal::service('extension.path.resolver');
   $output = '';
   switch ($route_name) {
     case 'help.page.geofield_map':
       $output .= '<h3>' . t('Geofield Map Help') . '</h3>';
       $output .= '<p>' . t('Map Widget, Formatter and Views integration for Geofields.') . '</p>';
       $output .= '<p>' . t('For more info: @readme', [
-        '@readme' => Link::fromTextAndUrl(t('Readme.md'), Url::fromUri('base:/' . drupal_get_path('module', 'geofield_map') . '/README.md', ['attributes' => ['target' => '_blank']]))->toString(),
+        '@readme' => Link::fromTextAndUrl(t('Readme.md'), Url::fromUri('base:/' . $extension_path_resolver->getPath('module', 'geofield_map') . '/README.md', ['attributes' => ['target' => '_blank']]))->toString(),
       ]) . '</p>';
   }
   return $output;
@@ -236,7 +238,7 @@ function geofield_map_preprocess_select(&$variables) {
       '#theme' => 'image',
       '#width' => $image_preview_width,
       '#height' => $image_preview_height,
-      '#uri' => file_create_url($element['#value']),
+      '#uri' => \Drupal::service('file_url_generator')->generateAbsoluteString($element['#value']),
     ];
     $variables['data'] = [];
     foreach (Element::children($element) as $child) {

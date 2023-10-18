@@ -35,8 +35,8 @@ class ParagraphsLibraryTest extends ParagraphsTestBase {
    */
   public function testLibraryItems() {
     // Set default theme.
-    \Drupal::service('theme_installer')->install(['bartik']);
-    $this->config('system.theme')->set('default', 'bartik')->save();
+    \Drupal::service('theme_installer')->install(['claro']);
+    $this->config('system.theme')->set('default', 'claro')->save();
     $this->loginAsAdmin(['create paragraphed_test content', 'edit any paragraphed_test content', 'administer paragraphs library']);
 
     // Add a Paragraph type with a text field.
@@ -54,7 +54,7 @@ class ParagraphsLibraryTest extends ParagraphsTestBase {
     ];
     $this->submitForm($edit, 'Save');
     $this->clickLink('re usable paragraph label');
-    $this->assertSession()->responseContains('bartik/css/base/elements.css');
+    $this->assertSession()->responseContains('claro/css/base/elements.css');
     $this->clickLink('Edit');
     $this->assertSession()->responseNotContains('class="messages messages--warning"');
     $items = \Drupal::entityQuery('paragraphs_library_item')
@@ -164,7 +164,7 @@ class ParagraphsLibraryTest extends ParagraphsTestBase {
     $alternative_display->save();
 
     $this->drupalGet('node/' . $node_one->id());
-    $this->assertText('re_usable_text');
+    $this->assertSession()->pageTextContains('re_usable_text');
 
     /** @var \Drupal\Core\Entity\Entity\EntityViewDisplay $from_library_view_display */
     $from_library_view_display = $display_storage->load('paragraph.from_library.default');
@@ -174,7 +174,7 @@ class ParagraphsLibraryTest extends ParagraphsTestBase {
     $from_library_view_display->save();
 
     $this->drupalGet('node/' . $node_one->id());
-    $this->assertNoText('re_usable_text');
+    $this->assertSession()->pageTextNotContains('re_usable_text');
 
     $from_library_view_display = $display_storage->load('paragraph.from_library.default');
     $field_reusable_paragraph_component = $from_library_view_display->getComponent('field_reusable_paragraph');
@@ -294,9 +294,15 @@ class ParagraphsLibraryTest extends ParagraphsTestBase {
     $this->assertSession()->linkExists('Manage fields');
     $this->assertSession()->linkExists('Manage form display');
     $this->assertSession()->linkExists('Manage display');
+    $this->assertSession()->buttonExists('Save configuration');
     // Assert that users can create fields to
     $this->clickLink('Manage fields');
-    $this->clickLink('Add field');
+    if (version_compare(\Drupal::VERSION, '10.1', '>=')) {
+      $this->clickLink('Create a new field');
+    }
+    else {
+      $this->clickLink('Add field');
+    }
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextNotContains('plugin does not exist');
     $this->drupalGet('admin/config/content');

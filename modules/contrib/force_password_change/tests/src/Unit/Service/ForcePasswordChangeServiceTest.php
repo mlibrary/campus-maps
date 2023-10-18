@@ -2,9 +2,14 @@
 
 namespace Drupal\Tests\force_password_change\Unit\Service;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\force_password_change\Mapper\ForcePasswordChangeMapperInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\force_password_change_service_test\Service\ForcePasswordChangeServiceTest as ForcePasswordChangeService;
+use Drupal\user\UserDataInterface;
 
 /**
  * @coversDefaultClass \Drupal\force_password_change\Service\ForcePasswordChangeService
@@ -51,16 +56,12 @@ class ForcePasswordChangeServiceTest extends UnitTestCase {
     $this->container = new ContainerBuilder();
     \Drupal::setContainer($this->container);
 
-    $this->mapper = $this->getMockBuilder('\Drupal\force_password_change\Mapper\ForcePasswordChangeMapperInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->mapper = $this->createMock(ForcePasswordChangeMapperInterface::class);
     $this->mapper->expects($this->any())
       ->method('getUserCreatedTime')
       ->willReturn(1000000);
 
-    $this->currentUser = $this->getMockBuilder('\Drupal\Core\Session\AccountProxyInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->currentUser = $this->createMock(AccountProxyInterface::class);
     $this->currentUser->expects($this->any())
       ->method('id')
       ->willReturn(1);
@@ -68,17 +69,11 @@ class ForcePasswordChangeServiceTest extends UnitTestCase {
       ->method('getRoles')
       ->willReturn(['authenticated']);
 
-    $this->configFactory = $this->getMockBuilder('\Drupal\Core\Config\ConfigFactoryInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
 
-    $this->userData = $this->getMockBuilder('\Drupal\user\UserDataInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->userData = $this->createMock(UserDataInterface::class);
 
-    $this->time = $this->getMockBuilder('\Drupal\Component\Datetime\TimeInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->time = $this->createMock(TimeInterface::class);
     $this->time->expects($this->any())
       ->method('getRequestTime')
       ->willReturn(1000101);

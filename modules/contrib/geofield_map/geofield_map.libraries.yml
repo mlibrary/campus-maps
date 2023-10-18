@@ -31,9 +31,8 @@ geofield_map_widget:
   js:
     js/geofield_map_widget.js: {}
   dependencies:
-      - core/underscore
       - core/jquery
-      - core/jquery.once
+      - core/once
       - core/drupal
       - core/drupalSettings
       - core/drupal.autocomplete
@@ -57,9 +56,8 @@ geofield_google_map:
   js:
     js/geofield_map_gmap_formatter.js: {}
   dependencies:
-      - core/underscore
       - core/jquery
-      - core/jquery.once
+      - core/once
       - core/drupal
       - core/drupalSettings
 
@@ -67,10 +65,14 @@ geocoder:
   version: 1.x
   css:
     component:
+      css/autocomplete-loading.module.css: { weight: -10 }
       css/geofield_map_geocoder.css: {}
   js:
     js/geofield_map.geocoder.js: {}
   dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
     - core/drupal.autocomplete
 
 geojson:

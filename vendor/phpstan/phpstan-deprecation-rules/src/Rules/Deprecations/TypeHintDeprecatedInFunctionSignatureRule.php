@@ -5,21 +5,27 @@ namespace PHPStan\Rules\Deprecations;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Node\InFunctionNode;
-use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
+use PHPStan\Rules\Rule;
+use PHPStan\ShouldNotHappenException;
+use function sprintf;
 
 /**
- * @implements \PHPStan\Rules\Rule<InFunctionNode>
+ * @implements Rule<InFunctionNode>
  */
-class TypeHintDeprecatedInFunctionSignatureRule implements \PHPStan\Rules\Rule
+class TypeHintDeprecatedInFunctionSignatureRule implements Rule
 {
 
 	/** @var DeprecatedClassHelper */
 	private $deprecatedClassHelper;
 
-	public function __construct(DeprecatedClassHelper $deprecatedClassHelper)
+	/** @var DeprecatedScopeHelper */
+	private $deprecatedScopeHelper;
+
+	public function __construct(DeprecatedClassHelper $deprecatedClassHelper, DeprecatedScopeHelper $deprecatedScopeHelper)
 	{
 		$this->deprecatedClassHelper = $deprecatedClassHelper;
+		$this->deprecatedScopeHelper = $deprecatedScopeHelper;
 	}
 
 	public function getNodeType(): string
@@ -29,18 +35,18 @@ class TypeHintDeprecatedInFunctionSignatureRule implements \PHPStan\Rules\Rule
 
 	public function processNode(Node $node, Scope $scope): array
 	{
-		if (DeprecatedScopeHelper::isScopeDeprecated($scope)) {
+		if ($this->deprecatedScopeHelper->isScopeDeprecated($scope)) {
 			return [];
 		}
 
 		$function = $scope->getFunction();
-		if (!$function instanceof FunctionReflection) {
-			throw new \PHPStan\ShouldNotHappenException();
+		if ($function === null) {
+			throw new ShouldNotHappenException();
 		}
 		$functionSignature = ParametersAcceptorSelector::selectSingle($function->getVariants());
 
 		$errors = [];
-		foreach ($functionSignature->getParameters() as $i => $parameter) {
+		foreach ($functionSignature->getParameters() as $parameter) {
 			$deprecatedClasses = $this->deprecatedClassHelper->filterDeprecatedClasses($parameter->getType()->getReferencedClasses());
 			foreach ($deprecatedClasses as $deprecatedClass) {
 				$errors[] = sprintf(

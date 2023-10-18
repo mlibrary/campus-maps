@@ -8,8 +8,10 @@ geocoder:
   version: 1.x
   css:
     component:
+      /core/modules/system/css/components/autocomplete-loading.module.css: { weight: -10 }
       css/geocoder_geocoder.css: {}
   js:
     js/geocoder.drupal.js: {}
   dependencies:
+    - core/once
     - core/drupal.autocomplete

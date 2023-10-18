@@ -95,7 +95,7 @@ class GeofieldProximitySort extends SortPluginBase {
     $source_plugin_id = isset($user_input['options']['source']) ? $user_input['options']['source'] : $this->options['source'];
     $source_plugin_configuration = isset($user_input['options']['source_configuration']) ? $user_input['options']['source_configuration'] : $this->options['source_configuration'];
 
-    $this->proximitySourceManager->buildCommonFormElements($form, $form_state, $context);
+    $this->proximitySourceManager->buildCommonFormElements($form, $form_state, $this->options, $context);
 
     $form['units']['#default_value'] = $this->options['units'];
     $form['source']['#default_value'] = $this->options['source'];

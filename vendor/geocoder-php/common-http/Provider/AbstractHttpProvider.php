@@ -16,9 +16,9 @@ use Geocoder\Exception\InvalidCredentials;
 use Geocoder\Exception\InvalidServerResponse;
 use Geocoder\Exception\QuotaExceeded;
 use Geocoder\Provider\AbstractProvider;
-use Http\Message\MessageFactory;
 use Http\Discovery\MessageFactoryDiscovery;
-use Http\Client\HttpClient;
+use Http\Message\MessageFactory;
+use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 
 /**
@@ -28,7 +28,7 @@ use Psr\Http\Message\RequestInterface;
 abstract class AbstractHttpProvider extends AbstractProvider
 {
     /**
-     * @var HttpClient
+     * @var ClientInterface
      */
     private $client;
 
@@ -37,11 +37,7 @@ abstract class AbstractHttpProvider extends AbstractProvider
      */
     private $messageFactory;
 
-    /**
-     * @param HttpClient          $client
-     * @param MessageFactory|null $factory
-     */
-    public function __construct(HttpClient $client, MessageFactory $factory = null)
+    public function __construct(ClientInterface $client, MessageFactory $factory = null)
     {
         $this->client = $client;
         $this->messageFactory = $factory ?: MessageFactoryDiscovery::find();
@@ -49,10 +45,6 @@ abstract class AbstractHttpProvider extends AbstractProvider
 
     /**
      * Get URL and return contents. If content is empty, an exception will be thrown.
-     *
-     * @param string $url
-     *
-     * @return string
      *
      * @throws InvalidServerResponse
      */
@@ -63,11 +55,6 @@ abstract class AbstractHttpProvider extends AbstractProvider
         return $this->getParsedResponse($request);
     }
 
-    /**
-     * @param string $url
-     *
-     * @return RequestInterface
-     */
     protected function getRequest(string $url): RequestInterface
     {
         return $this->getMessageFactory()->createRequest('GET', $url);
@@ -75,10 +62,6 @@ abstract class AbstractHttpProvider extends AbstractProvider
 
     /**
      * Send request and return contents. If content is empty, an exception will be thrown.
-     *
-     * @param RequestInterface $request
-     *
-     * @return string
      *
      * @throws InvalidServerResponse
      */
@@ -96,7 +79,7 @@ abstract class AbstractHttpProvider extends AbstractProvider
         }
 
         $body = (string) $response->getBody();
-        if (empty($body)) {
+        if ('' === $body) {
             throw InvalidServerResponse::emptyResponse((string) $request->getUri());
         }
 
@@ -105,17 +88,12 @@ abstract class AbstractHttpProvider extends AbstractProvider
 
     /**
      * Returns the HTTP adapter.
-     *
-     * @return HttpClient
      */
-    protected function getHttpClient(): HttpClient
+    protected function getHttpClient(): ClientInterface
     {
         return $this->client;
     }
 
-    /**
-     * @return MessageFactory
-     */
     protected function getMessageFactory(): MessageFactory
     {
         return $this->messageFactory;

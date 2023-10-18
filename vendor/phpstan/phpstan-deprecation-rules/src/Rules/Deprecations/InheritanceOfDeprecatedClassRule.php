@@ -5,20 +5,27 @@ namespace PHPStan\Rules\Deprecations;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PHPStan\Analyser\Scope;
+use PHPStan\Broker\ClassNotFoundException;
 use PHPStan\Reflection\ReflectionProvider;
+use PHPStan\Rules\Rule;
+use function sprintf;
 
 /**
- * @implements \PHPStan\Rules\Rule<Class_>
+ * @implements Rule<Class_>
  */
-class InheritanceOfDeprecatedClassRule implements \PHPStan\Rules\Rule
+class InheritanceOfDeprecatedClassRule implements Rule
 {
 
 	/** @var ReflectionProvider */
 	private $reflectionProvider;
 
-	public function __construct(ReflectionProvider $reflectionProvider)
+	/** @var DeprecatedScopeHelper */
+	private $deprecatedScopeHelper;
+
+	public function __construct(ReflectionProvider $reflectionProvider, DeprecatedScopeHelper $deprecatedScopeHelper)
 	{
 		$this->reflectionProvider = $reflectionProvider;
+		$this->deprecatedScopeHelper = $deprecatedScopeHelper;
 	}
 
 	public function getNodeType(): string
@@ -28,7 +35,7 @@ class InheritanceOfDeprecatedClassRule implements \PHPStan\Rules\Rule
 
 	public function processNode(Node $node, Scope $scope): array
 	{
-		if (DeprecatedScopeHelper::isScopeDeprecated($scope)) {
+		if ($this->deprecatedScopeHelper->isScopeDeprecated($scope)) {
 			return [];
 		}
 
@@ -44,7 +51,7 @@ class InheritanceOfDeprecatedClassRule implements \PHPStan\Rules\Rule
 
 		try {
 			$class = $this->reflectionProvider->getClass($className);
-		} catch (\PHPStan\Broker\ClassNotFoundException $e) {
+		} catch (ClassNotFoundException $e) {
 			return [];
 		}
 
@@ -84,7 +91,7 @@ class InheritanceOfDeprecatedClassRule implements \PHPStan\Rules\Rule
 					}
 				}
 			}
-		} catch (\PHPStan\Broker\ClassNotFoundException $e) {
+		} catch (ClassNotFoundException $e) {
 			// Other rules will notify if the interface is not found
 		}
 

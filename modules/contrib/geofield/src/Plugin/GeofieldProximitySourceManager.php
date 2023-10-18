@@ -34,6 +34,8 @@ class GeofieldProximitySourceManager extends DefaultPluginManager {
    *   An associative array containing the structure of the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
+   * @param array $options
+   *   The form options.
    * @param string $context
    *   The array list of the specific view handler plugin type to look for.
    *   Possible values:
@@ -41,13 +43,12 @@ class GeofieldProximitySourceManager extends DefaultPluginManager {
    *   - sort
    *   - field
    *   - NULL (all).
-   * @param bool $is_exposed
-   *   The check/differentiate if it is part of an exposed form.
    */
-  public function buildCommonFormElements(array &$form, FormStateInterface $form_state, $context = NULL, $is_exposed = FALSE) {
+  public function buildCommonFormElements(array &$form, FormStateInterface $form_state, array $options, $context = NULL) {
+    $user_input = $form_state->getUserInput();
 
-    // Attach Geofield Map Libraries.
-    $form['#attached']['library'][] = 'geofield/geofield_proximity';
+    // Attach Geofield Libraries.
+    $form['#attached']['library'][] = 'geofield/geofield_general';
 
     $form['units'] = [
       '#type' => 'select',
@@ -55,7 +56,19 @@ class GeofieldProximitySourceManager extends DefaultPluginManager {
       '#description' => '',
       '#options' => geofield_radius_options(),
       '#default_value' => '',
+      '#weight' => -10,
     ];
+
+    // In case of Proximity Filter settings, add an option to Expose Units in
+    // the Exposed Filter form.
+    if ($context == 'filter') {
+      $form['exposed_units'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Expose Units in the Exposed Filter form'),
+        '#default_value' => $user_input['options']['exposed_units'] ?? $options['exposed_units'],
+        '#weight' => -9,
+      ];
+    }
 
     $form['source_intro'] = [
       '#markup' => $this->t('How do you want to enter your proximity parameters (distance and origin point)?'),
@@ -75,7 +88,7 @@ class GeofieldProximitySourceManager extends DefaultPluginManager {
     foreach ($this->getDefinitions() as $plugin_id => $definition) {
       if (isset($definition['context'])
         && (empty($definition['context']) || in_array($context, $definition['context']))
-        && (!isset($definition['exposedOnly']) || ($definition['exposedOnly'] && $is_exposed))
+        && (!isset($definition['exposedOnly']) || ($definition['exposedOnly'] && (isset($options['exposed']) && $options['exposed'])))
         && (!isset($definition['no_ui']) || !$definition['no_ui'])
       ) {
         $form['source']['#options'][$plugin_id] = $definition['label'];

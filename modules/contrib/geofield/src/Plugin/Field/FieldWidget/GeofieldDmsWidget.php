@@ -12,7 +12,7 @@ use Drupal\geofield\DmsPoint;
  *
  * @FieldWidget(
  *   id = "geofield_dms",
- *   label = @Translation("DMS Widget"),
+ *   label = @Translation("Degrees Minutes Seconds"),
  *   field_types = {
  *     "geofield"
  *   }
@@ -24,18 +24,33 @@ class GeofieldDmsWidget extends GeofieldBaseWidget {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    $latlon_value = [];
+    $element = parent::formElement($items, $delta, $element, $form, $form_state);
 
-    foreach (['lat', 'lon'] as $component) {
-      $latlon_value[$component] = isset($items[$delta]->{$component}) ? floatval($items[$delta]->{$component}) : '';
+    /* @var \Drupal\geofield\Plugin\Field\FieldType\GeofieldItem $geofield_item */
+    $geofield_item = $items->getValue()[$delta];
+    if (empty($geofield_item) || $geofield_item['geo_type'] == 'Point') {
+      $latlon_value = [];
+
+      foreach (['lat', 'lon'] as $component) {
+        $latlon_value[$component] = isset($items[$delta]->{$component}) ? floatval($items[$delta]->{$component}) : '';
+      }
+
+      $element['value'] += [
+        '#type' => 'geofield_dms',
+        '#default_value' => $latlon_value,
+      ];
     }
-
-    $element += [
-      '#type' => 'geofield_dms',
-      '#default_value' => $latlon_value,
-    ];
-
-    return ['value' => $element];
+    else {
+      $widget_label = $this->getPluginDefinition()['label']->render();
+      $element['value'] += [
+        '#prefix' => '<div class="geofield-warning">' . $this->t('The "@widget_label" widget cannot be applied because it doesn\'t support Geometries (Polylines, Polygons, etc.).', [
+          '@widget_label' => $widget_label,
+        ]) . '</div>',
+        '#type' => 'textarea',
+        '#default_value' => $items[$delta]->value ?: NULL,
+      ];
+    }
+    return $element;
   }
 
   /**

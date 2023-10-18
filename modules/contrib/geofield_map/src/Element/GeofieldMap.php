@@ -55,7 +55,7 @@ class GeofieldMap extends GeofieldLatLon {
     // Geocode address textfield and functionality.
     $gmap_geocoder_enabled = \Drupal::moduleHandler()->moduleExists('geocoder') && $element['#gmap_geocoder'];
     $message_recipient = t("(Note: This message is only shown to the Geofield Map module administrator ('Configure Geofield Map' permission).");
-    if (strlen($element['#gmap_api_key']) > 0 || $gmap_geocoder_enabled) {
+    if ((!empty($element['#gmap_api_key']) || $gmap_geocoder_enabled) && ($element['#hide_geocode_address'] == FALSE)) {
       $element['map']['geocode'] = [
         '#title' => t("Geocode address"),
         '#type' => 'textfield',
@@ -82,7 +82,7 @@ class GeofieldMap extends GeofieldLatLon {
         $element['map']['geocode']['#description'] .= '<br>' . $message_recipient . '</div>';
       }
     }
-    elseif ($currentUser->hasPermission('configure geofield_map')) {
+    elseif ($currentUser->hasPermission('configure geofield_map') && $element['#hide_geocode_address'] == FALSE) {
       $geocoder_module_link = !\Drupal::moduleHandler()->moduleExists('geocoder') ? \Drupal::service('link_generator')->generate('Geocoder Module', Url::fromUri('https://www.drupal.org/project/geocoder', ['attributes' => ['target' => 'blank']])) : 'Geocoder Module';
       $element['map']['geocode_missing'] = [
         '#type' => 'html_tag',
@@ -138,6 +138,18 @@ class GeofieldMap extends GeofieldLatLon {
       $element['#attributes']['class'] = ['geofield-map-marker'];
     }
 
+    if (!empty($element['#click_to_remove_marker']) && $element['#click_to_remove_marker'] == TRUE) {
+      $element['map']['actions']['click_to_remove_marker'] = [
+        '#type' => 'button',
+        '#value' => t('Remove marker'),
+        '#name' => 'geofield-map-remove-marker',
+        '#attributes' => [
+          'id' => $element['#id'] . '-click-to-remove-marker',
+        ],
+      ];
+      $element['#attributes']['class'] = ['geofield-map-remove-marker'];
+    }
+
     // Add the HTML5 User Geolocation button functionality.
     if (!empty($element['#geolocation']) && $element['#geolocation'] == TRUE) {
       $element['#attached']['library'][] = 'geofield_map/geolocation';
@@ -147,14 +159,14 @@ class GeofieldMap extends GeofieldLatLon {
         '#name' => 'geofield-html5-geocode-button',
         '#attributes' => ['mapid' => $mapid],
       ];
-      $element['#attributes']['class'] = ['auto-geocode'];
+      $element['#attributes']['class'] = ['geofieldmap-widget-auto-geocode'];
     }
 
     // Define Lat and Lon sub-elements.
     $element['lat']['#weight'] = 10;
     $element['lon']['#weight'] = 20;
-    $element['lat']['#attributes']['id'] = 'lat-' . $element['#id'];
-    $element['lon']['#attributes']['id'] = 'lon-' . $element['#id'];
+    $element['lat']['#attributes']['id'] = $element['#id'] . '-lat';
+    $element['lon']['#attributes']['id'] = $element['#id'] . '-lon';
     if ($element['#hide_coordinates']) {
       $element['lat']['#attributes']['class'][] = 'visually-hidden';
       $element['lat']['#title_display'] = 'invisible';
@@ -188,7 +200,14 @@ class GeofieldMap extends GeofieldLatLon {
         }
 
         // Re-Generate the geoaddress_field #id.
-        $address_field['widget'][$element['#delta']]['value']['#id'] = $element['#geoaddress_field']['field'] . '-' . $element['#delta'];
+        // set unique id on multiple paragraph.
+        $parent = "";
+        if (!empty($element['#field_parents'])) {
+          foreach ($element['#field_parents'] as $value_parent) {
+            $parent .= $value_parent . '-';
+          }
+        }
+        $address_field['widget'][$element['#delta']]['value']['#id'] = $parent . $element['#geoaddress_field']['field'] . '-' . $element['#delta'];
         NestedArray::setValue($complete_form, $parents, $address_field);
       }
     }
@@ -235,6 +254,9 @@ class GeofieldMap extends GeofieldLatLon {
       'click_to_find_marker' => $element['#click_to_find_marker'] ? TRUE : FALSE,
       'click_to_place_marker_id' => $element['#click_to_place_marker'] ? $element['map']['actions']['click_to_place_marker']['#attributes']['id'] : NULL,
       'click_to_place_marker' => $element['#click_to_place_marker'] ? TRUE : FALSE,
+      'click_to_remove_marker_id' => $element['#click_to_remove_marker'] ? $element['map']['actions']['click_to_remove_marker']['#attributes']['id'] : NULL,
+      'click_to_remove_marker' => $element['#click_to_remove_marker'] ? TRUE : FALSE,
+      'geolocation' => $element['#geolocation'],
       // Geofield Map Google Maps and Geocoder Settings.
       'gmap_api_localization' => $google_maps_service->getGmapApiLocalization($geofield_map_settings->get('gmap_api_localization')),
       'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,

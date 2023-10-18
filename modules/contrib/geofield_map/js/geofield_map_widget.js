@@ -23,7 +23,7 @@
           // Set the map_data[mapid] settings.
           Drupal.geoFieldMap.map_data[mapid] = options;
 
-          // Google maps library shouldn't be requested if the following
+          // Google Maps library shouldn't be requested if the following
           // conditions apply:
           // - leaflet js is the chosen map library;
           // - geocoder integration is enabled;
@@ -60,7 +60,7 @@
     maps_api_loading: false,
 
     /**
-     * Returns the re-coded google maps api language parameter, from html lang
+     * Returns the re-coded Google Maps api language parameter, from html lang
      * attribute.
      *
      * @param {string} html_language - The language id string
@@ -87,7 +87,7 @@
       let self = this;
       // Wait until the window load event to try to use the maps library.
       $(document).ready(function (e) {
-        _.each(self.googleCallbacks, function (callback) {
+        self.googleCallbacks.forEach(function (callback) {
           callback.callback();
         });
         self.googleCallbacks = [];
@@ -120,7 +120,7 @@
       // Add the callback.
       self.addCallback(callback);
 
-      // Check for google maps.
+      // Check for Google Maps.
       if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
         if (self.maps_api_loading === true) {
           return;
@@ -128,9 +128,9 @@
 
         self.maps_api_loading = true;
 
-        // Google maps isn't loaded so lazy load google maps.
+        // Google Maps isn't loaded so lazy load Google Maps.
         // Default script path.
-        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language);
+        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language) + '&callback=Drupal.geoFieldMap.googleCallback';
 
         // If a Google API key is set, use it.
         if (gmap_api_key) {
@@ -140,12 +140,11 @@
         $.getScript(scriptPath)
           .done(function () {
             self.maps_api_loading = false;
-            self.googleCallback();
           });
 
       }
       else {
-        // Google maps loaded. Run callback.
+        // Google Maps loaded. Run callback.
         self.googleCallback();
       }
     },
@@ -160,13 +159,37 @@
     place_marker: function (mapid) {
       let self = this;
       if (self.map_data[mapid].click_to_place_marker) {
-        if (!window.confirm('Change marker position ?')) {
+        if (!window.confirm(Drupal.t('Change marker position ?'))) {
           return;
         }
       }
       let position = self.map_data[mapid].map.getCenter();
       self.setMarkerPosition(mapid, position);
       self.geofields_update(mapid, position);
+    },
+
+    // Remove marker from the map.
+    remove_marker: function (mapid) {
+      let self = this;
+      let position;
+      if (self.map_data[mapid].click_to_remove_marker) {
+        if (!window.confirm(Drupal.t('Remove marker from map ?'))) {
+          return;
+        }
+      }
+      switch (self.map_data[mapid].map_library) {
+
+        case 'leaflet':
+          position = {lat: 0, lon: 0};
+          break;
+
+        case 'gmap':
+          position = new google.maps.LatLng(0, 0);
+      break;
+      }
+      self.setMarkerPosition(mapid, position);
+      $('#' + self.map_data[mapid].latid).val(null);
+      $('#' + self.map_data[mapid].lngid).val(null);
     },
 
     // Geofields update.
@@ -303,8 +326,8 @@
     trigger_geocode: function (mapid, position) {
       let self = this;
       self.setMarkerPosition(mapid, position);
-      self.mapSetCenter(mapid, position);
       self.setZoomToFocus(mapid);
+      self.mapSetCenter(mapid, position);
       self.setLatLngValues(mapid, position);
       self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
     },
@@ -559,6 +582,12 @@
         self.place_marker(self.map_data[params.mapid].mapid);
       });
 
+      // Bind click to remove_marker functionality.
+      $('#' + self.map_data[params.mapid].click_to_remove_marker_id).click(function (e) {
+        e.preventDefault();
+        self.remove_marker(self.map_data[params.mapid].mapid);
+      });
+
       // Define Lat & Lng input selectors and all related functionalities and Geofield Map Listeners.
       if (params.widget && params.latid && params.lngid) {
 
@@ -668,6 +697,19 @@
             self.setMarkerPosition(params.mapid, position);
             self.geofields_update(params.mapid, position);
           });
+
+          // Fix for Geofield Map Widget visibility issue inside Field Group,
+          // with Leaflet library
+          // @see https://www.drupal.org/project/geofield_map/issues/3087072
+          // Set to refresh when first in viewport to avoid visibility issue.
+          new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+              if(entry.intersectionRatio > 0) {
+                window.dispatchEvent(new Event('resize'));
+                observer.disconnect();
+              }
+            });
+          }).observe(document.getElementById(params.mapid));
 
         }
 

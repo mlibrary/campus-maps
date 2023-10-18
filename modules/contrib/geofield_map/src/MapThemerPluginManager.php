@@ -40,6 +40,13 @@ class MapThemerPluginManager extends DefaultPluginManager {
   protected $entityManager;
 
   /**
+   * The geofield map settings.
+   *
+   * @var array
+   */
+  protected $geofieldMapSettings;
+
+  /**
    * Constructor of the a Geofield Map Themers plugin manager.
    *
    * @param \Traversable $namespaces

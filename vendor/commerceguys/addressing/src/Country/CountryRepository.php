@@ -55,19 +55,20 @@ class CountryRepository implements CountryRepositoryInterface
      */
     protected $availableLocales = [
         'af', 'am', 'ar', 'ar-LY', 'ar-SA', 'as', 'az', 'be', 'bg', 'bn',
-        'bn-IN', 'bs', 'ca', 'cs', 'cy', 'da', 'de', 'de-AT', 'de-CH', 'el',
-        'en', 'en-001', 'en-CA', 'en-GB', 'en-MV', 'es', 'es-419', 'es-AR',
-        'es-BO', 'es-CL', 'es-CO', 'es-CR', 'es-DO', 'es-EC', 'es-GT', 'es-HN',
-        'es-MX', 'es-NI', 'es-PA', 'es-PE', 'es-PR', 'es-PY', 'es-SV', 'es-US',
-        'es-VE', 'et', 'eu', 'fa', 'fa-AF', 'fi', 'fil', 'fr', 'fr-BE', 'fr-CA',
-        'ga', 'gl', 'gu', 'he', 'hi', 'hi-Latn', 'hr', 'hu', 'hy', 'id', 'is',
-        'it', 'ja', 'ka', 'kk', 'km', 'ko', 'ko-KP', 'ky', 'lo', 'lt', 'lv',
-        'mk', 'ml', 'mn', 'mr', 'ms', 'my', 'ne', 'nl', 'nn', 'no', 'or', 'pa',
-        'pl', 'ps', 'ps-PK', 'pt', 'pt-PT', 'ro', 'ro-MD', 'ru', 'ru-UA', 'sd',
-        'si', 'sk', 'sl', 'so', 'sq', 'sr', 'sr-Cyrl-BA', 'sr-Cyrl-ME',
-        'sr-Cyrl-XK', 'sr-Latn', 'sr-Latn-BA', 'sr-Latn-ME', 'sr-Latn-XK', 'sv',
-        'sw', 'sw-CD', 'sw-KE', 'ta', 'te', 'th', 'tk', 'tr', 'uk', 'ur',
-        'ur-IN', 'uz', 'vi', 'yue', 'zh', 'zh-Hant', 'zh-Hant-HK', 'zu',
+        'bn-IN', 'bs', 'ca', 'chr', 'cs', 'cy', 'da', 'de', 'de-AT', 'de-CH',
+        'dsb', 'el', 'en', 'en-001', 'en-AU', 'en-CA', 'en-MV', 'es', 'es-419',
+        'es-AR', 'es-BO', 'es-CL', 'es-CO', 'es-CR', 'es-DO', 'es-EC', 'es-GT',
+        'es-HN', 'es-MX', 'es-NI', 'es-PA', 'es-PE', 'es-PR', 'es-PY', 'es-SV',
+        'es-US', 'es-VE', 'et', 'eu', 'fa', 'fa-AF', 'fi', 'fil', 'fr',
+        'fr-BE', 'fr-CA', 'ga', 'gd', 'gl', 'gu', 'he', 'hi', 'hi-Latn', 'hr',
+        'hsb', 'hu', 'hy', 'id', 'ig', 'is', 'it', 'ja', 'ka', 'kk', 'km',
+        'ko', 'ko-KP', 'kok', 'ky', 'lo', 'lt', 'lv', 'mk', 'ml', 'mn', 'mr',
+        'ms', 'my', 'ne', 'nl', 'nn', 'no', 'or', 'pa', 'pcm', 'pl', 'ps',
+        'ps-PK', 'pt', 'pt-PT', 'qu', 'ro', 'ro-MD', 'ru', 'ru-UA', 'si', 'sk',
+        'sl', 'so', 'sq', 'sr', 'sr-Cyrl-BA', 'sr-Cyrl-ME', 'sr-Cyrl-XK',
+        'sr-Latn', 'sr-Latn-BA', 'sr-Latn-ME', 'sr-Latn-XK', 'sv', 'sw',
+        'sw-CD', 'sw-KE', 'ta', 'te', 'th', 'tk', 'tr', 'uk', 'ur', 'ur-IN',
+        'uz', 'vi', 'yue', 'yue-Hans', 'zh', 'zh-Hant', 'zh-Hant-HK', 'zu',
     ];
 
     /**
@@ -75,10 +76,10 @@ class CountryRepository implements CountryRepositoryInterface
      *
      * @param string $defaultLocale  The default locale. Defaults to 'en'.
      * @param string $fallbackLocale The fallback locale. Defaults to 'en'.
-     * @param string $definitionPath The path to the country definitions.
+     * @param string|null $definitionPath The path to the country definitions.
      *                               Defaults to 'resources/country'.
      */
-    public function __construct($defaultLocale = 'en', $fallbackLocale = 'en', $definitionPath = null)
+    public function __construct(string $defaultLocale = 'en', string $fallbackLocale = 'en', string $definitionPath = null)
     {
         $this->defaultLocale = $defaultLocale;
         $this->fallbackLocale = $fallbackLocale;
@@ -88,7 +89,7 @@ class CountryRepository implements CountryRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function get($countryCode, $locale = null)
+    public function get($countryCode, $locale = null): Country
     {
         $countryCode = strtoupper($countryCode);
         $baseDefinitions = $this->getBaseDefinitions();
@@ -113,7 +114,7 @@ class CountryRepository implements CountryRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function getAll($locale = null)
+    public function getAll($locale = null): array
     {
         $locale = $locale ?: $this->defaultLocale;
         $locale = Locale::resolve($this->availableLocales, $locale, $this->fallbackLocale);
@@ -137,7 +138,7 @@ class CountryRepository implements CountryRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function getList($locale = null)
+    public function getList($locale = null): array
     {
         $locale = $locale ?: $this->defaultLocale;
         $locale = Locale::resolve($this->availableLocales, $locale, $this->fallbackLocale);
@@ -154,10 +155,8 @@ class CountryRepository implements CountryRepositoryInterface
      * Loads the country definitions for the provided locale.
      *
      * @param string $locale The desired locale.
-     *
-     * @return array
      */
-    protected function loadDefinitions($locale)
+    protected function loadDefinitions(string $locale): array
     {
         if (!isset($this->definitions[$locale])) {
             $filename = $this->definitionPath . $locale . '.json';
@@ -172,14 +171,13 @@ class CountryRepository implements CountryRepositoryInterface
      *
      * Contains data common to all locales: three letter code, numeric code.
      *
-     * @return array
      *   An array of definitions, keyed by country code.
      *   Each definition is a numerically indexed array containing:
      *   - The three letter code.
      *   - The numeric code.
      *   - The currency code.
      */
-    protected function getBaseDefinitions()
+    protected function getBaseDefinitions(): array
     {
         return [
             'AC' => ['ASC', null, 'SHP'],
@@ -283,7 +281,7 @@ class CountryRepository implements CountryRepositoryInterface
             'HK' => ['HKG', '344', 'HKD'],
             'HM' => ['HMD', '334', 'AUD'],
             'HN' => ['HND', '340', 'HNL'],
-            'HR' => ['HRV', '191', 'HRK'],
+            'HR' => ['HRV', '191', 'EUR'],
             'HT' => ['HTI', '332', 'USD'],
             'HU' => ['HUN', '348', 'HUF'],
             'IC' => [null, null, 'EUR'],
@@ -389,7 +387,7 @@ class CountryRepository implements CountryRepositoryInterface
             'SI' => ['SVN', '705', 'EUR'],
             'SJ' => ['SJM', '744', 'NOK'],
             'SK' => ['SVK', '703', 'EUR'],
-            'SL' => ['SLE', '694', 'SLL'],
+            'SL' => ['SLE', '694', 'SLE'],
             'SM' => ['SMR', '674', 'EUR'],
             'SN' => ['SEN', '686', 'XOF'],
             'SO' => ['SOM', '706', 'SOS'],

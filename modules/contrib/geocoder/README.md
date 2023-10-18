@@ -1,7 +1,13 @@
-# Geocoder 3.x
+# Geocoder 4.x
 
 This is a complete rewrite of the Geocoder module, based on the
 [Geocoder PHP library](http://geocoder-php.org) - [version 4.x](https://github.com/geocoder-php/Geocoder/tree/4.x).
+
+This branch is a parallel copy of the Geocoder 3.x branch requiring the
+php-http/guzzle7-adapter, thus compatible with Guzzle 7 (that is a possible
+dependency since Drupal 9.4 and a requirement for Drupal 10).
+At the moment this branch still have incompatibilities with packages locked to
+php-http/guzzle6-adapter dependency (see issue #3283651).
 
 # Features
 * Solid API based on [Geocoder PHP library](http://geocoder-php.org);
@@ -38,7 +44,7 @@ This is a complete rewrite of the Geocoder module, based on the
 * Download the module running the following shell command from your project root
   (at the composer.json file level):
 
-  ```$ composer require drupal/geocoder:^3.0```
+  ```$ composer require drupal/geocoder:^4.0```
 
 * Choose the [Geocoder Provider](https://packagist.org/providers/geocoder-php/provider-implementation)
   you want to use and also add it as a required dependency to your project. For
@@ -48,9 +54,9 @@ This is a complete rewrite of the Geocoder module, based on the
 
 * Enable the module via [Drush](http://drush.org)
 
- ```$ drush en geocoder```
+  ```$ drush en geocoder```
 
- or the website back-end/administration interface;
+  or the website back-end/administration interface;
 * Eventually enable the submodules: ```geocoder_field``` and
   ```geocoder_geofield``` / ```geocoder_address```.
 * Create and configure one or more providers at Configuration > System >
@@ -335,7 +341,7 @@ enabling support and configuration for the
 - in your *settings.php add:
   `$settings['cache']['bins']['geocoder'] = 'cache.backend.permanent_database'`
 
-# Upgrading from Geocoder 2.x to 3.x
+# Upgrading from Geocoder 2.x to 3.x (and above))
 
 ## Site builders
 
@@ -345,8 +351,8 @@ enabling support and configuration for the
    dependency willdurand/geocoder": "^3.0" library is removed.
    (eventually run also: `composer remove willdurand/geocoder`);
 
-2. Require the new default Geocoder 3.x version:
-   `composer require drupal/geocoder`
+2. Require the new default Geocoder 4.x version:
+   `composer require 'drupal/geocoder:^4.0'`
    (this will also install the dependency willdurand/geocoder
    in its "^4.0" version)
 
@@ -372,10 +378,9 @@ enabling support and configuration for the
 
 ## Developers
 
-Some backward compatibility breaking changes have been introduced in the
-Geocoder API in version 3.x. Starting with this version the Geocoder providers
-are config entities, whereas in earlier versions the provider settings were
-stored in simple configuration. An upgrade path is provided but any code that
+Since Geocoder 3.x version the Geocoder providers are config entities,
+whereas in earlier versions the provider settings were stored in simple
+configuration. An upgrade path is provided but any code that
 was relying on the old simple config will need to be updated to use the config
 entities instead. Take a look at the `GeocoderProvider` entity type for more
 information.
@@ -449,7 +454,7 @@ In Geocoder 2.x `\Drupal\geocoder\ProviderPluginManager::getPlugins()` was the
 main way of retrieving the provider plugins. It was returning the plugin
 definitions with the provider configuration mixed into it.
 
-In Geocoder 3.x this data model has been replaced by the new `GeocoderProvider`
+Since Geocdoer 3.x this data model has been replaced by the new `GeocoderProvider`
 config entity. Now this method returns the list of plugin definitions, making it
 the same result as calling ProviderPluginManager::getDefinitions().
 
@@ -468,10 +473,3 @@ the site builder:
 ```
 $providers = \Drupal\geocoder\Entity\GeocoderProvider::loadMultiple();
 ```
-
-# Links
-* [Composer](https://getcomposer.org/)
-* [Drush](http://drush.org)
-* [Geocoder PHP library](http://geocoder-php.org) - [version
-  3.x](https://github.com/geocoder-php/Geocoder/tree/3.x)
-* [Geocoder module](https://www.drupal.org/project/geocoder)

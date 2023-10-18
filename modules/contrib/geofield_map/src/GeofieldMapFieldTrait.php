@@ -154,6 +154,7 @@ trait GeofieldMapFieldTrait {
         'force_open' => 0,
         'tooltip_field' => 'title',
       ],
+      'weight' => NULL,
       'map_oms' => [
         'map_oms_control' => 1,
         'map_oms_options' => '{"markersWontMove": "true", "markersWontHide": "true", "basicFormatEvents": "true", "nearbyDistance": 3}',
@@ -257,6 +258,9 @@ trait GeofieldMapFieldTrait {
     // Set Map Marker and Infowindow Element.
     $this->setMapMarkerAndInfowindowElement($form, $settings, $elements);
 
+    // Generate the Geofield Map weight/zIndex Form Element.
+    $this->setWeightElement($settings, $elements);
+
     // Set Map Additional Options Element.
     $this->setMapAdditionalOptionsElement($settings, $elements);
 
@@ -292,7 +296,6 @@ trait GeofieldMapFieldTrait {
    *   The map settings.
    */
   protected function preProcessMapSettings(array &$map_settings) {
-    /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
     $config = $this->config;
     $geofield_map_settings = $config->getEditable('geofield_map.settings');
 
@@ -1128,6 +1131,25 @@ trait GeofieldMapFieldTrait {
       '#default_value' => $settings['map_geometries_options'],
       '#placeholder' => self::getDefaultSettings()['map_geometries_options'],
       '#element_validate' => [[get_class($this), 'jsonValidate']],
+    ];
+  }
+
+  /**
+   * Set the weight Form Element.
+   *
+   * @param array $settings
+   *   The Form Settings.
+   * @param array $elements
+   *   The Form element to alter.
+   */
+  protected function setWeightElement(array $settings, array &$elements) {
+    $default_settings = $this::getDefaultSettings();
+    $elements['weight'] = [
+      '#title' => $this->t('weight / zIndex Offset'),
+      '#type' => 'textfield',
+      '#size' => 30,
+      '#description' => $this->t('This option supports <b>Replacement Patterns</b> and should end up into an Integer (positive or negative value).<br>This will apply to each Geofield Map Feature/Marker result, and might be used to dynamically set its position/visibility on top (or below) of each others.'),
+      '#default_value' => $settings['weight'] ?? $default_settings['weight'],
     ];
   }
 

@@ -63,14 +63,14 @@ class WktGeneratorTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'geofield',
   ];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->wktGenerator = \Drupal::service('geofield.wkt_generator');
   }

@@ -6,22 +6,29 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\ConstFetch;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
+use PHPStan\Rules\Rule;
+use function sprintf;
+use const PHP_VERSION_ID;
 
 /**
- * @implements \PHPStan\Rules\Rule<ConstFetch>
+ * @implements Rule<ConstFetch>
  */
-class FetchingDeprecatedConstRule implements \PHPStan\Rules\Rule
+class FetchingDeprecatedConstRule implements Rule
 {
 
 	/** @var ReflectionProvider */
 	private $reflectionProvider;
 
+	/** @var DeprecatedScopeHelper */
+	private $deprecatedScopeHelper;
+
 	/** @var array<string,string> */
 	private $deprecatedConstants = [];
 
-	public function __construct(ReflectionProvider $reflectionProvider)
+	public function __construct(ReflectionProvider $reflectionProvider, DeprecatedScopeHelper $deprecatedScopeHelper)
 	{
 		$this->reflectionProvider = $reflectionProvider;
+		$this->deprecatedScopeHelper = $deprecatedScopeHelper;
 
 		// phpcs:ignore SlevomatCodingStandard.ControlStructures.EarlyExit.EarlyExitNotUsed
 		if (PHP_VERSION_ID >= 70300) {
@@ -37,7 +44,7 @@ class FetchingDeprecatedConstRule implements \PHPStan\Rules\Rule
 
 	public function processNode(Node $node, Scope $scope): array
 	{
-		if (DeprecatedScopeHelper::isScopeDeprecated($scope)) {
+		if ($this->deprecatedScopeHelper->isScopeDeprecated($scope)) {
 			return [];
 		}
 
@@ -46,18 +53,17 @@ class FetchingDeprecatedConstRule implements \PHPStan\Rules\Rule
 		}
 
 		$constantReflection = $this->reflectionProvider->getConstant($node->name, $scope);
-		$defaultMessage = 'Use of constant %s is deprecated.';
 
 		if ($constantReflection->isDeprecated()->yes()) {
 			return [sprintf(
-				$constantReflection->getDeprecatedDescription() ?? $defaultMessage,
+				$constantReflection->getDeprecatedDescription() ?? 'Use of constant %s is deprecated.',
 				$constantReflection->getName()
 			)];
 		}
 
 		if (isset($this->deprecatedConstants[$constantReflection->getName()])) {
 			return [sprintf(
-				$this->deprecatedConstants[$constantReflection->getName()] ?? $defaultMessage,
+				$this->deprecatedConstants[$constantReflection->getName()],
 				$constantReflection->getName()
 			)];
 		}

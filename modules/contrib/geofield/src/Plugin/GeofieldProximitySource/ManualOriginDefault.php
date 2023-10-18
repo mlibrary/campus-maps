@@ -14,7 +14,7 @@ use Drupal\Component\Render\FormattableMarkup;
  * @GeofieldProximitySource(
  *   id = "geofield_manual_origin",
  *   label = @Translation("Manual Origin (Default)"),
- *   description = @Translation("Allow the Manual input of Distance and Origin (as couple of Latitude and Longitude in decimal degrees.)"),
+ *   description = @Translation("Allow the Manual input of Origin as couple of Latitude and Longitude in decimal degrees."),
  *   exposedDescription = @Translation("Manual input of Distance and Origin (as couple of Latitude and Longitude in decimal degrees.)"),
  *   context = {},
  * )

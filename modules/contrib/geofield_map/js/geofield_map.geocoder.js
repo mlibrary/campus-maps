@@ -76,11 +76,14 @@
         delay: geocoder_settings.delay || 800,
         // This bit uses the geocoder to fetch address values.
         source: function (request, response) {
+          let thisElement = this.element;
+          thisElement.addClass('ui-autocomplete-loading');
           // Execute the geocoder.
           $.when(self.geocode(request.term, providers, options).then(
             // On Resolve/Success.
             function (results) {
               response($.map(results, function (item) {
+                thisElement.removeClass('ui-autocomplete-loading');
                 return {
                   // the value property is needed to be passed to the select.
                   value: item.formatted_address,
@@ -98,7 +101,6 @@
         },
         // This bit is executed upon selection of an address.
         select: function (event, ui) {
-          let self = this;
           let zoom = geocoder_settings.zoom || 14;
           let map, position;
           switch (type) {

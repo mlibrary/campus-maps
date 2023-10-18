@@ -278,6 +278,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       ],
       'click_to_find_marker' => FALSE,
       'click_to_place_marker' => FALSE,
+      'click_to_remove_marker' => FALSE,
+      'hide_geocode_address' => FALSE,
       'hide_coordinates' => FALSE,
       'geoaddress_field' => [
         'field' => '0',
@@ -292,8 +294,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
 
-    $default_settings = self::defaultSettings();
     $elements = [];
+
+    $default_settings = self::defaultSettings();
     $gmap_settings_page_link = Url::fromRoute('geofield_map.settings', [], [
       'query' => [
         'destination' => Url::fromRoute('<current>')
@@ -301,7 +304,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       ],
     ]);
 
-    // Attach Geofield Map Library.
+    // Attach Geofield Map Libraries.
     $elements['#attached']['library'] = [
       'geofield_map/geofield_map_general',
       'geofield_map/geofield_map_widget',
@@ -518,6 +521,37 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#default_value' => $this->getSetting('click_to_place_marker'),
     ];
 
+    $elements['click_to_remove_marker'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Click to remove marker'),
+      '#description' => $this->t('Provides a button to remove the marker from the map.'),
+      '#default_value' => $this->getSetting('click_to_remove_marker'),
+    ];
+
+    $html5_geolocation_description = $this->t("Uses the @html5_geolocation_link to enable the following features:<br>
+      - An initial automatic set of the Geofield value to the user location, for the first Widget Geofield Map (also in case of multivalue field) if the Geofield Value and/or a Default value is not set (Position Lat: 0, Lon: 0 is interpreted as NULL)<br>
+      - A 'Find my location' button that once clicked will manually set the Geofield value to the user location", [
+        '@html5_geolocation_link' => $this->link->generate($this->t('HTML Geolocation API'), Url::fromUri('https://www.w3schools.com/html/html5_geolocation.asp', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]
+    );
+
+    $elements['html5_geolocation'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use HTML5 Geolocation to set Default Values'),
+      '#default_value' => $this->getSetting('html5_geolocation'),
+      '#description' => $html5_geolocation_description,
+    ];
+
+    $elements['hide_geocode_address'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Hide Geocode Address Input'),
+      '#description' => $this->t('Option to visually hide the Geocode Address input element from the widget form.'),
+      '#default_value' => $this->getSetting('hide_geocode_address'),
+    ];
+
     $elements['hide_coordinates'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Hide Lat/Lon Coordinates Input'),
@@ -595,7 +629,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       ],
     ];
 
-    return $elements + parent::settingsForm($form, $form_state);
+    return $elements;
   }
 
   /**
@@ -649,6 +683,14 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#markup' => $this->t('Click to place marker: @state', ['@state' => $this->getSetting('click_to_place_marker') ? $this->t('enabled') : $this->t('disabled')]),
     ];
 
+    $marker_remove = [
+      '#markup' => $this->t('Click to remove marker: @state', ['@state' => $this->getSetting('click_to_remove_marker') ? $this->t('enabled') : $this->t('disabled')]),
+    ];
+
+    $hide_geocode_address = [
+      '#markup' => $this->t('Geocode address hidden: @state', ['@state' => $this->getSetting('hide_geocode_address') ? $this->t('enabled') : $this->t('disabled')]),
+    ];
+
     $hide_coordinates = [
       '#markup' => $this->t('Lat/Lon coordinates hidden: @state', ['@state' => $this->getSetting('hide_coordinates') ? $this->t('enabled') : $this->t('disabled')]),
     ];
@@ -695,6 +737,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       'html5' => $html5,
       'map_center' => $map_center,
       'marker_center' => $marker_center,
+      'marker_remove' => $marker_remove,
+      'hide_geocode_address' => $hide_geocode_address,
       'hide_coordinates' => $hide_coordinates,
       'field' => $geoaddress_field_field,
       'hidden' => $geoaddress_field_hidden,
@@ -751,14 +795,19 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         '#zoom' => $this->getSetting('zoom'),
         '#click_to_find_marker' => $this->getSetting('click_to_find_marker'),
         '#click_to_place_marker' => $this->getSetting('click_to_place_marker'),
+        '#click_to_remove_marker' => $this->getSetting('click_to_remove_marker'),
+        '#hide_geocode_address' => $this->getSetting('hide_geocode_address'),
         '#hide_coordinates' => $this->getSetting('hide_coordinates'),
         '#geoaddress_field' => $this->getSetting('geoaddress_field'),
         '#error_label' => !empty($element['#title']) ? $element['#title'] : $this->fieldDefinition->getLabel(),
       ];
     }
     else {
+      $widget_label = $this->getPluginDefinition()['label']->render();
       $element += [
-        '#prefix' => '<div class="geofield-map-warning">' . $this->t('This Geofield Map cannot be applied because Polylines and Polygons are not supported at the moment') . '</div>',
+        '#prefix' => '<div class="geofield-map-warning">' . $this->t('The "@widget_label" widget cannot be applied because it doesn\'t support Geometries (Polylines, Polygons, etc.) at the moment.', [
+          '@widget_label' => $widget_label,
+        ]) . '</div>',
         '#type' => 'textarea',
         '#default_value' => $items[$delta]->value ?: NULL,
       ];

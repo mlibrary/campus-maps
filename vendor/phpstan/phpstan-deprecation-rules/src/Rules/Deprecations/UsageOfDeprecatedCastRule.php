@@ -5,13 +5,22 @@ namespace PHPStan\Rules\Deprecations;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Cast;
 use PHPStan\Analyser\Scope;
+use PHPStan\Rules\Rule;
 use function sprintf;
 
 /**
- * @implements \PHPStan\Rules\Rule<Cast>
+ * @implements Rule<Cast>
  */
-class UsageOfDeprecatedCastRule implements \PHPStan\Rules\Rule
+class UsageOfDeprecatedCastRule implements Rule
 {
+
+	/** @var DeprecatedScopeHelper */
+	private $deprecatedScopeHelper;
+
+	public function __construct(DeprecatedScopeHelper $deprecatedScopeHelper)
+	{
+		$this->deprecatedScopeHelper = $deprecatedScopeHelper;
+	}
 
 	public function getNodeType(): string
 	{
@@ -20,7 +29,7 @@ class UsageOfDeprecatedCastRule implements \PHPStan\Rules\Rule
 
 	public function processNode(Node $node, Scope $scope): array
 	{
-		if (DeprecatedScopeHelper::isScopeDeprecated($scope)) {
+		if ($this->deprecatedScopeHelper->isScopeDeprecated($scope)) {
 			return [];
 		}
 

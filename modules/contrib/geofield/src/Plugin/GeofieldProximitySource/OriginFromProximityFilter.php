@@ -112,7 +112,7 @@ class OriginFromProximityFilter extends GeofieldProximitySourceBase implements C
         '#tag' => 'div',
         '#value' => $this->t('No Geofield Proximity Filter found. At least one should be set for this Proximity Field be able to work.'),
         "#attributes" => [
-          'class' => ['proximity-filter-warning', 'red'],
+          'class' => ['geofield-warning', 'red'],
         ],
       ];
       $form_state->setError($form['source_proximity_filter_warning'], $this->t('This Proximity Field cannot work. Dismiss this and add & setup a Geofield Proximity Filter before.'));

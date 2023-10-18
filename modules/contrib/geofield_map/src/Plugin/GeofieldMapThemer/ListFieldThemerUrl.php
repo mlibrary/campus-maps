@@ -143,7 +143,7 @@ class ListFieldThemerUrl extends MapThemerBase {
         ])
         && $field_storage_definitions[$field_id]->getCardinality() == 1
       ) {
-        $list_fields[$field_id] = ['options' => $field_storage_definitions[$field_id]->getSetting('allowed_values')];
+        $list_fields[$field_id] = ['options' => options_allowed_values($field_storage_definitions[$field_id])];
       }
     }
 
@@ -153,7 +153,7 @@ class ListFieldThemerUrl extends MapThemerBase {
         // Eventually filter out the default terms that have been removed, in
         // the meanwhile.
         $default_existing_array_keys = array_intersect(array_keys($default_element['fields'][$field_id]['options']), array_keys($list_fields[$field_id]['options']));
-        $list_fields[$field_id]['options'] = array_replace(array_flip($default_existing_array_keys), $list_fields[$field_id]['options']);
+        $list_fields[$field_id]['options'] = array_replace(array_flip($default_existing_array_keys), $field_label['options']);
       }
     }
 

@@ -27,7 +27,7 @@ class AddressFormatConstraintValidator extends ExternalValidator implements Cont
   /**
    * {@inheritdoc}
    */
-  protected function addViolation($field, $message, $invalid_value, AddressFormat $address_format) {
+  protected function addViolation(string $field, string $message, $invalid_value, AddressFormat $address_format) {
     $labels = LabelHelper::getFieldLabels($address_format);
     $label = $labels[$field];
 

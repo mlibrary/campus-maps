@@ -7,7 +7,7 @@
 (function(geolocation, $){
   if (geolocation) return;
 
-  var cache;
+  let cache;
 
   geolocation = window.navigator.geolocation = {};
   geolocation.getCurrentPosition = function(callback){
@@ -35,17 +35,18 @@
 (function ($) {
   Drupal.behaviors.geofieldGeolocation = {
     attach: function (context, settings) {
+      let fields;
 
       // Callback for getCurrentPosition on geofield widget html5 geocode button
       function updateLocation(position) {
-        $fields.find('.auto-geocode .geofield-lat').val(position.coords.latitude);
-        $fields.find('.auto-geocode .geofield-lon').val(position.coords.longitude);
+        fields.find('.auto-geocode .geofield-lat').val(position.coords.latitude);
+        fields.find('.auto-geocode .geofield-lon').val(position.coords.longitude);
       }
 
       // Callback for getCurrentPosition on geofield proximity client position.
       function getClientOrigin(position) {
-        var lat = position.coords.latitude.toFixed(6);
-        var lon = position.coords.longitude.toFixed(6);
+        const lat = position.coords.latitude.toFixed(6);
+        const lon = position.coords.longitude.toFixed(6);
         latitudeInput.val(lat);
         longitudeInput.val(lon);
         latitudeSpan.text(lat);
@@ -55,10 +56,10 @@
 
       // don't do anything if we're on field configuration
       if (!$(context).find("#edit-instance").length) {
-        var $fields = $(context);
+        let fields = $(context);
         // check that we have something to fill up
         // on multi values check only that the first one is em  pty
-        if ($fields.find('.auto-geocode .geofield-lat').val() === '' && $fields.find('.auto-geocode .geofield-lon').val() === '') {
+        if (fields.find('.auto-geocode .geofield-lat').val() === '' && fields.find('.auto-geocode .geofield-lon').val() === '') {
           // Check to see if we have geolocation support, either natively or through Google.
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(updateLocation);
@@ -70,25 +71,27 @@
       }
 
       // React on the geofield widget html5 geocode button click.
-      $('input[name="geofield-html5-geocode-button"]').once('geofield_geolocation').click(function (e) {
-        e.preventDefault();
-        $fields = $(this).parents('.auto-geocode').parent();
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(updateLocation);
-        }
-        else {
-          console.log('Geolocation is not supported by this browser.');
-        }
+      once('geofield_geolocation', '[name="geofield-html5-geocode-button"]').forEach(function (e) {
+        $(e).click(function(e) {
+          e.preventDefault();
+          fields = $(this).parents('.auto-geocode').parent();
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(updateLocation);
+          }
+          else {
+            console.log('Geolocation is not supported by this browser.');
+          }
+        });
       });
 
-      var latitudeInput, longitudeInput, latitudeSpan, longitudeSpan = '';
+      let latitudeInput, longitudeInput, latitudeSpan, longitudeSpan = '';
 
       // React on the geofield proximity client location source.
-      $('.proximity-origin-client').once('geofield_geolocation').each(function (e) {
-        latitudeInput = $(this).find('.geofield-lat').first();
-        longitudeInput = $(this).find('.geofield-lon').first();
-        latitudeSpan = $(this).find('.geofield-lat-summary').first();
-        longitudeSpan = $(this).find('.geofield-lon-summary').first();
+      once('geofield_geolocation', '.proximity-origin-client').forEach(function (e) {
+        latitudeInput = $(e).find('.geofield-lat').first();
+        longitudeInput = $(e).find('.geofield-lon').first();
+        latitudeSpan = $(e).find('.geofield-lat-summary').first();
+        longitudeSpan = $(e).find('.geofield-lon-summary').first();
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(getClientOrigin);
         }
