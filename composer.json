@@ -44,7 +44,8 @@
         "geocoder-php/google-maps-provider": "^4.6",
         "drupal/classy": "^1.0",
         "drupal/ckeditor": "^1.0",
-        "drupal/upgrade_status": "^4.0"
+        "drupal/upgrade_status": "^4.0",
+        "drupal/symfony_mailer_lite": "^1.0"
     },
     "replace": {
     },

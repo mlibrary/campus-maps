@@ -3,7 +3,7 @@
         'name' => 'drupal/recommended-project',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '6213660fbbb3d7c235b46fbabb4038a0890283bc',
+        'reference' => '057bc4083b9c50ad8a3182263e1c77055e47c6d8',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -586,7 +586,7 @@
         'drupal/recommended-project' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '6213660fbbb3d7c235b46fbabb4038a0890283bc',
+            'reference' => '057bc4083b9c50ad8a3182263e1c77055e47c6d8',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -616,6 +616,15 @@
             'reference' => '8.x-2.4',
             'type' => 'drupal-module',
             'install_path' => __DIR__ . '/../../modules/contrib/swiftmailer',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'drupal/symfony_mailer_lite' => array(
+            'pretty_version' => '1.0.2',
+            'version' => '1.0.2.0',
+            'reference' => '1.0.2',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../modules/contrib/symfony_mailer_lite',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
@@ -1075,8 +1084,8 @@
         'psr/http-client-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-factory' => array(
@@ -1091,8 +1100,8 @@
         'psr/http-factory-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-message' => array(
@@ -1107,8 +1116,8 @@
         'psr/http-message-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/log' => array(
@@ -1282,6 +1291,15 @@
             'reference' => '13e8387320b5942d0dc408440c888e2d526efef4',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/http-kernel',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'symfony/mailer' => array(
+            'pretty_version' => 'v6.4.2',
+            'version' => '6.4.2.0',
+            'reference' => '6da89e5c9202f129717a770a03183fb140720168',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/mailer',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
