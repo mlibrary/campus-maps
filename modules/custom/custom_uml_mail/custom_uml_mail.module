@@ -30,8 +30,8 @@ function custom_uml_mail_send_mail($recipient, $reply_to, $subject, $message, $k
     'from' => $from,
     'subject' => $subject,
     'message' => $message,
-    'cc'      => $cc,
-    'bcc'     => $bcc,
+    'Cc'      => $cc,
+    'Bcc'     => $bcc,
   ];
   foreach ($files as $file){
     if (isset($file['file']) && $file['file'] instanceof \Drupal\file\Entity\File) {
@@ -68,32 +68,32 @@ function custom_uml_mail_send_mail($recipient, $reply_to, $subject, $message, $k
  * Alter destination of outgoing emails if reroute_email is enabled.
  */
 function custom_uml_mail_mail_alter(&$message) {
-  $message['headers']['cc'] = trim($message['headers']['cc'], ',');
-  $message['headers']['bcc'] = trim($message['headers']['bcc'], ',');
-  if (empty($message['headers']['cc'])) {
-    if (!empty($message['params']['cc'])) {
-      $message['headers']['cc'] = trim($message['params']['cc'], ',');
+  $message['headers']['Cc'] = trim($message['headers']['Cc'], ',');
+  $message['headers']['Bcc'] = trim($message['headers']['Bcc'], ',');
+  if (empty($message['headers']['Cc'])) {
+    if (!empty($message['params']['Cc'])) {
+      $message['headers']['Cc'] = trim($message['params']['Cc'], ',');
     }
-    elseif (!empty($message['cc'])) {
-      $message['headers']['cc'] = trim($message['cc'], ',');
+    elseif (!empty($message['Cc'])) {
+      $message['headers']['Cc'] = trim($message['Cc'], ',');
     }
     else {
-      unset($message['headers']['cc']);
-      unset($message['cc']);
-      unset($message['params']['cc']);
+      unset($message['headers']['Cc']);
+      unset($message['Cc']);
+      unset($message['params']['Cc']);
     }
   }
-  if (empty($message['headers']['bcc'])) {
-    if (!empty($message['params']['bcc'])) {
-      $message['headers']['bcc'] = trim($message['params']['bcc'], ',');
+  if (empty($message['headers']['Bcc'])) {
+    if (!empty($message['params']['Bcc'])) {
+      $message['headers']['Bcc'] = trim($message['params']['Bcc'], ',');
     }
-    elseif (!empty($message['bcc'])) {
-      $message['headers']['bcc'] = trim($message['bcc'], ',');
+    elseif (!empty($message['Bcc'])) {
+      $message['headers']['Bcc'] = trim($message['Bcc'], ',');
     }
     else {
-      unset($message['headers']['bcc']);
-      unset($message['bcc']);
-      unset($message['params']['bcc']);
+      unset($message['headers']['Bcc']);
+      unset($message['Bcc']);
+      unset($message['params']['Bcc']);
     }
   }
 }
@@ -113,11 +113,11 @@ function custom_uml_mail_mail($key, &$message, $params){
   if (isset($params['files'])) {
     $message['files'] = $params['files'];
   }
-  if (isset($params['cc']) && !empty($params['cc'])) {
-    $message['headers']['Cc'] = trim($params['cc'], ',');
+  if (isset($params['Cc']) && !empty($params['Cc'])) {
+    $message['headers']['Cc'] = trim($params['Cc'], ',');
   }
-  if (isset($params['bcc']) && !empty($params['bcc'])) {
-    $message['headers']['Bcc'] = trim($params['bcc'], ',');
+  if (isset($params['Bcc']) && !empty($params['Bcc'])) {
+    $message['headers']['Bcc'] = trim($params['Bcc'], ',');
   }
   $message['headers']['From'] = $params['from'];
   //$message['headers']['Sender'] = $params['from'];
