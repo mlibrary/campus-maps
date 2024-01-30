@@ -38,7 +38,6 @@
         "drupal/mailsystem": "^4.2",
         "drupal/svg_image": "^3.0",
         "drupal/imce": "^3.0",
-        "drupal/swiftmailer": "^2.0@beta",
         "drupal/jquery_ui_accordion": "^2.0",
         "drupal/jquery_ui_slider": "^2.0",
         "geocoder-php/google-maps-provider": "^4.6",
