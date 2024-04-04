@@ -3,23 +3,24 @@
 namespace Drupal\node\Plugin\Action;
 
 use Drupal\Core\Action\ConfigurableActionBase;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Access\AccessResult;
 
 /**
  * Assigns ownership of a node to a user.
- *
- * @Action(
- *   id = "node_assign_owner_action",
- *   label = @Translation("Change the author of content"),
- *   type = "node"
- * )
  */
+#[Action(
+  id: 'node_assign_owner_action',
+  label: new TranslatableMarkup('Change the author of content'),
+  type: 'node'
+)]
 class AssignOwnerNode extends ConfigurableActionBase implements ContainerFactoryPluginInterface {
 
   /**
