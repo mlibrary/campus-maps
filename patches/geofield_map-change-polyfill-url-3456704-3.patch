@@ -1,0 +1,18 @@
+diff --git a/modules/contrib/geofield_map/geofield_map.libraries.yml b/modules/contrib/geofield_map/geofield_map.libraries.yml
+index ca42bb1..92eca82 100644
+--- a/modules/contrib/geofield_map/geofield_map.libraries.yml
++++ b/modules/contrib/geofield_map/geofield_map.libraries.yml
+@@ -105,11 +105,11 @@ overlappingmarkerspiderfier:
+ 
+ # External IntersectionObserver polyfill
+ intersection_observer:
+-  remote: https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver
++  remote: https://polyfill-fastly.io/v3/polyfill.min.js?features=IntersectionObserver
+   version: 1.x
+   license:
+     name: MIT license
+     url: https://choosealicense.com/licenses/mit/
+     gpl-compatible: true
+   js:
+-    https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver: { type: external }
++    https://polyfill-fastly.io/v3/polyfill.min.js?features=IntersectionObserver: { type: external }
