@@ -29,7 +29,7 @@
           // - geocoder integration is enabled;
           if (options.map_library === 'leaflet' && options.gmap_geocoder) {
             // Check and wai for the Leaflet module to be loaded.
-            let checkLeafletExist = setInterval(function() {
+            var checkLeafletExist = setInterval(function() {
                if (window.hasOwnProperty('L')) {
                   Drupal.geoFieldMap.map_initialize(options, context);
                   clearInterval(checkLeafletExist);
@@ -130,7 +130,7 @@
 
         // Google Maps isn't loaded so lazy load Google Maps.
         // Default script path.
-        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language) + '&callback=Drupal.geoFieldMap.googleCallback';
+        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=weekly&sensor=false&libraries=places&language=' + self.googleMapsLanguage(html_language) + '&callback=Drupal.geoFieldMap.googleCallback' + '&loading=async';
 
         // If a Google API key is set, use it.
         if (gmap_api_key) {
@@ -521,7 +521,6 @@
     // Init Geofield Map and its functions.
     map_initialize: function (params, context) {
       let self = this;
-      $.noConflict();
 
       if (params.searchid !== null) {
 

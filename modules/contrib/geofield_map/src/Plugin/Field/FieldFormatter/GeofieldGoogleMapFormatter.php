@@ -156,7 +156,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * @param string $view_mode
    *   The view mode.
    * @param array $third_party_settings
-   *   Any third party settings settings.
+   *   Any third party settings.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
@@ -170,7 +170,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The Entity Field Manager.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
-   *   The The geoPhpWrapper.
+   *   The geoPhpWrapper.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The Renderer service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler

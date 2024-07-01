@@ -48,6 +48,11 @@ geolocation:
   js:
     js/geolocation.js: {}
 
+geojson:
+  version: 1.x
+  js:
+    js/geojson.js: {}
+
 geofield_google_map:
   version: 1.x
   css:
@@ -60,6 +65,7 @@ geofield_google_map:
       - core/once
       - core/drupal
       - core/drupalSettings
+      - geofield_map/geojson
 
 geocoder:
   version: 1.x
@@ -74,11 +80,6 @@ geocoder:
     - core/drupal
     - core/drupalSettings
     - core/drupal.autocomplete
-
-geojson:
-  version: 1.x
-  js:
-    js/geojson.js: {}
 
 # External Marker Clusterer
 marker_cluster:

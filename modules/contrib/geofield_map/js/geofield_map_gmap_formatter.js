@@ -155,7 +155,7 @@
         self.maps_api_loading = true;
         // Google Maps isn't loaded so lazy load Google Maps.
         // Default script path.
-        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=3.exp&sensor=false&language=' + self.googleMapsLanguage(html_language) + '&callback=Drupal.geoFieldMapFormatter.googleCallback';
+        let scriptPath = self.map_data[mapid]['gmap_api_localization'] + '?v=weekly&sensor=false&language=' + self.googleMapsLanguage(html_language) + '&callback=Drupal.geoFieldMapFormatter.googleCallback'  + '&loading=async';
 
         // If a Google API key is set, use it.
         if (gmap_api_key) {
@@ -201,9 +201,6 @@
         icon_image = feature.geojsonProperties.icon;
       }
 
-      // Define the OverlappingMarkerSpiderfier flag.
-      let oms = self.map_data[mapid].oms ? self.map_data[mapid].oms : null;
-
       // Set the personalized Icon Image, if set.
       if (feature.setIcon && icon_image && icon_image.length > 0) {
         self.checkImage(icon_image,
@@ -213,15 +210,17 @@
           });
       }
 
-      let map = self.map_data[mapid].map;
-
       // Add a default Tooltip on the title geojsonProperty, if existing.
       if (feature.setTitle && feature.geojsonProperties.tooltip) {
         feature.setTitle(feature.geojsonProperties.tooltip);
       }
 
+      const map = self.map_data[mapid].map;
+
       // If the feature is a Point, make it a Marker and extend the Map bounds.
       if (feature.getPosition) {
+        // Define the OverlappingMarkerSpiderfier flag.
+        const oms = self.map_data[mapid].oms ? self.map_data[mapid].oms : null;
         if (oms) {
           self.map_data[mapid].oms.addMarker(feature);
         }
@@ -231,7 +230,7 @@
 
         // Generate the markers object index based on entity id (and geofield
         // cardinality), and add the marker to the markers object.
-        let entity_id = feature['geojsonProperties']['entity_id'];
+        const entity_id = feature['geojsonProperties']['entity_id'];
         if (self.map_data[mapid].geofield_cardinality && self.map_data[mapid].geofield_cardinality !== 1) {
           let i = 0;
           while (self.map_data[mapid].markers[entity_id + '-' + i]) {
@@ -247,7 +246,7 @@
 
         // Check for eventual simple or OverlappingMarkerSpiderfier click
         // Listener.
-        let clickListener = oms ? 'spider_click' : 'click';
+        const clickListener = oms ? 'spider_click' : 'click';
         google.maps.event.addListener(feature, clickListener, function () {
           self.infowindow_open(mapid, feature);
         });
@@ -302,7 +301,6 @@
     // Init Geofield Google Map and its functions.
     map_initialize: function (mapid, map_settings, data, context) {
       let self = this;
-      $.noConflict();
 
       // If google and google.maps have been defined.
       if (google && google.maps) {
@@ -454,6 +452,7 @@
             }
           });
 
+          // Iterate on each features and place it to the map.
           if (features.setMap) {
             self.place_feature(features, mapid);
           }
@@ -482,7 +481,7 @@
 
             // Add markercluster_additional_options if any.
             if (map_settings.map_markercluster.markercluster_additional_options.length > 0) {
-              let markeclusterAdditionalOptions = JSON.parse(map_settings.map_markercluster.markercluster_additional_options);
+              const markeclusterAdditionalOptions = JSON.parse(map_settings.map_markercluster.markercluster_additional_options);
               // Merge markeclusterOption with markeclusterAdditionalOptions.
               $.extend(markeclusterOption, markeclusterAdditionalOptions);
             }
@@ -490,7 +489,7 @@
             // Define a markerCluster property, so other code can interact with
             // it.
             let markerCluster = [];
-            let keys = Object.keys(self.map_data[mapid].markers);
+            const keys = Object.keys(self.map_data[mapid].markers);
             for (let k = 0; k < keys.length; k++) {
               markerCluster.push(self.map_data[mapid].markers[keys[k]]);
             }

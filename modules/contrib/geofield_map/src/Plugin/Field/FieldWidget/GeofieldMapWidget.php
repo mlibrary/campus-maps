@@ -476,7 +476,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#min' => $this->getSetting('zoom')['min'],
       '#max' => $this->getSetting('zoom')['max'],
       '#title' => $this->t('Start Zoom level'),
-      '#description' => $this->t('The initial Zoom level for an empty Geofield.'),
+      '#description' => $this->t('The initial Zoom level for an empty Geofield.<br>Admitted values usually range from 0 (the whole world) to 20 - 22, depending on the max zoom supported by the specific Map Tile in use.<br>As a reference consider Zoom 5 for a large country, 10 for a city, 15 for a road or a district, etc.'),
       '#default_value' => $this->getSetting('zoom')['start'],
       '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
     ];

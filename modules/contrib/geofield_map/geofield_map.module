@@ -64,7 +64,6 @@ function geofield_map_theme($existing, $type, $theme, $path) {
 function geofield_map_googlemap_render(array $js_settings) {
 
   $attached_libraries = [
-    'geofield_map/geojson',
     'geofield_map/geofield_google_map',
   ];
 
