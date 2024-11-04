@@ -4,6 +4,7 @@ namespace Drupal\geocoder_field\Plugin\Geocoder\Preprocessor;
 
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Locale\CountryManagerInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\file\Entity\File as FileEntity;
 use Drupal\geocoder_field\PreprocessorBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,6 +22,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class File extends PreprocessorBase {
+
+  use LoggerChannelTrait;
 
   /**
    * The file system service.
@@ -75,7 +78,7 @@ class File extends PreprocessorBase {
           $this->field->set($delta, $value);
         }
         catch (\Exception $e) {
-          watchdog_exception('geocoder', $e);
+          $this->getLogger('geocoder')->error($e->getMessage());
         }
       }
     }

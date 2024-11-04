@@ -92,7 +92,7 @@ class LatLonFormatter extends GeofieldDefaultFormatter {
         if ($geom->getGeomType() != 'Point') {
           $geom = $geom->centroid();
         }
-        /* @var \Point $geom */
+        /** @var \Point $geom */
         if ($this->getOutputFormat() == 'decimal') {
           $output = [
             '#theme' => 'geofield_latlon',

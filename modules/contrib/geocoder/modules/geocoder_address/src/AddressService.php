@@ -2,14 +2,14 @@
 
 namespace Drupal\geocoder_address;
 
-use Drupal\Core\DependencyInjection\ServiceProviderBase;
+use CommerceGuys\Addressing\Address as AddressingAddress;
 use CommerceGuys\Addressing\AddressFormat\AddressFormatRepositoryInterface;
 use CommerceGuys\Addressing\Country\CountryRepositoryInterface;
-use CommerceGuys\Addressing\Subdivision\SubdivisionRepositoryInterface;
-use Drupal\address\Element\Address as ElementAddress;
-use CommerceGuys\Addressing\Address as AddressingAddress;
 use CommerceGuys\Addressing\Formatter\DefaultFormatter;
 use CommerceGuys\Addressing\Formatter\PostalLabelFormatter;
+use CommerceGuys\Addressing\Subdivision\SubdivisionRepositoryInterface;
+use Drupal\address\Element\Address as ElementAddress;
+use Drupal\Core\DependencyInjection\ServiceProviderBase;
 
 /**
  * Generate an AddressService.
@@ -128,14 +128,13 @@ class AddressService extends ServiceProviderBase {
     // Use the Address formatter to create a string ordered appropriately
     // for the country in the address.
     $address = new AddressingAddress();
-    $address = $address
-      ->withCountryCode($values['country_code'])
-      ->withPostalCode($values['postal_code'])
-      ->withAdministrativeArea($values['administrative_area'])
-      ->withDependentLocality($values['dependent_locality'])
-      ->withLocality($values['locality'])
-      ->withAddressLine1($values['address_line1'])
-      ->withAddressLine2($values['address_line2']);
+    $address = $values['country_code'] ? $address->withCountryCode($values['country_code']) : $address;
+    $address = $values['postal_code'] ? $address->withPostalCode($values['postal_code']) : $address;
+    $address = $values['administrative_area'] ? $address->withAdministrativeArea($values['administrative_area']) : $address;
+    $address = $values['dependent_locality'] ? $address->withDependentLocality($values['dependent_locality']) : $address;
+    $address = $values['locality'] ? $address->withLocality($values['locality']) : $address;
+    $address = $values['address_line1'] ? $address->withAddressLine1($values['address_line1']) : $address;
+    $address = $values['address_line2'] ? $address->withAddressLine2($values['address_line2']) : $address;
 
     $countrycode = $values['country_code'] ?? NULL;
     $langcode = !empty($values['langcode']) ? $values['langcode'] : 'en';
@@ -151,8 +150,14 @@ class AddressService extends ServiceProviderBase {
     $address_string = str_replace("<br>", ' ', $address_string);
     $address_string = strip_tags($address_string);
 
-    // Add Country code suffix, if defined.
-    $address_string .= isset($countrycode) ? ' ' . $countrycode : '';
+    // In case of a country-only address, use the full country name.
+    if (strlen($address_string) === 0 && strlen($countrycode) !== 0) {
+      $address_string = $this->countryRepository->get($countrycode)->getName();
+    }
+    elseif (strlen($countrycode) !== 0) {
+      // Otherwise add Country code suffix, if defined.
+      $address_string .= ' ' . $countrycode;
+    }
 
     return $address_string;
   }

@@ -2,18 +2,18 @@
 
 namespace Drupal\geocoder;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
-use Drupal\geocoder\Annotation\GeocoderProvider;
 use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\geocoder\Annotation\GeocoderProvider;
 
 /**
  * Provides a plugin manager for geocoder providers.
@@ -79,7 +79,7 @@ class ProviderPluginManager extends GeocoderPluginManagerBase {
     RendererInterface $renderer,
     LinkGeneratorInterface $link_generator,
     EntityTypeManagerInterface $entity_type_manager,
-    MessengerInterface $messenger
+    MessengerInterface $messenger,
   ) {
     parent::__construct('Plugin/Geocoder/Provider', $namespaces, $module_handler, ProviderInterface::class, GeocoderProvider::class);
     $this->alterInfo('geocoder_provider_info');
@@ -135,7 +135,8 @@ class ProviderPluginManager extends GeocoderPluginManagerBase {
    *   The plugins table list.
    */
   public function providersPluginsTableList(array $enabled_provider_ids): array {
-    $providers_link = $this->link->generate(t('Geocoder providers configuration page'), Url::fromRoute('entity.geocoder_provider.collection', [], [
+    $providers = [];
+    $providers_link = $this->link->generate($this->t('Geocoder providers configuration page'), Url::fromRoute('entity.geocoder_provider.collection', [], [
       'attributes' => ['target' => '_blank'],
     ]));
 
@@ -186,14 +187,6 @@ class ProviderPluginManager extends GeocoderPluginManagerBase {
       // We need this class for #states to hide the entire table.
       '#attributes' => ['class' => ['js-form-item', 'geocode-plugins-list']],
     ];
-
-    // Reorder the plugins promoting the default ones in the proper order. By
-    // initializing the enabled providers first they will appear at the top of
-    // the list.
-    $providers = [];
-    foreach ($enabled_provider_ids as $enabled_provider_id) {
-      $providers[$enabled_provider_id] = NULL;
-    }
 
     foreach ($this->entityTypeManager->getStorage('geocoder_provider')->loadMultiple() as $provider_entity) {
       // Non-default values are appended at the end.

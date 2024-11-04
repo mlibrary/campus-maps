@@ -44,7 +44,7 @@ class DmsPoint {
    *   The property if exists, otherwise NULL.
    */
   public function get($property) {
-    return isset($this->{$property}) ? $this->{$property} : NULL;
+    return $this->{$property} ?? NULL;
   }
 
   /**

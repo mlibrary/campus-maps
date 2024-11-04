@@ -19,7 +19,8 @@ interface GeocoderThrottleInterface {
    *   or null not to limit the requests.
    *
    * @return void|null
+   *   No return value.
    */
-  public function waitForAvailability(string $key, array $throttle_info);
+  public function waitForAvailability(string $key, array|null $throttle_info);
 
 }

@@ -65,7 +65,9 @@ class GeofieldDefaultWidget extends GeofieldBaseWidget {
     if ($this->getSetting('geometry_validation')) {
       // Append notice to the field description in the widget:
       $element['#description'] = $element['#description'] . '<br />' . $this->t('Geometry Validation enabled (valid WKT or Geojson format & values required)');
-      $element['#element_validate'] = [[get_class($this), 'validateGeofieldGeometryText']];
+      $element['#element_validate'] = [
+        [get_class($this), 'validateGeofieldGeometryText'],
+      ];
     }
     else {
       // Append notice to the field description in the widget:
@@ -88,7 +90,7 @@ class GeofieldDefaultWidget extends GeofieldBaseWidget {
   /**
    * {@inheritdoc}
    */
-  public static function validateGeofieldGeometryText(array $element, FormStateInterface &$form_state) {
+  public static function validateGeofieldGeometryText(array $element, FormStateInterface $form_state) {
     if (!empty($element['#value']) && is_null(\Drupal::service('geofield.geophp')->load($element['#value']))) {
       $form_state->setError($element, t('The @value is not a valid geospatial content.', [
         '@value' => $element['#value'],

@@ -124,7 +124,7 @@
                     map.infowindow.setPosition(position);
                     setTimeout(function () {
                       map.infowindow.open(map);
-                    }, 200);;
+                    }, 200);
                   }
                   break;
 

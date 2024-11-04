@@ -1,10 +1,11 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\geocoder;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
@@ -12,7 +13,6 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\geocoder\Traits\ConfigurableProviderTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 
 /**
  * Provides a base class for configurable providers using handlers.
@@ -55,7 +55,7 @@ abstract class ConfigurableProviderUsingHandlerBase extends ProviderUsingHandler
       parent::__construct($configuration, $plugin_id, $plugin_definition, $config_factory, $cache_backend, $language_manager);
     }
     catch (InvalidPluginDefinitionException $e) {
-      watchdog_exception('geocoder', $e);
+      $this->getLogger('geocoder')->error($e->getMessage());
     }
   }
 

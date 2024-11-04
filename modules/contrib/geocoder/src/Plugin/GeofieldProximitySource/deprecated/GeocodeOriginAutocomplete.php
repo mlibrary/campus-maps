@@ -2,10 +2,10 @@
 
 namespace Drupal\geocoder\Plugin\GeofieldProximitySource\deprecated;
 
-use Drupal\geocoder\Plugin\GeofieldProximitySource\GeocodeOrigin;
-use Drupal\geocoder\Geocoder;
-use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder\FormatterPluginManager;
+use Drupal\geocoder\Geocoder;
+use Drupal\geocoder\Plugin\GeofieldProximitySource\GeocodeOrigin;
+use Drupal\geocoder\ProviderPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

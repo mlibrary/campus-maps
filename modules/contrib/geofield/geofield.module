@@ -7,7 +7,8 @@
 
 use Drupal\Core\Database\Database;
 
-// Ludwig integration for 'classmap' type phayes/geophp library.
+// cspell:ignore itamair
+// Ludwig's integration for 'classmap' type phayes/geophp library.
 if (\Drupal::hasService('ludwig.require_once')) {
   $ludwig_require_once = \Drupal::service('ludwig.require_once');
   $ludwig_require_once->requireOnce('itamair/geophp', 'geoPHP.inc', dirname(__FILE__));
@@ -18,77 +19,77 @@ if (\Drupal::hasService('ludwig.require_once')) {
  *
  * @var string
  */
-define('GEOFIELD_TYPE_POINT', 'POINT');
+const GEOFIELD_TYPE_POINT = 'POINT';
 
 /**
  * Multipoint feature constant.
  *
  * @var string
  */
-define('GEOFIELD_TYPE_MULTIPOINT', 'MULTIPOINT');
+const GEOFIELD_TYPE_MULTIPOINT = 'MULTIPOINT';
 
 /**
  * Linestring feature constant.
  *
  * @var string
  */
-define('GEOFIELD_TYPE_LINESTRING', 'LINESTRING');
+const GEOFIELD_TYPE_LINESTRING = 'LINESTRING';
 
 /**
  * Multilinestring feature constant.
  *
  * @var string
  */
-define('GEOFIELD_TYPE_MULTILINESTRING', 'MULTILINESTRING');
+const GEOFIELD_TYPE_MULTILINESTRING = 'MULTILINESTRING';
 
 /**
  * Polygon feature constant.
  *
  * @var string
  */
-define('GEOFIELD_TYPE_POLYGON', 'POLYGON');
+const GEOFIELD_TYPE_POLYGON = 'POLYGON';
 
 /**
  * Multipolygon feature constant.
  *
  * @var string
  */
-define('GEOFIELD_TYPE_MULTIPOLYGON', 'MULTIPOLYGON');
+const GEOFIELD_TYPE_MULTIPOLYGON = 'MULTIPOLYGON';
 
 /* *
  * Max length of geohashes (imposed by database column length).
  */
-define('GEOFIELD_GEOHASH_LENGTH', 16);
+const GEOFIELD_GEOHASH_LENGTH = 16;
 
 /**
  * Diameter of the Earth in kilometers.
  */
-define('GEOFIELD_KILOMETERS', 6371);
+const GEOFIELD_KILOMETERS = 6371;
 
 /**
  * Diameter of the Earth in meters.
  */
-define('GEOFIELD_METERS', 6371000);
+const GEOFIELD_METERS = 6371000;
 
 /**
  * Diameter of the Earth in miles.
  */
-define('GEOFIELD_MILES', 3959);
+const GEOFIELD_MILES = 3959;
 
 /**
  * Diameter of the Earth in yards.
  */
-define('GEOFIELD_YARDS', 6975175);
+const GEOFIELD_YARDS = 6975175;
 
 /**
  * Diameter of the Earth in feet.
  */
-define('GEOFIELD_FEET', 20925525);
+const GEOFIELD_FEET = 20925525;
 
 /**
  * Diameter of the Earth in nautical miles.
  */
-define('GEOFIELD_NAUTICAL_MILES', 3444);
+const GEOFIELD_NAUTICAL_MILES = 3444;
 
 /**
  * Implements hook_theme().

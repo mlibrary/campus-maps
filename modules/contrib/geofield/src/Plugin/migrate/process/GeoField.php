@@ -3,11 +3,11 @@
 namespace Drupal\geofield\Plugin\migrate\process;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
-use Drupal\geofield\GeoPHP\GeoPHPInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Maps D7 geofield values to new the geofield values.

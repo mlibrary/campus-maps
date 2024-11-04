@@ -3,14 +3,29 @@
 namespace Drupal\geofield\Plugin\migrate\process;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\geofield\WktGeneratorInterface;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
-use Drupal\geofield\WktGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Process latitude and longitude and return the value for the D8 geofield.
+ * Migrate latitude & longitude single values into a Geofield.
+ *
+ * The "geofield_latlon" process plugin transforms pairs of
+ * latitude & longitude single values into Geofield WKT format value.
+ *
+ * Example:
+ *
+ * @code
+ *  process:
+ *    field_geofield:
+ *    plugin: geofield_latlon
+ *    source:
+ *    - latitude
+ *    - longitude
+ *
+ * @endcode
  *
  * @MigrateProcessPlugin(
  *   id = "geofield_latlon"
@@ -50,9 +65,9 @@ class GeofieldLatLon extends ProcessPluginBase implements ContainerFactoryPlugin
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
     $value = array_map('floatval', $value);
-    list($lat, $lon) = $value;
+    [$lat, $lon] = $value;
 
-    if (empty($lat) || empty($lon)) {
+    if (empty($lat) && empty($lon)) {
       return NULL;
     }
 

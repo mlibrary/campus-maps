@@ -12,7 +12,7 @@ use Drupal\field\FieldStorageConfigInterface;
  */
 function geofield_field_views_data(FieldStorageConfigInterface $field_storage) {
 
-  // TODO: This code only covers configurable fields, handle base table fields.
+  // @todo handle base table fields, as this code only covers configurable fields.
   // @see https://www.drupal.org/node/2489476.
   $data = views_field_default_views_data($field_storage);
 
@@ -20,9 +20,9 @@ function geofield_field_views_data(FieldStorageConfigInterface $field_storage) {
   $entity_type_id = $field_storage->getTargetEntityTypeId();
   $field_label = NULL;
 
-  foreach ($data as $table_name => $table_data) {
-    if (isset($data[$table_name][$field_name])) {
-      $field_label = $data[$table_name][$field_name]['title'];
+  foreach ($data as $table_data) {
+    if (isset($table_data[$field_name])) {
+      $field_label = $table_data[$field_name]['title'];
       break;
     }
   }

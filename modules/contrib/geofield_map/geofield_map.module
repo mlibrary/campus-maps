@@ -67,11 +67,6 @@ function geofield_map_googlemap_render(array $js_settings) {
     'geofield_map/geofield_google_map',
   ];
 
-  // Add the intersection_observer library, if lazy load is enabled.
-  if ($js_settings['map_settings']['map_lazy_load']) {
-    $attached_libraries[] = 'geofield_map/intersection_observer';
-  }
-
   // Add the Marker Cluster library, if asked.
   if ($js_settings['map_settings']['map_markercluster']['markercluster_control']) {
     $attached_libraries[] = 'geofield_map/marker_cluster';
@@ -91,7 +86,7 @@ function geofield_map_googlemap_render(array $js_settings) {
     && \Drupal::service('current_user')->hasPermission('access geocoder api endpoints')) {
     $attached_libraries[] = 'geofield_map/geocoder';
 
-    /* @var \Drupal\geofield_map\Services\GeocoderService $geofield_map_geocoder_service */
+    /** @var \Drupal\geofield_map\Services\GeocoderService $geofield_map_geocoder_service */
     $geofield_map_geocoder_service = \Drupal::service('geofield_map.geocoder');
     // Get Filtered Js Map Geocoder Settings.
     $js_settings['map_settings']['map_geocoder']['settings'] = $geofield_map_geocoder_service->getJsGeocoderSettings($js_settings['map_settings']['map_geocoder']['settings']);
@@ -149,7 +144,7 @@ function geofield_map_preprocess_image_widget(&$variables) {
         'style_name' => $element['#preview_image_style'],
         'uri' => $file->getFileUri(),
       ];
-      /* @var \Drupal\Core\Image\Image $image */
+      /** @var \Drupal\Core\Image\Image $image */
       $image = \Drupal::service('image.factory')->get($file->getFileUri());
       $file_is_manageable = FALSE;
       $file_width = $file_height = 1;

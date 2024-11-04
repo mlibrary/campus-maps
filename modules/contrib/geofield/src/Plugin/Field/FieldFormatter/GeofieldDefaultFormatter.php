@@ -2,14 +2,14 @@
 
 namespace Drupal\geofield\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FormatterBase;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\geofield\GeoPHP\GeoPHPInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'geofield_default' formatter.
@@ -54,9 +54,9 @@ class GeofieldDefaultFormatter extends FormatterBase implements ContainerFactory
    * @param string $view_mode
    *   The view mode.
    * @param array $third_party_settings
-   *   Any third party settings settings.
+   *   Any third party settings.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
-   *   The The geoPhpWrapper.
+   *   The geoPhpWrapper.
    */
   public function __construct(
     $plugin_id,
@@ -66,7 +66,7 @@ class GeofieldDefaultFormatter extends FormatterBase implements ContainerFactory
     $label,
     $view_mode,
     array $third_party_settings,
-    GeoPHPInterface $geophp_wrapper
+    GeoPHPInterface $geophp_wrapper,
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->geoPhpWrapper = $geophp_wrapper;
@@ -126,7 +126,7 @@ class GeofieldDefaultFormatter extends FormatterBase implements ContainerFactory
 
     $elements['output_escape'] = [
       '#title' => $this->t('Escape output (recommended)'),
-      '#description' => $this->t('The text is escaped by converting special characters to HTML entities.<br>In some circumstances (i.e. part of Json output) this might not be the wanted/preferred behaviour.'),
+      '#description' => $this->t('The text is escaped by converting special characters to HTML entities.<br>In some circumstances (i.e. part of Json output) this might not be the wanted/preferred behavior.'),
       '#type' => 'checkbox',
       '#default_value' => $this->getSetting('output_escape'),
     ];

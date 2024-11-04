@@ -127,9 +127,7 @@ abstract class GeofieldProximitySourceBase extends PluginBase implements Geofiel
    */
   public function getProximity($lat, $lon) {
     if (!$this->isValidLocation($lat, $lon)) {
-      throw new InvalidPointException($this->t('@proximity_handler reports Invalid Point coordinates', [
-        '@proximity_handler' => get_class($this),
-      ]));
+      throw new InvalidPointException(sprintf('%s reports Invalid Point coordinates', get_class($this)));
     }
 
     // Fetch the value of the units that have been set for this class. The
@@ -157,9 +155,7 @@ abstract class GeofieldProximitySourceBase extends PluginBase implements Geofiel
       );
 
     if (!is_numeric($proximity)) {
-      throw new ProximityUnavailableException($this->t('@proximity_handler not able to calculate valid Proximity value', [
-        '@proximity_handler' => get_class($this),
-      ]));
+      throw new ProximityUnavailableException(sprintf('%s not able to calculate valid Proximity value', get_class($this)));
     }
 
     return $proximity;

@@ -5,14 +5,15 @@
  * Geocoder Field module.
  */
 
+use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldConfigInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormState;
-use Drupal\Core\Entity\ContentEntityFormInterface;
-use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\geocoder\Entity\GeocoderProvider;
+use Drupal\geocoder_field\GeocoderFieldPluginInterface;
 use Geocoder\Model\AddressCollection;
 
 /**
@@ -83,20 +84,17 @@ function geocoder_field_form_field_config_edit_form_alter(array &$form, FormStat
   $field = $form_state->getFormObject()->getEntity();
 
   /** @var \Drupal\geocoder_field\GeocoderFieldPluginInterface $field_plugin */
-  if (!$field_plugin = \Drupal::service('geocoder_field.plugin.manager.field')->getPluginByFieldType($field->getType())) {
-    // There's no geocoding field plugin to handle this type of field.
-    return;
+  $field_plugin = \Drupal::service('geocoder_field.plugin.manager.field')->getPluginByFieldType($field->getType());
+  if ($field_plugin instanceof GeocoderFieldPluginInterface) {
+    $form['third_party_settings']['geocoder_field'] = $field_plugin->getSettingsForm($field, $form, $form_state);
+
+    // Temporary store the field plugin to be used in the validation phase.
+    $form['third_party_settings']['geocoder_field']['field_plugin'] = [
+      '#type' => 'value',
+      '#value' => $field_plugin,
+    ];
+    array_unshift($form['#validate'], 'geocoder_field_field_config_edit_form_validate');
   }
-
-  $form['third_party_settings']['geocoder_field'] = $field_plugin->getSettingsForm($field, $form, $form_state);
-
-  // Temporary store the field plugin to be used in the validation phase.
-  $form['third_party_settings']['geocoder_field']['field_plugin'] = [
-    '#type' => 'value',
-    '#value' => $field_plugin,
-  ];
-
-  $form['#validate'][] = 'geocoder_field_field_config_edit_form_validate';
 }
 
 /**
@@ -222,7 +220,7 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
       $dumper = $dumper_manager->createInstance($geocoder['dumper']);
     }
     catch (PluginException $e) {
-      \Drupal::logger('geocoder')->error('No Dumper has been set');
+      \Drupal::logger('geocoder')->error($e->getMessage());
     }
     $default_values = $entity->get($field_name);
     $result = [];
@@ -230,7 +228,7 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
     $providers = GeocoderProvider::loadMultiple($geocoder['providers']);
 
     // Skip Geocode/Reverse Geocode op is so requested for not empty value.
-    if (isset($geocoder['skip_not_empty_value']) && $geocoder['skip_not_empty_value'] && isset($default_values) && !$default_values->isEmpty()) {
+    if (isset($geocoder['skip_not_empty_value']) && $geocoder['skip_not_empty_value'] && !$default_values->isEmpty()) {
       return;
     }
 
@@ -270,7 +268,7 @@ function geocoder_field_entity_presave(EntityInterface $entity) {
             // Single-to-multiple handling - if we can, explode out the
             // component geometries.
             case 's_to_m':
-              foreach ($geo_collection->all() as $collection_delta => $address) {
+              foreach ($geo_collection->all() as $address) {
                 $this_result = $dumper->dump($address);
                 // Check|Fix some incompatibility between Dumper output and
                 // Field Config.

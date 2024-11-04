@@ -95,7 +95,10 @@ class GeofieldFormatterTest extends EntityKernelTestBase {
     $entity->save();
 
     // Verify the geofield field formatter's render array.
-    $build = $entity->get('geofield')->view(['type' => 'geofield_latlon', 'settings' => ['output_format' => $format]]);
+    $build = $entity->get('geofield')->view([
+      'type' => 'geofield_latlon',
+      'settings' => ['output_format' => $format],
+    ]);
     \Drupal::service('renderer')->renderRoot($build[0]);
     $this->assertEquals($expected_value, trim($build[0]['#markup']));
   }
@@ -103,7 +106,7 @@ class GeofieldFormatterTest extends EntityKernelTestBase {
   /**
    * Provides test data for testLatLonFormatter().
    */
-  public function latLonFormatterProvider() {
+  public static function latLonFormatterProvider(): array {
     return [
       'DMS Value' => [
         'POINT (40 -3)',

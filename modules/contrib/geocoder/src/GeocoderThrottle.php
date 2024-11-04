@@ -38,13 +38,13 @@ class GeocoderThrottle implements GeocoderThrottleInterface {
   /**
    * {@inheritdoc}
    */
-  public function waitForAvailability(string $key, array $throttle_info = []) {
+  public function waitForAvailability(string $key, array|null $throttle_info = []) {
     // Use throttle info if set.
     if (isset($throttle_info['limit']) && isset($throttle_info['period'])) {
       // The throttle mechanism uses milliseconds, so we convert the argument
       // and convert back the result as sleep() uses seconds.
       $time_to_wait = $this->throttle->throttle($key, $throttle_info['limit'], $throttle_info['period'] * 1000);
-      sleep($time_to_wait / 1000);
+      sleep(ceil($time_to_wait / 1000));
     }
   }
 

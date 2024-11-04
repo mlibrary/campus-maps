@@ -63,7 +63,6 @@ views.filter.geofield_proximity_filter:
                 address_format:
                   type: string
 
-
 views.filter_value.geofield_proximity_filter:
   type: views.field.numeric
   label: 'Geofield Proximity Filter'

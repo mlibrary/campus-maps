@@ -2,9 +2,9 @@
 
 namespace Drupal\geocoder_address\Plugin\Geocoder\Preprocessor;
 
-use Drupal\geocoder_field\PreprocessorBase;
 use Drupal\Core\Locale\CountryManagerInterface;
 use Drupal\geocoder_address\AddressService;
+use Drupal\geocoder_field\PreprocessorBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

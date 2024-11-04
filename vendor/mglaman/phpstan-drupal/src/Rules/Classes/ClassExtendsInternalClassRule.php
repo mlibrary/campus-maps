@@ -9,7 +9,11 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use function sprintf;
 
+/**
+ * @implements Rule<Class_>
+ */
 class ClassExtendsInternalClassRule implements Rule
 {
     /**
@@ -29,7 +33,6 @@ class ClassExtendsInternalClassRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        /** @var Class_ $node */
         if (!isset($node->extends)) {
             return [];
         }
@@ -44,7 +47,6 @@ class ClassExtendsInternalClassRule implements Rule
             return [];
         }
 
-        // @phpstan-ignore-next-line
         if (!isset($node->namespacedName)) {
             return [$this->buildError(null, $extendedClassName)->build()];
         }
@@ -52,7 +54,7 @@ class ClassExtendsInternalClassRule implements Rule
         $currentClassName = $node->namespacedName->toString();
 
         if (!NamespaceCheck::isDrupalNamespace($node)) {
-            [$this->buildError($currentClassName, $extendedClassName)->build()];
+            return [$this->buildError($currentClassName, $extendedClassName)->build()];
         }
 
         if (NamespaceCheck::isSharedNamespace($node)) {
@@ -70,9 +72,9 @@ class ClassExtendsInternalClassRule implements Rule
 
     private function buildError(?string $currentClassName, string $extendedClassName): RuleErrorBuilder
     {
-        return RuleErrorBuilder::message(\sprintf(
+        return RuleErrorBuilder::message(sprintf(
             '%s extends @internal class %s.',
-            $currentClassName !== null ? \sprintf('Class %s', $currentClassName) : 'Anonymous class',
+            $currentClassName !== null ? sprintf('Class %s', $currentClassName) : 'Anonymous class',
             $extendedClassName
         ));
     }

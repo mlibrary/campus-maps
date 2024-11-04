@@ -32,7 +32,7 @@ interface WktGeneratorInterface {
    * Returns a WKT format point feature.
    *
    * @param array $point
-   *   A Lon Lat array. By default create a random pair.
+   *   A Lon Lat array. By default, create a random pair.
    *
    * @return string
    *   The WKT point feature.

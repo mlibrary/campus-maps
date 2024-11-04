@@ -2,12 +2,15 @@
 
 namespace Drupal\geocoder;
 
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
  * Provides a base class for geocoder plugin managers.
  */
 abstract class GeocoderPluginManagerBase extends DefaultPluginManager {
+
+  use LoggerChannelTrait;
 
   /**
    * List of fields types available as source for Geocode operations.

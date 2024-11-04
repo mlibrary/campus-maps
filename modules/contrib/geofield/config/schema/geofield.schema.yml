@@ -16,16 +16,40 @@ field.field_settings.geofield:
       type: string
       label: 'Backend storage'
 
-field.geofield.value:
-  type: sequence
-  label: 'Default value'
-  sequence:
-    - type: mapping
-      label: 'Default'
-      mapping:
-        value:
-          type: text
-          label: 'Value'
+field.value.geofield:
+  type: mapping
+  label: 'Default'
+  mapping:
+    value:
+      type: text
+      label: 'Value'
+    geo_type:
+      type: string
+      label: 'Geo type'
+    lat:
+      type: float
+      label: 'Lat'
+    lon:
+      type: float
+      label: 'Lon'
+    left:
+      type: float
+      label: 'Left'
+    top:
+      type: float
+      label: 'Top'
+    right:
+      type: float
+      label: 'Right'
+    bottom:
+      type: float
+      label: 'Bottom'
+    geohash:
+      type: string
+      label: 'Geohash'
+    latlon:
+      type: string
+      label: 'LatLon'
 
 entity_view_display.field.geofield_default:
   type: entity_field_view_display_base
@@ -33,7 +57,7 @@ entity_view_display.field.geofield_default:
   mapping:
     settings:
       sequence:
-        - type: string
+        type: string
 
 entity_form_display.field.geofield_default:
   type: entity_field_form_display_base
@@ -43,7 +67,7 @@ entity_form_display.field.geofield_default:
       type: sequence
       label: 'Settings'
       sequence:
-        - type: string
+        type: string
 
 entity_form_display.field.geofield_latlon:
   type: entity_field_form_display_base
@@ -53,7 +77,7 @@ entity_form_display.field.geofield_latlon:
       type: sequence
       label: 'Settings'
       sequence:
-        - type: string
+        type: string
 
 entity_form_display.field.geofield_bbox:
   type: entity_field_form_display_base
@@ -63,7 +87,7 @@ entity_form_display.field.geofield_bbox:
       type: sequence
       label: 'Settings'
       sequence:
-        - type: string
+        type: string
 
 field.widget.settings.geofield_default:
   type: mapping

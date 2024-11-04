@@ -26,10 +26,9 @@ it means simply running the following command from your project root:
 
 __$ composer require drupal/geofield__
 
-This process will also download the required <a href="https://github.com/phayes/geoPHP" title="GeoPHP library" target="_blank" rel="nofollow">GeoPHP library</a> dependency,
-that will be sited in the /vendor folder.
-For further information, see
-[Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
+This process will also download the required [GeoPHP library](https://github.com/phayes/geoPHP)
+dependency, that will be sited in the /vendor folder. For further information,
+see [Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
 
 
 ## Configuration
@@ -44,11 +43,12 @@ Geofield perfectly matches and extends itself with its dependent most adopted
 third party modules, such as::
 
 - [Geofield Map](https://www.drupal.org/project/geofield_map): an advanced,
-  complete and easy-to-use Geo Mapping solution that lets you manage the Geofield
-  with an interactive Map both in back-end and in the front-end;
+  complete and easy-to-use Geo Mapping solution that lets you manage the
+  Geofield with an interactive Map both in back-end and in the front-end;
 - [Leaflet](https://www.drupal.org/project/leaflet): Drupal advanced integration
-  with the Leaflet JS mapping library. Advanced features for creating and editing
-  Points and Geometries Layers (Linestring, Polygon) so as for managing Leaflet
+  with the Leaflet JS mapping library. Advanced features for creating and
+  editing Points and Geometries Layers (Linestring, Polygon) so as for managing
+  Leaflet.
   Views styles and Formatters;
 - [Geocoder](https://www.drupal.org/project/geocoder): most advanced, complete
   and easy to use solution to process Geocode and Reverse Geocode operations on
@@ -82,41 +82,51 @@ derived from the WKT column. Columns are as follows:
 
 ### Save or Updated a Geofield programmatically
 
-To save or update programatically a Geofield (both single and multivalue) it is sufficient to pass the WKT values/geometries to the
+To save or update programmatically a Geofield (both single and multivalue) it is
+
+sufficient to pass the WKT values/geometries to the
 
 {Drupal\geofield\Plugin\Field\FieldType\GeofieldItem} setValue public method
 
-For instance in case of a node entity containing a geofield named "field_geofield",
-it is possible to update/set its multiple values in the following way:
+For instance, in case of a node entity containing a geofield named
+"field_geofield", it is possible to update/set its multiple values in the
+following way:
 
-     // The location of the Empire State Building, in New York City (US)
-     $empire_location_lon_lat = [-73.985664, 40.748441];
+```php
+  // The location of the Empire State Building, in New York City (US)
+  $empire_location_lon_lat = [-73.985664, 40.748441];
 
-     // Generate the WKT version of the point geometry: 'POINT (-73.985664 41.748441)'
-     $empire_location_wkt = \Drupal::service('geofield.wkt_generator')->wktBuildPoint($empire_location_lon_lat);
+  // Generate the WKT version of the point geometry:
+  // 'POINT (-73.985664 41.748441)'
+  $empire_location_wkt = \Drupal::service('geofield.wkt_generator')->wktBuildPoint($empire_location_lon_lat);
 
-     // Generate the (first) geofield value in the proper format.
-     $geofield_point = [
-     'value' => $empire_location_wkt,
-     ];
+  // Generate the (first) geofield value in the proper format.
+  $geofield_point = [
+    'value' => $empire_location_wkt,
+  ];
 
-     // Generate the (second) geofield value in the proper format.
-     // The permiter of Bryant Park, in New York City (US)
-     $geofield_polygon = [
-     'value' => 'POLYGON((-73.98411932014324 40.754779803566606,-73.98502054237224 40.75354445673964,-73.98186626457073 40.75221155678824,-73.98092212699748 40.75344692838096,-73.98411932014324 40.754779803566606))',
-     ];
+  // Generate the (second) geofield value in the proper format.
+  // The perimeter of Bryant Park, in New York City (US)
+  $geofield_polygon = [
+    'value' => "POLYGON((-73.98411932014324 40.754779803566606," +
+      "-73.98502054237224 40.75354445673964," +
+      "-73.98186626457073 40.75221155678824," +
+      "-73.98092212699748 40.75344692838096," +
+      "-73.98411932014324 40.754779803566606))",
+  ];
 
-      // Get the wanted entity ($id of a node in this example) and set the
-      // 'field_geofield' with the goefield values/geometries
-      $entity =  \Drupal\node\Entity\Node::load($id);
-      $geofield = $entity->get('field_geofield');
-      $geofield->setValue([$geofield_point, $geofield_polygon]);
-      $entity->save();
+  // Get the wanted entity ($id of a node in this example) and set the
+  // 'field_geofield' with the geofield values/geometries
+  $entity =  \Drupal\node\Entity\Node::load($id);
+  $geofield = $entity->get('field_geofield');
+  $geofield->setValue([$geofield_point, $geofield_polygon]);
+  $entity->save();
+```
 
 
 ## Maintainers
 
-Drupal 8, 9,10:
+Drupal 8, 9, 10:
 - Italo Mairo (itamair) - https://www.drupal.org/u/itamair
 
 Drupal 7:

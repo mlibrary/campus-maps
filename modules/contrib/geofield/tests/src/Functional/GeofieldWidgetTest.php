@@ -3,11 +3,11 @@
 namespace Drupal\Tests\geofield\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\field\Functional\FieldTestBase;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Tests the Geofield widgets.
@@ -28,7 +28,7 @@ class GeofieldWidgetTest extends FieldTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'seven';
+  protected $defaultTheme = 'stark';
 
   /**
    * A field storage with cardinality 1 to use in this test class.
@@ -81,7 +81,10 @@ class GeofieldWidgetTest extends FieldTestBase {
     $this->assertSession = $this->assertSession();
 
     // Create a web user.
-    $this->drupalLogin($this->drupalCreateUser(['view test entity', 'administer entity_test content']));
+    $this->drupalLogin($this->drupalCreateUser([
+      'view test entity',
+      'administer entity_test content',
+    ]));
   }
 
   /**

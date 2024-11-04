@@ -9,6 +9,20 @@ dependency since Drupal 9.4 and a requirement for Drupal 10).
 At the moment this branch still have incompatibilities with packages locked to
 php-http/guzzle6-adapter dependency (see issue #3283651).
 
+### How to seamlessly upgrade to Drupal 10 & Geocoder 4.x ... ###
+
+When preparing for an upgrade to Drupal 10 we recommend that you widen
+your composer version constraints to allow either 3.x or 4.x.
+Edit composer.json the following way:
+
+```
+"require": {
+...
+"drupal/geocoder": "^3.20 || ^4.0",
+...
+}
+```
+
 # Features
 * Solid API based on [Geocoder PHP library](http://geocoder-php.org);
 * Geocode and Reverse Geocode using one or multiple Geocoder providers
@@ -46,11 +60,11 @@ php-http/guzzle6-adapter dependency (see issue #3283651).
 
   ```$ composer require drupal/geocoder:^4.0```
 
-* Choose the [Geocoder Provider](https://packagist.org/providers/geocoder-php/provider-implementation)
-  you want to use and also add it as a required dependency to your project. For
-  example if you want to use Google Maps as your provider:
+* Choose the [Geocoder Provider](https://github.com/geocoder-php/Geocoder#address)
+you want to use and also add it as a required dependency to your project. For
+example if you want to use Nominatim (used by OpenStreetMap) as your provider:
 
-  ```$ composer require geocoder-php/google-maps-provider```
+  ```$ composer require geocoder-php/nominatim-provider```
 
 * Enable the module via [Drush](http://drush.org)
 
@@ -454,9 +468,10 @@ In Geocoder 2.x `\Drupal\geocoder\ProviderPluginManager::getPlugins()` was the
 main way of retrieving the provider plugins. It was returning the plugin
 definitions with the provider configuration mixed into it.
 
-Since Geocdoer 3.x this data model has been replaced by the new `GeocoderProvider`
-config entity. Now this method returns the list of plugin definitions, making it
-the same result as calling ProviderPluginManager::getDefinitions().
+Since Geocdoer 3.x this data model has been replaced by the new
+`GeocoderProvider` config entity. Now this method returns the list of
+plugin definitions, making it the same result as
+calling ProviderPluginManager::getDefinitions().
 
 It is recommended to no longer use this method but instead use one of these
 two alternatives:

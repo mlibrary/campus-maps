@@ -2,8 +2,8 @@
 
 namespace Drupal\geofield\Plugin\GeofieldProximitySource;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Defines 'Geofield Client Location Origin' plugin.
@@ -27,20 +27,25 @@ class ClientLocationOriginFilter extends ManualOriginDefault {
    */
   public function buildOptionsForm(array &$form, FormStateInterface $form_state, array $options_parents, $is_exposed = FALSE) {
 
-    $form['#attributes'] = [
-      'class' => ['proximity-origin-client'],
-    ];
+    // For the Client Location Origin Filter. Lat and Lon are being set only on
+    // the Client Front end, thus we set them as initially null.
+    $lat = NULL;
+    $lon = NULL;
+
+    if ($is_exposed) {
+      $form['#attributes']['class'][] = 'proximity-origin-client';
+    }
 
     $form["origin"] = [
       '#title' => $this->t('Client Coordinates'),
       '#type' => 'geofield_latlon',
       '#description' => $this->t('Value in decimal degrees. Use dot (.) as decimal separator.'),
       '#default_value' => [
-        'lat' => '',
-        'lon' => '',
+        'lat' => $lat,
+        'lon' => $lon,
       ],
       '#attributes' => [
-        'class' => ['visually-hidden'],
+        'class' => ['proximity-origin-input visually-hidden'],
       ],
     ];
 
@@ -51,7 +56,7 @@ class ClientLocationOriginFilter extends ManualOriginDefault {
       $form['origin_summary_flag'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Show the Client Origin coordinates as summary in the Exposed Form'),
-        '#default_value' => isset($this->configuration['origin_summary_flag']) ? $this->configuration['origin_summary_flag'] : TRUE,
+        '#default_value' => $this->configuration['origin_summary_flag'] ?? TRUE,
       ];
     }
 
@@ -72,7 +77,11 @@ class ClientLocationOriginFilter extends ManualOriginDefault {
               '@lon' => $this->t('undefined'),
             ]),
           ]),
+          '#attributes' => [
+            'class' => ['proximity-origin-summary'],
+          ],
         ];
+        $form['origin_summary']['#attached']['library'][] = 'geofield/proximity_origin_summary_update';
       }
     }
   }

@@ -2,8 +2,8 @@
 
 namespace Drupal\geofield\Plugin\Validation\Constraint;
 
-use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;

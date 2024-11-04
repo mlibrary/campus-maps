@@ -21,12 +21,15 @@ class GeofieldFieldBuilder extends CoreFieldBuilder {
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $field_items) {
+  public function build(FieldItemListInterface $field_items): array {
     $result = [];
 
     foreach ($field_items as $field_key => $field_item) {
       if (!$field_item->isEmpty()) {
-        $value = $field_item->view(['label' => 'hidden', 'type' => 'geofield_latlon']);
+        $value = $field_item->view([
+          'label' => 'hidden',
+          'type' => 'geofield_latlon',
+        ]);
         $rendered_value = $this->renderer->renderPlain($value);
         $result[$field_key][] = $rendered_value;
       }

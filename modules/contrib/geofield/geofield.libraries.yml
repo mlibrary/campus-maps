@@ -11,3 +11,11 @@ geolocation:
   dependencies:
     - core/jquery
     - core/once
+
+proximity_origin_summary_update:
+  version: 1.x
+  js:
+    js/proximity_origin_summary_update.js: {}
+  dependencies:
+    - core/jquery
+    - core/once

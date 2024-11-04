@@ -32,7 +32,7 @@ class DmsConverterTest extends UnitTestCase {
    * @return array
    *   A list of equivalent DMS/Decimal coordinates.
    */
-  public function dataProvider() {
+  public static function dataProvider(): array {
     return [
       'Simple' => [
         new DmsPoint([

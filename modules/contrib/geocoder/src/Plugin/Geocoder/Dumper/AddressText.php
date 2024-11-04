@@ -3,9 +3,9 @@
 namespace Drupal\geocoder\Plugin\Geocoder\Dumper;
 
 use Drupal\geocoder\DumperBase;
+use Drupal\geocoder\FormatterPluginManager;
 use Geocoder\Location;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\geocoder\FormatterPluginManager;
 
 /**
  * Provides an address string geocoder dumper plugin.
@@ -49,7 +49,7 @@ class AddressText extends DumperBase {
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    FormatterPluginManager $geocoder_formatter_plugin_manager
+    FormatterPluginManager $geocoder_formatter_plugin_manager,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->geocoderFormatterPluginManager = $geocoder_formatter_plugin_manager;

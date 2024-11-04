@@ -302,10 +302,9 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
     // Get the eventual ajax user input of the icon_image_mode field.
     $user_input = $form_state->getUserInput();
-    $user_input_icon_image_mode = isset($user_input['fields']) && isset($user_input['fields'][$geofield_id]['settings_edit_form']) && isset($user_input['fields'][$geofield_id]['settings_edit_form']['settings']['map_marker_and_infowindow']['icon_image_mode']) ?
-      $user_input['fields'][$geofield_id]['settings_edit_form']['settings']['map_marker_and_infowindow']['icon_image_mode'] : NULL;
+    $user_input_icon_image_mode = $user_input['fields'][$geofield_id]['settings_edit_form']['settings']['map_marker_and_infowindow']['icon_image_mode'] ?? NULL;
 
-    $selected_icon_image_mode = isset($user_input_icon_image_mode) ? $user_input_icon_image_mode : $default_icon_image_mode;
+    $selected_icon_image_mode = $user_input_icon_image_mode ?? $default_icon_image_mode;
 
     $elements['map_marker_and_infowindow']['icon_image_mode'] = [
       '#title' => $this->t('Custom Icon definition mode'),
@@ -344,7 +343,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#type' => 'select',
         '#title' => $this->t('Image style'),
         '#options' => $this->markerIcon->getImageStyleOptions(),
-        '#default_value' => isset($settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style']) ? $settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] : 'geofield_map_default_icon_style',
+        '#default_value' => $settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] ?? 'geofield_map_default_icon_style',
         '#states' => [
           'visible' => [
             ':input[name="fields[field_geofield][settings_edit_form][settings][map_marker_and_infowindow][icon_file_wrapper][icon_file][is_svg]"]' => ['checked' => FALSE],
@@ -391,10 +390,15 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   public static function iconImageModeUpdate(array $form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     $geofield_id = $form_state->getTemporaryValue('geofield_id');
-    $response->addCommand(new ReplaceCommand(
-      '#map-marker-and-infowindow-wrapper',
-      $form['fields'][$geofield_id]['plugin']['settings_edit_form']['settings']['map_marker_and_infowindow']
-    ));
+    // Define the data to replace, evaluating also the use case tge form is
+    // being updated as Layout Builder block.
+    $data = $form["#id"] === 'layout-builder-update-block' ? $form['settings']['formatter']['settings_wrapper']['settings']['map_marker_and_infowindow'] : $form['fields'][$geofield_id]['plugin']['settings_edit_form']['settings']['map_marker_and_infowindow'];
+    if (!is_null($data)) {
+      $response->addCommand(new ReplaceCommand(
+        '#map-marker-and-infowindow-wrapper',
+        $data,
+      ));
+    };
     return $response;
   }
 
@@ -411,7 +415,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $default_icon_image_mode = !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? 'icon_image_path' : $default_settings['map_marker_and_infowindow']['icon_image_mode'];
 
     $map_dimensions = [
-      '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
+      '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', [
+        '@width' => $settings['map_dimensions']['width'],
+        '@height' => $settings['map_dimensions']['height'],
+      ]),
     ];
 
     $map_empty = [
@@ -628,7 +635,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'value' => [
           '#type' => 'html_tag',
           '#tag' => 'div',
-          '#value' => isset($settings['map_markercluster']['markercluster_additional_options']) ? $settings['map_markercluster']['markercluster_additional_options'] : [],
+          '#value' => $settings['map_markercluster']['markercluster_additional_options'],
         ],
       ];
     }
@@ -666,7 +673,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'map_zoom_and_pan' => $map_zoom_and_pan,
       'map_controls' => $map_controls,
       'map_marker_and_infowindow' => $map_marker_and_infowindow,
-      'map_additional_options' => isset($map_additional_options) ? $map_additional_options : NULL,
+      'map_additional_options' => $map_additional_options ?? NULL,
       'map_oms' => $map_oms,
       'map_markercluster' => $map_markercluster,
       'custom_style_map' => $custom_style_map,
@@ -698,17 +705,16 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
     $view_in_progress = TRUE;
 
-    /* @var \Drupal\Core\Entity\EntityInterface $entity */
+    /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $items->getEntity();
     // Take the entity translation, if existing.
-    /* @var \Drupal\Core\TypedData\TranslatableInterface $entity */
+    /** @var \Drupal\Core\TypedData\TranslatableInterface $entity */
     if ($entity->hasTranslation($langcode)) {
       $entity = $entity->getTranslation($langcode);
     }
     $entity_type = $entity->getEntityTypeId();
     $bundle = $entity->bundle();
     $entity_id = $entity->id();
-    /* @var \Drupal\Core\Field\FieldDefinitionInterface $field */
     $field = $items->getFieldDefinition();
 
     $map_settings = $this->getSettings();
@@ -732,8 +738,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     ];
 
     $description = [];
-    $description_field = isset($map_settings['map_marker_and_infowindow']['infowindow_field']) ? $map_settings['map_marker_and_infowindow']['infowindow_field'] : NULL;
-    /* @var \Drupal\Core\Field\FieldItemList $description_field_entity */
+    $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'] ?? NULL;
+    /** @var \Drupal\Core\Field\FieldItemList $description_field_entity */
     $description_field_entity = $entity->$description_field;
 
     // Render the entity with the selected view mode.
@@ -749,8 +755,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       elseif (isset($entity->$description_field)) {
         $description_field_cardinality = $description_field_entity->getFieldDefinition()->getFieldStorageDefinition()->getCardinality();
         foreach ($description_field_entity->getValue() as $value) {
-          $description[] = isset($value['value']) ? $value['value'] : '';
-          if ($description_field_cardinality == 1 || $map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
+          $description[] = $value['value'] ?? '';
+          if ($description_field_cardinality == 1 || !$map_settings['map_marker_and_infowindow']['multivalue_split']) {
             break;
           }
         }
@@ -769,7 +775,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
       // Generate the weight feature property
       // (falls back to natural result ordering).
-      $feature['weight'] = !empty($map_settings['weight']) ? intval(str_replace(["\n", "\r"], "", $this->token->replace($map_settings['weight'], $tokens))) : $delta;
+      $feature['weight'] = !empty($map_settings['weight']) ? intval(str_replace(["
+        \n",
+        "\r",
+      ], "", $this->token->replace($map_settings['weight'], $tokens))) : $delta;
 
       // Add Custom Icon, if set.
       if (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
@@ -817,7 +826,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
 
     // Order the data features based on the 'weight' element.
-    uasort($features, ['Drupal\Component\Utility\SortArray', 'sortByWeightElement']);
+    uasort($features, [
+      'Drupal\Component\Utility\SortArray',
+      'sortByWeightElement',
+    ]);
 
     if (empty($features) && $map_settings['map_empty']['empty_behaviour'] !== '2') {
       $view_in_progress = FALSE;

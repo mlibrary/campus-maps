@@ -109,3 +109,18 @@ Further Detailed Documentation and APIs provided in the Geocoder 3.x Readme.md f
 <h2>Geocoder 4.x (Drupal 9/10)</h2>
 This branch is a parallel copy of the Geocoder 3.x branch requiring the php-http/guzzle7-adapter, thus compatible with Guzzle 7 (that is a possible dependency since Drupal 9.4 and a requirement for Drupal 10).
 At the moment this branch still have incompatibilities with packages locked to php-http/guzzle6-adapter dependency (see issue #3283651).
+
+<h3>How to seamlessly upgrade to Drupal 10 & Geocoder 4.x ...</h3>
+When preparing for an upgrade to Drupal 10 we recommend that you widen your composer version constraints to allow either 3.x or 4.x.
+Edit composer.json the following way:
+
+<code>
+  "require": {
+  ...
+  "drupal/geocoder": "^3.20 || ^4.0",
+  ...
+  }
+</code>
+
+This will allow the module to be automatically upgraded when you upgrade Drupal core.
+(For more info refer to <a href="https://www.drupal.org/project/geocoder/issues/3283651#comment-15050664">this Issue Comment</a>.

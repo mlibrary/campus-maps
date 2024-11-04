@@ -302,6 +302,7 @@ class DisableFieldTest extends BrowserTestBase {
   public function testDisableFieldKeepValuesOnDisabledState() {
     $assert_session = $this->assertSession();
     $this->fieldUIAddNewField('admin/structure/types/manage/test', 'test', 'Test field', 'string', [], [
+      'set_default_value' => TRUE,
       'default_value_input[field_test][0][value]' => 'default_test_value',
       'disable_field[add][disable]' => 'roles',
       'disable_field[add][roles][]' => [$this->role1],

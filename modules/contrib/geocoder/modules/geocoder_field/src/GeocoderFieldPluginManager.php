@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\geocoder_field;
 
@@ -50,7 +50,7 @@ class GeocoderFieldPluginManager extends DefaultPluginManager {
     CacheBackendInterface $cache_backend,
     ModuleHandlerInterface $module_handler,
     PreprocessorPluginManager $preprocessor_plugin_manager,
-    EntityFieldManagerInterface $entity_field_manager
+    EntityFieldManagerInterface $entity_field_manager,
   ) {
     parent::__construct('Plugin/Geocoder/Field', $namespaces, $module_handler, GeocoderFieldPluginInterface::class, GeocoderField::class);
     $this->alterInfo('geocode_field_info');

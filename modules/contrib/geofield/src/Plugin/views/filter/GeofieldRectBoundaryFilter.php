@@ -2,11 +2,11 @@
 
 namespace Drupal\geofield\Plugin\views\filter;
 
-use Drupal\geofield\Plugin\views\GeofieldBoundaryHandlerTrait;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\geofield\Plugin\views\GeofieldBoundaryHandlerTrait;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 use Drupal\views\Plugin\views\query\Sql;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
  * Filter handler for search keywords.
@@ -18,11 +18,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 class GeofieldRectBoundaryFilter extends FilterPluginBase implements ContainerFactoryPluginInterface {
 
   use GeofieldBoundaryHandlerTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public $no_operator = TRUE;
 
   /**
    * {@inheritdoc}

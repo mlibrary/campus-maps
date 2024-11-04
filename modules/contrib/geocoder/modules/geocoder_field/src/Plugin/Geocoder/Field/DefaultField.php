@@ -2,21 +2,21 @@
 
 namespace Drupal\geocoder_field\Plugin\Geocoder\Field;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\geocoder\DumperPluginManager;
 use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder_field\GeocoderFieldPluginInterface;
 use Drupal\geocoder_field\GeocoderFieldPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Utility\LinkGeneratorInterface;
-use Drupal\Core\Url;
 
 /**
  * Provides a default generic geocoder field plugin.
@@ -50,7 +50,7 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
   protected $moduleHandler;
 
   /**
-   * The plugin manager for this type of plugins.
+   * The plugin manager for this type of plugin.
    *
    * @var \Drupal\geocoder_field\GeocoderFieldPluginManager
    */
@@ -105,7 +105,7 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param \Drupal\geocoder_field\GeocoderFieldPluginManager $field_plugin_manager
-   *   The plugin manager for this type of plugins.
+   *   The plugin manager for this type of plugin.
    * @param \Drupal\geocoder\DumperPluginManager $dumper_plugin_manager
    *   The dumper plugin manager service.
    * @param \Drupal\geocoder\ProviderPluginManager $provider_plugin_manager
@@ -128,7 +128,7 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
     ProviderPluginManager $provider_plugin_manager,
     RendererInterface $renderer,
     LinkGeneratorInterface $link_generator,
-    EntityTypeManagerInterface $entity_type_manager
+    EntityTypeManagerInterface $entity_type_manager,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->config = $config_factory->get('geocoder.settings');
@@ -165,7 +165,7 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
    */
   public function getSettingsForm(FieldConfigInterface $field, array $form, FormStateInterface &$form_state) {
 
-    $geocoder_settings_link = $this->link->generate(t('Edit options in the Geocoder configuration page</span>'), Url::fromRoute('geocoder.settings', [], [
+    $geocoder_settings_link = $this->link->generate($this->t('Edit options in the Geocoder configuration page</span>'), Url::fromRoute('geocoder.settings', [], [
       'query' => [
         'destination' => Url::fromRoute('<current>')
           ->toString(),
@@ -174,7 +174,7 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
 
     $element = [
       '#type' => 'details',
-      '#title' => t('Geocode'),
+      '#title' => $this->t('Geocode'),
       '#open' => TRUE,
     ];
 
@@ -334,10 +334,10 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
     $element['geocode']['delta_handling'] = [
       '#type' => 'select',
       '#title' => $this->t('Multi-value input handling'),
-      '#description' => 'If the source field is a multi-value field, this is mapped 1-on-1 by default.
+      '#description' => $this->t('If the source field is a multi-value field, this is mapped 1-on-1 by default.
       That means that if you can add an unlimited amount of text fields, this also results in an
       unlimited amount of geocodes. However, if you have one field that contains multiple geocodes
-      (like a file) you can select single-to-multiple to extract all geocodes from the first field.',
+      (like a file) you can select single-to-multiple to extract all geocodes from the first field.'),
       '#default_value' => $field->getThirdPartySetting('geocoder_field', 'delta_handling', 'default'),
       '#options' => [
         'default' => $this->t('Match Multiples (default)'),
@@ -392,7 +392,7 @@ class DefaultField extends PluginBase implements GeocoderFieldPluginInterface, C
     $form_values = $form_state->getValues();
 
     if ($form_values['method'] !== 'none' && empty($form_values['providers'])) {
-      $form_state->setError($form['third_party_settings']['geocoder_field']['providers'], t('The selected Geocode operation needs at least one provider.'));
+      $form_state->setError($form['third_party_settings']['geocoder_field']['providers'], $this->t('The selected Geocode operation needs at least one provider.'));
     }
 
     // On Reverse Geocode the delta_handling should always be 'default'

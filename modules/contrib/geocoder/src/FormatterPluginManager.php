@@ -2,10 +2,10 @@
 
 namespace Drupal\geocoder;
 
-use Drupal\geocoder\Plugin\Geocoder\Formatter\FormatterInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\geocoder\Annotation\GeocoderFormatter;
+use Drupal\geocoder\Plugin\Geocoder\Formatter\FormatterInterface;
 
 /**
  * Provides a plugin manager for geocoder formatters.

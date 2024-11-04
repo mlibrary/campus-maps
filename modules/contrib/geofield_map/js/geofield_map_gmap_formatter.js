@@ -19,37 +19,32 @@
     attach: function (context, drupalSettings) {
 
       function loadMap(mapId) {
-        // Check if the Map container really exists and hasn't been yet
-        // initialized.
-        if (drupalSettings['geofield_google_map'][mapId] && !Drupal.geoFieldMapFormatter.map_data[mapId]) {
+        let map_settings = drupalSettings['geofield_google_map'][mapId]['map_settings'];
+        let data = drupalSettings['geofield_google_map'][mapId]['data'];
 
-          let map_settings = drupalSettings['geofield_google_map'][mapId]['map_settings'];
-          let data = drupalSettings['geofield_google_map'][mapId]['data'];
+        // Set the map_data[mapid] settings.
+        Drupal.geoFieldMapFormatter.map_data[mapId] = map_settings;
 
-          // Set the map_data[mapid] settings.
-          Drupal.geoFieldMapFormatter.map_data[mapId] = map_settings;
-
-          // Load before the GMap Library, if needed.
-          Drupal.geoFieldMapFormatter.loadGoogle(mapId, map_settings.gmap_api_key, map_settings.map_additional_libraries, function () {
-            if (!document.getElementById(mapId)) {
-              return;
-            }
-            Drupal.geoFieldMapFormatter.map_initialize(mapId, map_settings, data, context);
-          });
-        }
+        // Load before the GMap Library, if needed.
+        Drupal.geoFieldMapFormatter.loadGoogle(mapId, map_settings.gmap_api_key, map_settings.map_additional_libraries, function () {
+          if (!document.getElementById(mapId)) {
+            return;
+          }
+          Drupal.geoFieldMapFormatter.map_initialize(mapId, map_settings, data, context);
+        });
       }
 
       if (drupalSettings['geofield_google_map']) {
-
         // If the IntersectionObserver API is available, create an observer to load the map when it enters the viewport
         // It will be used to handle map loading instead of displaying the map on page load.
         let mapObserver = null;
         if ('IntersectionObserver' in window){
           mapObserver = new IntersectionObserver(function (entries, observer) {
             for(var i = 0; i < entries.length; i++) {
-              if(entries[i].isIntersecting){
-                const mapId = entries[i].target.id;
-                loadMap(mapId);
+              if(entries[i].isIntersecting) {
+                once('geofield-map-loaded', entries[i].target).forEach(function (el) {
+                  loadMap(el.id);
+                });
               }
             }
           });

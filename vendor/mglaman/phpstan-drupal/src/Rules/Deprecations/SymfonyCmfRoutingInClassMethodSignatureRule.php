@@ -2,16 +2,24 @@
 
 namespace mglaman\PHPStanDrupal\Rules\Deprecations;
 
+use Drupal;
 use mglaman\PHPStanDrupal\Internal\DeprecatedScopeCheck;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Node\InClassMethodNode;
-use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 use PHPStan\Type\ObjectType;
+use Symfony\Cmf\Component\Routing\LazyRouteCollection;
+use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Symfony\Cmf\Component\Routing\RouteProviderInterface;
+use function explode;
+use function sprintf;
 
+/**
+ * @implements Rule<InClassMethodNode>
+ */
 final class SymfonyCmfRoutingInClassMethodSignatureRule implements Rule
 {
 
@@ -22,24 +30,27 @@ final class SymfonyCmfRoutingInClassMethodSignatureRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        assert($node instanceof InClassMethodNode);
         if (DeprecatedScopeCheck::inDeprecatedScope($scope)) {
             return [];
         }
-        [$major, $minor] = explode('.', \Drupal::VERSION, 3);
+        [$major, $minor] = explode('.', Drupal::VERSION, 3);
         if ($major !== '9' || (int) $minor < 1) {
             return [];
         }
-        $method = $scope->getFunction();
-        if (!$method instanceof MethodReflection) {
-            throw new \PHPStan\ShouldNotHappenException();
-        }
+        $method = $node->getMethodReflection();
 
-        $cmfRouteObjectInterfaceType = new ObjectType(\Symfony\Cmf\Component\Routing\RouteObjectInterface::class);
-        $cmfRouteProviderInterfaceType = new ObjectType(\Symfony\Cmf\Component\Routing\RouteProviderInterface::class);
-        $cmfLazyRouteCollectionType = new ObjectType(\Symfony\Cmf\Component\Routing\LazyRouteCollection::class);
+        // @phpstan-ignore-next-line
+        $cmfRouteObjectInterfaceType = new ObjectType(RouteObjectInterface::class);
+        // @phpstan-ignore-next-line
+        $cmfRouteProviderInterfaceType = new ObjectType(RouteProviderInterface::class);
+        // @phpstan-ignore-next-line
+        $cmfLazyRouteCollectionType = new ObjectType(LazyRouteCollection::class);
 
-        $methodSignature = ParametersAcceptorSelector::selectSingle($method->getVariants());
+        $methodSignature = ParametersAcceptorSelector::selectFromArgs(
+            $scope,
+            [],
+            $method->getVariants()
+        );
 
         $errors = [];
         $errorMessage = 'Parameter $%s of method %s() uses deprecated %s and removed in Drupal 10. Use %s instead.';

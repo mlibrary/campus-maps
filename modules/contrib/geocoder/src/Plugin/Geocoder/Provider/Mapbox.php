@@ -4,9 +4,9 @@ namespace Drupal\geocoder\Plugin\Geocoder\Provider;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geocoder\ConfigurableProviderUsingHandlerWithAdapterBase;
+use Geocoder\Provider\Mapbox\Mapbox as MapboxProvider;
 use Geocoder\Provider\Provider;
 use Geocoder\Query\GeocodeQuery;
-use Geocoder\Provider\Mapbox\Mapbox as MapboxProvider;
 
 /**
  * Provides a Mapbox geocoder provider plugin.

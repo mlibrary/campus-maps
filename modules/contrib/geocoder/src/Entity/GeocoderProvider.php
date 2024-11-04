@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\geocoder\Entity;
 
+use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\LazyPluginCollection;
-use Drupal\Component\Plugin\PluginHelper;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
 use Drupal\geocoder\GeocoderProviderInterface;
@@ -122,9 +122,9 @@ class GeocoderProvider extends ConfigEntityBase implements GeocoderProviderInter
   /**
    * {@inheritdoc}
    */
-  public function setPlugin(string $plugin_id): GeocoderProviderInterface {
-    $this->plugin = $plugin_id;
-    $this->getPluginCollection()->addInstanceId($plugin_id);
+  public function setPlugin(string $plugin): GeocoderProviderInterface {
+    $this->plugin = $plugin;
+    $this->getPluginCollection()->addInstanceId($plugin);
     return $this;
   }
 
@@ -141,7 +141,7 @@ class GeocoderProvider extends ConfigEntityBase implements GeocoderProviderInter
    * {@inheritdoc}
    */
   public function isConfigurable(): bool {
-    return PluginHelper::isConfigurable($this->getPlugin());
+    return $this->getPlugin() instanceof ConfigurableInterface;
   }
 
 }

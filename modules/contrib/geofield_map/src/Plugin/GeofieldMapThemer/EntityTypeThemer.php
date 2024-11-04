@@ -122,7 +122,7 @@ class EntityTypeThemer extends EntityTypeThemerUrl {
       ];
 
       // Builds the table row for the MapThemer.
-      $element[$bundle] = $this->buildDefaultMapThemerRow($row);;
+      $element[$bundle] = $this->buildDefaultMapThemerRow($row);
 
     }
 

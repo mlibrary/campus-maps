@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 class DeleteTest extends KernelTestBasePlugin {
 
   /**
-   * The Imce ckeditor plugin.
+   * The Imce Delete plugin.
    *
    * @var \Drupal\imce\Plugin\ImcePlugin\Delete
    */
@@ -48,7 +48,7 @@ class DeleteTest extends KernelTestBasePlugin {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() : void {
+  protected function setUp(): void {
     parent::setUp();
     $this->imceFM = $this->getImceFM();
     $this->delete = new Delete([], "delete", []);
@@ -79,7 +79,9 @@ class DeleteTest extends KernelTestBasePlugin {
    */
   public function setSelectionFile() {
     $this->imceFM->selection[] = $this->imceFM->createItem(
-      'file', "ciandt.jpg", ['path' => '.']
+      'file',
+      'ciandt.jpg',
+      ['path' => '.']
     );
     // $this->imceFM->getConf()
     $this->imceFM->selection[0] = new ImceFile('ciandt.jpg');
@@ -113,7 +115,7 @@ class DeleteTest extends KernelTestBasePlugin {
   /**
    * Test Delete::permissionInfo()
    */
-  public function testPermissiomInfo() {
+  public function testPermissionInfo() {
     $permissionInfo = $this->delete->permissionInfo();
     $this->assertIsArray($permissionInfo);
     $this->assertTrue(in_array('Delete files', $permissionInfo));
@@ -121,7 +123,7 @@ class DeleteTest extends KernelTestBasePlugin {
   }
 
   /**
-   * Teste messages on context ImcePlugin\Delete.
+   * Test messages on context ImcePlugin\Delete.
    */
   public function testMessages() {
     $messages = $this->imceFM->getMessages();

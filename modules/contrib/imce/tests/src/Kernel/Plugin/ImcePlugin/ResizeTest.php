@@ -21,7 +21,7 @@ class ResizeTest extends KernelTestBasePlugin {
   use StringTranslationTrait;
 
   /**
-   * The Imce ckeditor plugin.
+   * The Imce Resize plugin.
    *
    * @var \Drupal\imce\Plugin\ImcePlugin\Resize
    */
@@ -50,7 +50,7 @@ class ResizeTest extends KernelTestBasePlugin {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() : void {
+  protected function setUp(): void {
     parent::setUp();
     $this->imceFM = $this->getImceFM();
     $this->getTestFileUri();
@@ -93,7 +93,9 @@ class ResizeTest extends KernelTestBasePlugin {
    */
   public function setSelection() {
     $this->imceFM->selection[] = $this->imceFM->createItem(
-      'file', "ciandt.jpg", ['path' => '.']
+      'file',
+      'ciandt.jpg',
+      ['path' => '.']
     );
     // $this->imceFM->getConf()
     $this->imceFM->selection[0]->parent = new ImceFolder('.', $this->getConf());
@@ -121,9 +123,9 @@ class ResizeTest extends KernelTestBasePlugin {
   }
 
   /**
-   * Get plugins definations to new folder.
+   * Get plugins definition to new folder.
    */
-  public function getPluginDefinations() {
+  public function getPluginDefinitions() {
     return [
       'weight' => 0,
       'operations' => [
@@ -139,7 +141,7 @@ class ResizeTest extends KernelTestBasePlugin {
   /**
    * Test Resize::permissionInfo()
    */
-  public function testPermissiomInfo() {
+  public function testPermissionInfo() {
     $permissionInfo = $this->resize->permissionInfo();
     $this->assertIsArray($permissionInfo);
     $this->assertTrue(in_array($this->t('Resize images'), $permissionInfo));
@@ -151,7 +153,7 @@ class ResizeTest extends KernelTestBasePlugin {
   public function testResizeImageWithCopy() {
     $this->setParameterCopy(1);
     $this->resize->opResize($this->imceFM);
-    list($width, $height) = getimagesize(PublicStream::basePath() . '/ciandt_0.jpg');
+    [$width, $height] = getimagesize(PublicStream::basePath() . '/ciandt_0.jpg');
     $this->assertEquals($width, 315);
     $this->assertEquals($height, 210);
   }
@@ -162,13 +164,13 @@ class ResizeTest extends KernelTestBasePlugin {
   public function testResizeImageWithoutCopy() {
     $this->setParameterCopy(0);
     $this->resize->opResize($this->imceFM);
-    list($width, $height) = getimagesize(PublicStream::basePath() . '/ciandt.jpg');
+    [$width, $height] = getimagesize(PublicStream::basePath() . '/ciandt.jpg');
     $this->assertEquals($width, 315);
     $this->assertEquals($height, 210);
   }
 
   /**
-   * Teste messages on context ImcePlugin\Resize.
+   * Test messages on context ImcePlugin\Resize.
    */
   public function testMessages() {
     $messages = $this->imceFM->getMessages();

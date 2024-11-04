@@ -5,7 +5,7 @@
  * Post update functions for Geocoder Field.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Drupal\field\Entity\FieldConfig;
 

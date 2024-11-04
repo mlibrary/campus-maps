@@ -4,12 +4,12 @@ namespace Drupal\geocoder_field;
 
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\geocoder\GeocoderPluginManagerBase;
 use Drupal\geocoder_field\Annotation\GeocoderPreprocessor;
-use Drupal\Core\Field\FieldConfigInterface;
-use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
  * Provides a plugin manager for geocoder data preprocessors.

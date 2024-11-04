@@ -4,6 +4,7 @@ namespace Drupal\Tests\geocoder\Kernel;
 
 use Drupal\geocoder\Entity\GeocoderProvider;
 use Drupal\KernelTests\KernelTestBase;
+use Geocoder\Query\GeocodeQuery;
 
 /**
  * Tests basic Geocoder functionality.
@@ -15,7 +16,7 @@ class GeocoderKernelTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['geocoder'];
+  protected static $modules = ['geocoder', 'geocoder_test_provider'];
 
   /**
    * Our test provider.
@@ -27,7 +28,7 @@ class GeocoderKernelTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  public function setUp(): void {
     parent::setUp();
     $this->provider = GeocoderProvider::create([
       'id' => 'random',
@@ -55,6 +56,38 @@ class GeocoderKernelTest extends KernelTestBase {
     $geocoder = \Drupal::service('geocoder');
     $this->assertNotEmpty($geocoder->geocode('123 Foo Street', [
       'random',
+    ]));
+  }
+
+  /**
+   * Tests geocoding a GeocodeQuery.
+   *
+   * Tries the "random" Geocoder which cannot geocode a GeocodeQuery.
+   */
+  public function testRandomGeocodeWithGeocodeQuery() {
+    /** @var \Drupal\geocoder\GeocoderInterface $geocoder */
+    $geocoder = \Drupal::service('geocoder');
+    $this->assertEmpty($geocoder->geocode(GeocodeQuery::create('123 Foo Street'), [
+      'random',
+    ]));
+  }
+
+  /**
+   * Tests geocoding a GeocodeQuery.
+   *
+   * Tries the "geocoder_test_provider" Geocoder which can geocode a
+   * GeocodeQuery.
+   */
+  public function testGeocodeWithGeocodeQuery() {
+    GeocoderProvider::create([
+      'id'     => 'geocoder_test_provider',
+      'plugin' => 'geocoder_test_provider',
+    ])->save();
+
+    /** @var \Drupal\geocoder\GeocoderInterface $geocoder */
+    $geocoder = \Drupal::service('geocoder');
+    $this->assertNotEmpty($geocoder->geocode(GeocodeQuery::create('123 Foo Street'), [
+      'geocoder_test_provider',
     ]));
   }
 

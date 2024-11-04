@@ -7,7 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Stiphle' => array($vendorDir . '/davedevelopment/stiphle/src'),
-    'HTMLPurifier' => array($vendorDir . '/ezyang/htmlpurifier/library'),
     'Console' => array($vendorDir . '/pear/console_getopt'),
     'Archive_Tar' => array($vendorDir . '/pear/archive_tar'),
 );

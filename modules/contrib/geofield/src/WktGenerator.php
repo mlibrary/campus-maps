@@ -243,8 +243,8 @@ class WktGenerator implements WktGeneratorInterface {
    *   The polygon components coordinates.
    */
   protected function generatePolygon(array $start = NULL, $segments = NULL) {
-    $start = $start ? $start : $this->randomPoint();
-    $segments = $segments ? $segments : $this->ddGenerate(2, 4, TRUE);
+    $start = $start ?: $this->randomPoint();
+    $segments = $segments ?: $this->ddGenerate(2, 4, TRUE);
     $poly = $this->generateLinestring($start, $segments);
     // Close the polygon.
     $poly[] = $start;

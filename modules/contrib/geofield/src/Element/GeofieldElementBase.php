@@ -69,10 +69,13 @@ abstract class GeofieldElementBase extends FormElement {
    *   The complete form structure.
    */
   public static function elementValidate(array &$element, FormStateInterface $form_state, array &$complete_form) {
-    $error_label = isset($element['#error_label']) ? $element['#error_label'] : $element['#title'];
+    $error_label = $element['#error_label'] ?? $element['#title'];
     foreach (static::getComponents() as $key => $component) {
       if (!empty($element[$key]['#value']) && !is_numeric($element[$key]['#value'])) {
-        $form_state->setError($element[$key], t('@title: @component_title is not valid.', ['@title' => $error_label, '@component_title' => $component['title']]));
+        $form_state->setError($element[$key], t('@title: @component_title is not valid.', [
+          '@title' => $error_label,
+          '@component_title' => $component['title'],
+        ]));
       }
       elseif (is_numeric($element[$key]['#value']) && abs($element[$key]['#value']) > $component['range']) {
         $form_state->setError($element[$key], t('@title: @component_title is out of bounds (@bounds).', [

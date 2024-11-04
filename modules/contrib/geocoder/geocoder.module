@@ -5,7 +5,7 @@
  * Geocoder Module.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Drupal\Core\Routing\RouteMatchInterface;
 
@@ -47,16 +47,13 @@ function geocoder_help($route_name, RouteMatchInterface $route_match) {
 
 /**
  * Implements hook_geocoder_provider_info_alter().
- *
- * @param array $plugins
- *   The list of plugin definitions to alter, passed by reference.
  */
 function geocoder_geocoder_provider_info_alter(array &$plugins): void {
   // If composer is caching plugin locations remove them.
   // @see https://www.drupal.org/project/drupal/issues/3230708
   $class_loader = \Drupal::service('class_loader');
   if (method_exists($class_loader, 'setApcuPrefix') &&
-    (($apcu_prefix = $class_loader->getApcuPrefix()) !== NULL)
+    ($apcu_prefix = $class_loader->getApcuPrefix() !== NULL)
   ) {
     $apcu_cache_keys = [];
     foreach ($plugins as $plugin) {
@@ -71,4 +68,18 @@ function geocoder_geocoder_provider_info_alter(array &$plugins): void {
   $plugins = array_filter($plugins, function (array $plugin): bool {
     return empty($plugin['handler']) || class_exists($plugin['handler']);
   });
+}
+
+/**
+ * Implements hook_geocode_country_code_alter().
+ *
+ * Geopunt only works for Belgium, but doesn't include the country in the API
+ * response, which may result in unexpected behaviour e.g. Reverse geocoding
+ * and saving the result in an address field, since a country is required for
+ * address field to work.
+ */
+function geocoder_geocode_country_code_alter(string &$country_code, array $geojson_array): void {
+  if (isset($geojson_array['properties']['providedBy']) && $geojson_array['properties']['providedBy'] === 'geopunt') {
+    $country_code = 'BE';
+  }
 }

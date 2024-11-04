@@ -19,7 +19,7 @@ class GeocoderTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['geocoder'];
+  protected static $modules = ['geocoder'];
 
   /**
    * {@inheritdoc}
@@ -31,7 +31,7 @@ class GeocoderTest extends BrowserTestBase {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function setUp() {
+  public function setUp(): void {
 
     parent::setUp();
     $this->user = $this->DrupalCreateUser([

@@ -5,8 +5,8 @@ namespace Drupal\geofield\Plugin\GeofieldProximitySource;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\geofield\Plugin\GeofieldProximitySourceBase;
 use Drupal\geofield\Plugin\GeofieldProximitySourceManager;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\geofield\Plugin\views\argument\GeofieldProximityArgument;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines 'Geofield Context Filter' plugin.

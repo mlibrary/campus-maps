@@ -2,10 +2,8 @@
 
 namespace Drupal\imce\Plugin\ImcePlugin;
 
-use Drupal\Core\File\FileSystemInterface;
-use Drupal\file\FileInterface;
-use Drupal\imce\ImcePluginBase;
 use Drupal\imce\ImceFM;
+use Drupal\imce\ImcePluginBase;
 
 /**
  * Defines Imce Upload plugin.
@@ -49,30 +47,43 @@ class Upload extends ImcePluginBase {
     }
     // Prepare save options.
     $destination = $folder->getUri();
-    $replace = $fm->getConf('replace', FileSystemInterface::EXISTS_RENAME);
+    $replace = $fm->getConf('replace', 0);
     $validators = [];
-    // Extension validator.
     $exts = $fm->getConf('extensions', '');
-    $validators['file_validate_extensions'] = [$exts === '*' ? NULL : $exts];
-    // File size and user quota validator.
-    $validators['file_validate_size'] = [
-      $fm->getConf('maxsize'),
-      $fm->getConf('quota'),
-    ];
-    // Image resolution validator.
+    if ($exts === '*') {
+      $exts = NULL;
+    }
     $width = $fm->getConf('maxwidth');
     $height = $fm->getConf('maxheight');
-    if ($width || $height) {
-      // Fix exif orientation before resizing.
-      if (function_exists('exif_orientation_validate_image_rotation')) {
-        $validators['exif_orientation_validate_image_rotation'] = [];
-      }
-      $validators['file_validate_image_resolution'] = [($width ? $width : 10000) . 'x' . ($height ? $height : 10000)];
+    $dims = $width || $height ? ($width ?: 10000) . 'x' . ($height ?: 10000) : '';
+    $maxsize = $fm->getConf('maxsize');
+    $quota = $fm->getConf('quota');
+    // Fix exif orientation before resizing.
+    if ($dims && function_exists('exif_orientation_validate_image_rotation')) {
+      $validators['exif_orientation_validate_image_rotation'] = [];
     }
-    // Name validator.
-    $validators[get_class($this) . '::validateFileName'] = [$fm];
+    if (class_exists('Drupal\file\Plugin\Validation\Constraint\FileExtensionConstraint')) {
+      $validators['ImceFileName'] = ['filter' => $fm->getNameFilter()];
+      $validators['FileExtension'] = ['extensions' => $exts];
+      $validators['FileSizeLimit'] = [
+        'fileLimit' => $maxsize,
+        'userLimit' => $quota,
+      ];
+      if ($dims) {
+        $validators['FileImageDimensions'] = ['maxDimensions' => $dims];
+      }
+    }
+    else {
+      $validators['imce_file_validate_name'] = [$fm->getNameFilter()];
+      $validators['file_validate_extensions'] = [$exts];
+      $validators['file_validate_size'] = [$maxsize, $quota];
+      if ($dims) {
+        $validators['file_validate_image_resolution'] = [$dims];
+      }
+    }
     // Save files.
-    if ($files = file_save_upload('imce', $validators, $destination, NULL, $replace)) {
+    $files = file_save_upload('imce', $validators, $destination, NULL, $replace);
+    if ($files) {
       $fs = \Drupal::service('file_system');
       foreach (array_filter($files) as $file) {
         // Set status and save.
@@ -85,18 +96,6 @@ class Upload extends ImcePluginBase {
         $item->addToJs();
       }
     }
-  }
-
-  /**
-   * Validates the name of a file object.
-   */
-  public static function validateFileName(FileInterface $file, ImceFM $fm) {
-    $errors = [];
-    $filename = $file->getFileName();
-    if (!$fm->validateFileName($filename, TRUE)) {
-      $errors[] = t('%filename contains invalid characters.', ['%filename' => $filename]);
-    }
-    return $errors;
   }
 
 }

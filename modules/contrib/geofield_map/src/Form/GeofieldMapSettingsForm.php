@@ -2,14 +2,14 @@
 
 namespace Drupal\geofield_map\Form;
 
+use Drupal\Component\Utility\Environment;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
-use Drupal\Core\Site\Settings;
-use Drupal\Component\Utility\Environment;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Implements the GeofieldMapSettingsForm controller.
@@ -20,32 +20,16 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
 
   /**
    * The Link generator Service.
-   *
-   * @var \Drupal\Core\Utility\LinkGeneratorInterface
    */
-  protected $link;
-
-  /**
-   * GeofieldMapSettingsForm constructor.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
-   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
-   *   The Link Generator service.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, LinkGeneratorInterface $link_generator) {
-    parent::__construct($config_factory);
-    $this->link = $link_generator;
-  }
+  protected LinkGeneratorInterface $link;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('link_generator')
-    );
+    $instance = parent::create($container);
+    $instance->link = $container->get('link_generator');
+    return $instance;
   }
 
   /**

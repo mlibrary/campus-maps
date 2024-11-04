@@ -59,7 +59,6 @@ class ArrayCollection implements Collection, Selectable, Stringable
     /**
      * Initializes a new ArrayCollection.
      *
-     * @param array $elements
      * @psalm-param array<TKey,T> $elements
      */
     public function __construct(array $elements = [])
@@ -372,6 +371,8 @@ class ArrayCollection implements Collection, Selectable, Stringable
     /**
      * {@inheritDoc}
      *
+     * @psalm-param Closure(T, TKey):bool $p
+     *
      * @return static
      * @psalm-return static<TKey,T>
      */
@@ -466,12 +467,12 @@ class ArrayCollection implements Collection, Selectable, Stringable
             $filtered = array_filter($filtered, $filter);
         }
 
-        $orderings = $criteria->getOrderings();
+        $orderings = $criteria->orderings();
 
         if ($orderings) {
             $next = null;
             foreach (array_reverse($orderings) as $field => $ordering) {
-                $next = ClosureExpressionVisitor::sortByField($field, $ordering === Criteria::DESC ? -1 : 1, $next);
+                $next = ClosureExpressionVisitor::sortByField($field, $ordering === Order::Descending ? -1 : 1, $next);
             }
 
             uasort($filtered, $next);
@@ -480,7 +481,7 @@ class ArrayCollection implements Collection, Selectable, Stringable
         $offset = $criteria->getFirstResult();
         $length = $criteria->getMaxResults();
 
-        if ($offset || $length) {
+        if ($offset !== null && $offset > 0 || $length !== null && $length > 0) {
             $filtered = array_slice($filtered, (int) $offset, $length, true);
         }
 

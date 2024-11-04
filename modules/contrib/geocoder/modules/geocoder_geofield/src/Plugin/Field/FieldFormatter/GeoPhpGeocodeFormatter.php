@@ -6,28 +6,20 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\geocoder\DumperPluginManager;
 use Drupal\geocoder\GeocoderInterface;
 use Drupal\geocoder\ProviderPluginManager;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Utility\LinkGeneratorInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\geocoder_field\Plugin\Field\FieldFormatter\FileGeocodeFormatter;
 use Drupal\geocoder_field\PreprocessorPluginManager;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Abstract implementation of the GeoPhp Wrapper formatter for File fields.
  */
 abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
-
-  /**
-   * Unique Geocoder Plugin used by this formatter.
-   *
-   * @var string
-   */
-  protected $formatterPlugin = '';
 
   /**
    * The geoPhpWrapper service.
@@ -54,7 +46,7 @@ abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
    * @param array $third_party_settings
    *   Any third party settings.
    * @param \Drupal\geocoder\GeocoderInterface $geocoder
-   *   The gecoder service.
+   *   The Geocoder service.
    * @param \Drupal\geocoder\ProviderPluginManager $provider_plugin_manager
    *   The provider plugin manager service.
    * @param \Drupal\geocoder\DumperPluginManager $dumper_plugin_manager
@@ -63,8 +55,6 @@ abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
    *   The renderer.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
-   *   The logger factory.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\geocoder_field\PreprocessorPluginManager $preprocessor_manager
@@ -85,10 +75,9 @@ abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
     DumperPluginManager $dumper_plugin_manager,
     RendererInterface $renderer,
     LinkGeneratorInterface $link_generator,
-    LoggerChannelFactoryInterface $logger_factory,
     EntityTypeManagerInterface $entity_type_manager,
     PreprocessorPluginManager $preprocessor_manager,
-    GeoPHPInterface $geophp_wrapper
+    GeoPHPInterface $geophp_wrapper,
   ) {
     parent::__construct(
       $plugin_id,
@@ -103,7 +92,6 @@ abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
       $dumper_plugin_manager,
       $renderer,
       $link_generator,
-      $logger_factory,
       $entity_type_manager,
       $preprocessor_manager
     );
@@ -127,7 +115,6 @@ abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
       $container->get('plugin.manager.geocoder.dumper'),
       $container->get('renderer'),
       $container->get('link_generator'),
-      $container->get('logger.factory'),
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.geocoder.preprocessor'),
       $container->get('geofield.geophp')
@@ -170,7 +157,7 @@ abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
     $summary['intro'] = $this->pluginDefinition['description'];
     $summary += parent::settingsSummary();
     unset($summary['dumper']);
-    $summary['adapter'] = t('Output format: @format', [
+    $summary['adapter'] = $this->t('Output format: @format', [
       '@format' => !empty($adapter) ? $adapters[$adapter] : $this->t('Not set'),
     ]);
     return $summary;
@@ -200,7 +187,7 @@ abstract class GeoPhpGeocodeFormatter extends FileGeocodeFormatter {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('geocoder', $e);
+      $this->getLogger('geocoder')->error($e->getMessage());
     }
 
     return $elements;

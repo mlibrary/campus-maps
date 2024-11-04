@@ -1,19 +1,22 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\geocoder;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\geocoder\Traits\ConfigurableProviderTrait;
+use Geocoder\Collection;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\Query\ReverseQuery;
+use Psr\Http\Client\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
-use Http\Client\HttpClient;
 
 /**
  * Provides a base class for providers using handlers with HTTP adapter.
@@ -53,12 +56,12 @@ abstract class ConfigurableProviderUsingHandlerWithAdapterBase extends ProviderU
    *   The Drupal language manager service.
    * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager
    *   The typed config manager.
-   * @param \Http\Client\HttpClient $http_adapter
+   * @param \Psr\Http\Client\ClientInterface $http_adapter
    *   The HTTP adapter.
    * @param \Drupal\geocoder\GeocoderThrottleInterface $throttle
    *   The Geocoder Throttle service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $config_factory, CacheBackendInterface $cache_backend, LanguageManagerInterface $language_manager, TypedConfigManagerInterface $typed_config_manager, HttpClient $http_adapter, GeocoderThrottleInterface $throttle) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $config_factory, CacheBackendInterface $cache_backend, LanguageManagerInterface $language_manager, TypedConfigManagerInterface $typed_config_manager, ClientInterface $http_adapter, GeocoderThrottleInterface $throttle) {
     try {
       // The typedConfigManager property needs to be set before the constructor,
       // to prevent its possible exception, and allow the
@@ -69,7 +72,7 @@ abstract class ConfigurableProviderUsingHandlerWithAdapterBase extends ProviderU
       $this->throttle = $throttle;
     }
     catch (InvalidPluginDefinitionException $e) {
-      watchdog_exception('geocoder', $e);
+      $this->getLogger('geocoder')->error($e->getMessage());
     }
   }
 
@@ -104,6 +107,22 @@ abstract class ConfigurableProviderUsingHandlerWithAdapterBase extends ProviderU
   protected function doReverse($latitude, $longitude) {
     $this->throttle->waitForAvailability($this->pluginId, $this->configuration['throttle'] ?? []);
     return parent::doReverse($latitude, $longitude);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doGeocodeQuery(GeocodeQuery $query): Collection {
+    $this->throttle->waitForAvailability($this->pluginId, $this->configuration['throttle'] ?? []);
+    return parent::doGeocodeQuery($query);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doReverseQuery(ReverseQuery $query): Collection {
+    $this->throttle->waitForAvailability($this->pluginId, $this->configuration['throttle'] ?? []);
+    return parent::doReverseQuery($query);
   }
 
 }

@@ -3,10 +3,10 @@
 namespace Drupal\geocoder_field;
 
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Locale\CountryManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Locale\CountryManagerInterface;
 
 /**
  * Base class for the Preprocessor plugin.
@@ -71,6 +71,7 @@ abstract class PreprocessorBase extends PluginBase implements PreprocessorInterf
     if (!isset($this->field)) {
       throw new \RuntimeException('A field (\Drupal\Core\Field\FieldItemListInterface) must be set with ::setField() before preprocessing.');
     }
+    return $this;
   }
 
   /**

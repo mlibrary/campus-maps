@@ -3,11 +3,12 @@
 namespace Drupal\geofield\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
+use Drupal\geofield\Plugin\GeofieldProximitySourceManager;
 use Drupal\geofield\Plugin\views\GeofieldProximityHandlerTrait;
 use Drupal\views\Plugin\views\field\NumericField;
 use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\geofield\Plugin\GeofieldProximitySourceManager;
 
 /**
  * Field handler to render a Geofield proximity in Views.
@@ -19,6 +20,7 @@ use Drupal\geofield\Plugin\GeofieldProximitySourceManager;
 class GeofieldProximityField extends NumericField {
 
   use GeofieldProximityHandlerTrait;
+  use LoggerChannelTrait;
 
   /**
    * The geofield proximity manager.
@@ -70,7 +72,7 @@ class GeofieldProximityField extends NumericField {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static (
+    return new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
@@ -86,8 +88,8 @@ class GeofieldProximityField extends NumericField {
     $context = $this->pluginDefinition['plugin_type'];
 
     $user_input = $form_state->getUserInput();
-    $source_plugin_id = isset($user_input['options']['source']) ? $user_input['options']['source'] : $this->options['source'];
-    $source_plugin_configuration = isset($user_input['options']['source_configuration']) ? $user_input['options']['source_configuration'] : $this->options['source_configuration'];
+    $source_plugin_id = $user_input['options']['source'] ?? $this->options['source'];
+    $source_plugin_configuration = $user_input['options']['source_configuration'] ?? $this->options['source_configuration'];
 
     $this->proximitySourceManager->buildCommonFormElements($form, $form_state, $this->options, $context);
 
@@ -104,7 +106,7 @@ class GeofieldProximityField extends NumericField {
       $this->sourcePlugin->buildOptionsForm($form['source_configuration'], $form_state, ['source_configuration']);
     }
     catch (\Exception $e) {
-      watchdog_exception('geofield', $e);
+      $this->getLogger('geofield')->error($e->getMessage());
     }
 
     parent::buildOptionsForm($form, $form_state);
@@ -120,7 +122,7 @@ class GeofieldProximityField extends NumericField {
       $this->sourcePlugin->validateOptionsForm($form['source_configuration'], $form_state, ['source_configuration']);
     }
     catch (\Exception $e) {
-      watchdog_exception('geofield', $e);
+      $this->getLogger('geofield')->error($e->getMessage());
       $form_state->setErrorByName($form['source'], $this->t("The Proximity Source couldn't be set due to: @error", [
         '@error' => $e,
       ]));
@@ -139,7 +141,7 @@ class GeofieldProximityField extends NumericField {
       return $this->sourcePlugin->getProximity($values->{$this->aliases['latitude']}, $values->{$this->aliases['longitude']});
     }
     catch (\Exception $e) {
-      watchdog_exception('geofield', $e);
+      $this->getLogger('geofield')->error($e->getMessage());
       return NULL;
     }
 
@@ -172,7 +174,7 @@ class GeofieldProximityField extends NumericField {
         $build = parent::render($values);
       }
       catch (\Exception $e) {
-        watchdog_exception('geofield', $e);
+        $this->getLogger('geofield')->error($e->getMessage());
       }
 
     }

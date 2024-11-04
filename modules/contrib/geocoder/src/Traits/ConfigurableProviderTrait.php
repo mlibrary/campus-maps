@@ -1,17 +1,22 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\geocoder\Traits;
 
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Config\Schema\SchemaIncompleteException;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Logger\LoggerChannelTrait;
+use Drupal\Core\Url;
 
 /**
  * Trait containing reusable code for configuring Geocoder provider plugins.
  */
 trait ConfigurableProviderTrait {
+
+  use LoggerChannelTrait;
 
   /**
    * {@inheritdoc}
@@ -118,6 +123,24 @@ trait ConfigurableProviderTrait {
         $form['options']['throttle']['#open'] = TRUE;
       }
     }
+
+    $form['options']['geocoder'] = [
+      '#type' => 'details',
+      '#title' => $this->t("Geocoder Additional Options"),
+      '#weight' => 15,
+    ];
+
+    $form['options']['geocoder']['locale'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Locale'),
+      '#maxlength' => 4,
+      '#placeholder' => $this->languageManager->getCurrentLanguage()->getId(),
+      '#default_value' => $this->configuration['geocoder']['locale'] ?? '',
+      '#description' => $this->t('Define your specific language code (en, fr, de, it, es ... etc.) that should be used / forced in the @geocoder_query_link.<br>Alter this only if specifically aware of its functionality.<br><u>If left empty the Current Interface Language code/id will be used.</u>', [
+        '@geocoder_query_link' => Link::fromTextAndUrl('Geocoder Query withLocale() method', Url::fromUri('https://github.com/geocoder-php/php-common/blob/master/Query/GeocodeQuery.php#L81'))->toString(),
+      ]),
+    ];
+
     return $form;
   }
 
@@ -146,6 +169,9 @@ trait ConfigurableProviderTrait {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     try {
+
+      $this->configuration['geocoder']['locale'] = $form_state->getValue('locale');
+
       foreach (array_keys($this->getPluginArguments()) as $argument) {
         $this->configuration[$argument] = $form_state->getValue($argument);
       }
@@ -157,7 +183,7 @@ trait ConfigurableProviderTrait {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('geocoder', $e);
+      $this->getLogger('geocoder')->error($e->getMessage());
     }
   }
 

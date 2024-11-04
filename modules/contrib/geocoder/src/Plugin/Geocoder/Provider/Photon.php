@@ -12,7 +12,7 @@ use Drupal\geocoder\ConfigurableProviderUsingHandlerWithAdapterBase;
  *   name = "Photon",
  *   handler = "\Geocoder\Provider\Photon\Photon",
  *   arguments = {
- *     "rootUrl" = "https://photon.komoot.de",
+ *     "rootUrl" = "https://photon.komoot.io",
  *   }
  * )
  */

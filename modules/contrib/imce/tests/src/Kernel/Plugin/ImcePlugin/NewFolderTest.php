@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 class NewFolderTest extends KernelTestBasePlugin {
 
   /**
-   * The Imce ckeditor plugin.
+   * The Imce Newfolder plugin.
    *
    * @var \Drupal\imce\Plugin\ImcePlugin\Newfolder
    */
@@ -46,7 +46,7 @@ class NewFolderTest extends KernelTestBasePlugin {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() : void {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->imceFM = $this->getImceFM();
@@ -85,9 +85,9 @@ class NewFolderTest extends KernelTestBasePlugin {
   }
 
   /**
-   * Get plugins definations to new folder.
+   * Get plugins definition to new folder.
    */
-  public function getPluginDefinations() {
+  public function getPluginDefinitions() {
     return [
       'weight' => '-15',
       'operations' => [
@@ -103,7 +103,7 @@ class NewFolderTest extends KernelTestBasePlugin {
   /**
    * Test to NewFolder::permissionInfo().
    */
-  public function testPermissiomInfo() {
+  public function testPermissionInfo() {
     $permissionInfo = $this->newFolder->permissionInfo();
     $this->assertIsArray($permissionInfo);
     $this->assertTrue(in_array('Create subfolders', $permissionInfo));
@@ -114,7 +114,8 @@ class NewFolderTest extends KernelTestBasePlugin {
    */
   public function testFolderCreate() {
     $uriFolder = Imce::joinPaths(
-      $this->imceFM->activeFolder->getUri(), $this->imceFM->getPost('newfolder')
+      $this->imceFM->activeFolder->getUri(),
+      $this->imceFM->getPost('newfolder')
     );
 
     $this->assertIsString($uriFolder);
@@ -122,7 +123,7 @@ class NewFolderTest extends KernelTestBasePlugin {
   }
 
   /**
-   * Teste messages on context ImcePlugin\NewFolder.
+   * Test messages on context ImcePlugin\NewFolder.
    */
   public function testMessages() {
     $messages = $this->imceFM->getMessages();

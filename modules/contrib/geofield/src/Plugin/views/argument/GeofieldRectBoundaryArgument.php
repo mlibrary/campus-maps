@@ -2,10 +2,10 @@
 
 namespace Drupal\geofield\Plugin\views\argument;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield\Plugin\views\GeofieldBoundaryHandlerTrait;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
 use Drupal\views\Plugin\views\query\Sql;
-use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Argument handler for geofield rectangular boundary.
@@ -26,7 +26,7 @@ class GeofieldRectBoundaryArgument extends ArgumentPluginBase {
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
-    $form['description']['#markup'] .= $this->t('<br/>Boundary format should be in a NE-Latitude,NE-Longitude,SW-Latitude,SW-Longitude format: <strong>"40.773,-73.972,40.748,-73.984"</strong> .');
+    $form['description']['#markup'] .= $this->t('<br>Boundary format should be in a NE-Latitude,NE-Longitude,SW-Latitude,SW-Longitude format: <strong>"40.773,-73.972,40.748,-73.984"</strong> .');
   }
 
   /**

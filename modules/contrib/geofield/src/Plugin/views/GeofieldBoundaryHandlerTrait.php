@@ -3,7 +3,7 @@
 namespace Drupal\geofield\Plugin\views;
 
 /**
- * Trait GeofieldBoundaryHandlerTrait.
+ * Generates a GeofieldBoundaryHandlerTrait.
  */
 trait GeofieldBoundaryHandlerTrait {
 
@@ -32,7 +32,7 @@ trait GeofieldBoundaryHandlerTrait {
     $field_lon = "{$table_name}.{$field_id}_lon";
 
     /*
-     * Map shows a map, not a globe. Therefore it will never flip over
+     * Map shows a map, not a globe, therefore it will never flip over
      * the poles, but it will move across -180°/+180° longitude.
      * So latitude will always have north larger than south, but east not
      * necessarily larger than west.

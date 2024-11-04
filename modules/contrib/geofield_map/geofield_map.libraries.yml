@@ -6,10 +6,10 @@ leaflet:
     url: https://github.com/Leaflet/Leaflet/blob/master/LICENSE
     gpl-compatible: true
   js:
-    https://unpkg.com/leaflet@1.0.3/dist/leaflet.js: {}
+    https://unpkg.com/leaflet@1.0.3/dist/leaflet.js: { type: external, minified: true }
   css:
     component:
-      https://unpkg.com/leaflet@1.0.3/dist/leaflet.css: {}
+      https://unpkg.com/leaflet@1.0.3/dist/leaflet.css: { type: external }
 
 geofield_map_general:
   version: 1.x
@@ -106,14 +106,3 @@ overlappingmarkerspiderfier:
     https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js: { type: external }
   dependencies:
     - geofield_map/geofield_map_gmap_formatter
-
-# External IntersectionObserver polyfill
-intersection_observer:
-  remote: https://polyfill-fastly.io/v3/polyfill.min.js?features=IntersectionObserver
-  version: 1.x
-  license:
-    name: MIT license
-    url: https://choosealicense.com/licenses/mit/
-    gpl-compatible: true
-  js:
-    https://polyfill-fastly.io/v3/polyfill.min.js?features=IntersectionObserver: { type: external }

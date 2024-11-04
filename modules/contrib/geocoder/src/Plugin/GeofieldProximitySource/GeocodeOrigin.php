@@ -2,13 +2,13 @@
 
 namespace Drupal\geocoder\Plugin\GeofieldProximitySource;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\geofield\Plugin\GeofieldProximitySourceBase;
-use Drupal\geocoder\Geocoder;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\geocoder\Entity\GeocoderProvider;
-use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder\FormatterPluginManager;
+use Drupal\geocoder\Geocoder;
+use Drupal\geocoder\ProviderPluginManager;
+use Drupal\geofield\Plugin\GeofieldProximitySourceBase;
 use Geocoder\Model\AddressCollection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

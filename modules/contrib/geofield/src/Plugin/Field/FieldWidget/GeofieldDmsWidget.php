@@ -26,7 +26,7 @@ class GeofieldDmsWidget extends GeofieldBaseWidget {
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     $element = parent::formElement($items, $delta, $element, $form, $form_state);
 
-    /* @var \Drupal\geofield\Plugin\Field\FieldType\GeofieldItem $geofield_item */
+    /** @var \Drupal\geofield\Plugin\Field\FieldType\GeofieldItem $geofield_item */
     $geofield_item = $items->getValue()[$delta];
     if (empty($geofield_item) || $geofield_item['geo_type'] == 'Point') {
       $latlon_value = [];

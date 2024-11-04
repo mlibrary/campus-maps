@@ -2,18 +2,21 @@
 
 namespace Drupal\geocoder;
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Geocoder\StatefulGeocoder;
-use Geocoder\Provider\Provider;
 use Drupal\geocoder_geofield\Geocoder\Provider\GeometryProviderInterface;
+use Geocoder\Collection;
+use Geocoder\Provider\Provider;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\Query\ReverseQuery;
+use Geocoder\StatefulGeocoder;
 
 /**
  * Provides a base class for providers using handlers.
  */
-abstract class ProviderUsingHandlerBase extends ProviderBase {
+abstract class ProviderUsingHandlerBase extends ProviderBase implements ProviderGeocoderPhpInterface {
 
   /**
    * The provider handler.
@@ -41,6 +44,66 @@ abstract class ProviderUsingHandlerBase extends ProviderBase {
     if (empty($plugin_definition['handler'])) {
       throw new InvalidPluginDefinitionException($plugin_id, "Plugin '$plugin_id' should define a handler.");
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function geocodeQuery(GeocodeQuery $query): Collection {
+    $value = NULL;
+    if ($this->getHandler() instanceof Provider) {
+      $value = $this->getCache('geocodeQuery', $query);
+      if (is_null($value)) {
+        $value = $this->doGeocodeQuery($query);
+        $this->setCache('geocodeQuery', $query, $value);
+      }
+    }
+    return $value;
+  }
+
+  /**
+   * Perform the geocoding.
+   *
+   * @param \Geocoder\Query\GeocodeQuery $query
+   *   The Geocoder query.
+   *
+   * @return \Geocoder\Collection
+   *   Geocoder result collection.
+   *
+   * @throws \Geocoder\Exception\Exception
+   */
+  protected function doGeocodeQuery(GeocodeQuery $query): Collection {
+    return $this->getHandlerWrapper()->geocodeQuery($query);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function reverseQuery(ReverseQuery $query): Collection {
+    $value = NULL;
+    if ($this->getHandler() instanceof Provider) {
+      $value = $this->getCache('reverseQuery', $query);
+      if (is_null($value)) {
+        $value = $this->doReverseQuery($query);
+        $this->setCache('reverseQuery', $query, $value);
+      }
+    }
+    return $value;
+  }
+
+  /**
+   * Perform the reverse geocoding.
+   *
+   * @param \Geocoder\Query\ReverseQuery $query
+   *   The Geocoder query.
+   *
+   * @return \Geocoder\Collection
+   *   Geocoder result collection.
+   *
+   * @throws \Geocoder\Exception\Exception
+   */
+  protected function doReverseQuery(ReverseQuery $query): Collection {
+    return $this->getHandlerWrapper()->reverseQuery($query);
   }
 
   /**
@@ -101,7 +164,7 @@ abstract class ProviderUsingHandlerBase extends ProviderBase {
     if ($this->handlerWrapper === NULL) {
       $this->handlerWrapper = new StatefulGeocoder(
         $this->getHandler(),
-        $this->languageManager->getCurrentLanguage()->getId()
+        $this->getLocale()
       );
     }
 

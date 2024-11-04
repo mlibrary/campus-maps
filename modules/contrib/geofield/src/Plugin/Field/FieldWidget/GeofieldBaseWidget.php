@@ -2,21 +2,24 @@
 
 namespace Drupal\geofield\Plugin\Field\FieldWidget;
 
+use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\geofield\Plugin\GeofieldBackendManager;
-use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
+use Drupal\geofield\Plugin\GeofieldBackendManager;
 use Drupal\geofield\WktGeneratorInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Abstract class for Geofield widgets.
  */
 abstract class GeofieldBaseWidget extends WidgetBase implements ContainerFactoryPluginInterface {
+
+  use LoggerChannelTrait;
 
   /**
    * The Geofield Backend setup for the specific Field definition.
@@ -51,7 +54,7 @@ abstract class GeofieldBaseWidget extends WidgetBase implements ContainerFactory
    * @param array $settings
    *   The formatter settings.
    * @param array $third_party_settings
-   *   Any third party settings settings.
+   *   Any third party settings.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
    *   The geoPhpWrapper.
    * @param \Drupal\geofield\WktGeneratorInterface $wkt_generator
@@ -67,7 +70,7 @@ abstract class GeofieldBaseWidget extends WidgetBase implements ContainerFactory
     array $third_party_settings,
     GeoPHPInterface $geophp_wrapper,
     WktGeneratorInterface $wkt_generator,
-    GeofieldBackendManager $geofield_backend_manager = NULL
+    GeofieldBackendManager $geofield_backend_manager = NULL,
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
     try {
@@ -76,7 +79,7 @@ abstract class GeofieldBaseWidget extends WidgetBase implements ContainerFactory
       }
     }
     catch (PluginException $e) {
-      watchdog_exception("geofield base widget", $e);
+      $this->getLogger('geofield')->error($e->getMessage());
     }
 
     $this->geoPhpWrapper = $geophp_wrapper;
@@ -107,7 +110,6 @@ abstract class GeofieldBaseWidget extends WidgetBase implements ContainerFactory
     $element['#attached']['library'] = [
       'geofield/geofield_general',
     ];
-
     return ['value' => $element];
   }
 
@@ -124,7 +126,7 @@ abstract class GeofieldBaseWidget extends WidgetBase implements ContainerFactory
    */
   protected function geofieldBackendValue($value) {
     $output = NULL;
-    /* @var \Geometry|null $geom */
+    /** @var \Geometry|null $geom */
     if ($this->geofieldBackend && $geom = $this->geoPhpWrapper->load($value)) {
       $output = $this->geofieldBackend->save($geom);
     }

@@ -22,7 +22,7 @@ interface GeofieldProximitySourceInterface extends PluginInspectionInterface {
    * @return bool
    *   The flag indicates whether location is valid.
    *
-   * @todo: add more tests, particularly around max/min values.
+   * @todo Add more tests, particularly around max/min values.
    */
   public function isValidLocation($lat, $lon);
 

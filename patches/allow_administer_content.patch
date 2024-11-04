@@ -1,9 +1,9 @@
-diff --git a/core/modules/node/src/Plugin/Action/AssignOwnerNode.php b/core/modules/node/src/Plugin/Action/AssignOwnerNode.php
+diff --git a/core/modules/action/src/Plugin/Action/AssignOwnerNode.php b/core/modules/action/src/Plugin/Action/AssignOwnerNode.php
 index 7c4412d..3f48935 100644
---- a/core/modules/node/src/Plugin/Action/AssignOwnerNode.php
-+++ b/core/modules/node/src/Plugin/Action/AssignOwnerNode.php
+--- a/core/modules/action/src/Plugin/Action/AssignOwnerNode.php
++++ b/core/modules/action/src/Plugin/Action/AssignOwnerNode.php
 @@ -9,6 +9,7 @@
- use Drupal\Core\Session\AccountInterface;
+ use Drupal\Core\StringTranslation\TranslatableMarkup;;
  use Drupal\user\Entity\User;
  use Symfony\Component\DependencyInjection\ContainerInterface;
 +use Drupal\Core\Access\AccessResult;

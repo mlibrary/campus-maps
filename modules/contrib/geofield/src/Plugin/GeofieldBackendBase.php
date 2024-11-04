@@ -49,7 +49,7 @@ abstract class GeofieldBackendBase extends PluginBase implements GeofieldBackend
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    GeoPHPInterface $geophp_wrapper
+    GeoPHPInterface $geophp_wrapper,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->geoPhpWrapper = $geophp_wrapper;

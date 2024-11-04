@@ -2,48 +2,37 @@
 
 namespace Drupal\geofield\Plugin\migrate\process;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
-use Drupal\geofield\WktGeneratorInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Process WKT string and return the value for the D8 geofield.
+ * Process WKT string and return the value for the Drupal Geofield.
  *
  * @MigrateProcessPlugin(
  *   id = "geofield_wkt"
  * )
+ *
+ * Note: As remarked in issue #3074552
+ * this Migrate process plugin doesn't perform any transformation of
+ * source values. It just takes the value and returns it.
+ * So it is redundant with the Drupal core's get plugin, which just takes the
+ * source value as-is and inserts it into the field
+ *
+ * In other words, these following are equivalent:
+ *
+ * process:
+ *  my_geofield:
+ *   plugin: geofield_wkt
+ *   source: my_wkt_source
+ *
+ *  process:
+ *   my_geofield: my_wkt_source
+ *
+ * This is kept as a placeholder, just in case any additional logic needs to
+ * be added in the future.
  */
-class GeofieldWKT extends ProcessPluginBase implements ContainerFactoryPluginInterface {
-
-  /**
-   * The WktGenerator service.
-   *
-   * @var \Drupal\geofield\WktGeneratorInterface
-   */
-  protected $wktGenerator;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, WktGeneratorInterface $wkt_generator) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->wktGenerator = $wkt_generator;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('geofield.wkt_generator')
-    );
-  }
+class GeofieldWKT extends ProcessPluginBase {
 
   /**
    * {@inheritdoc}

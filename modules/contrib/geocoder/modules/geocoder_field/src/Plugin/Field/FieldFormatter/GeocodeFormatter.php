@@ -2,8 +2,8 @@
 
 namespace Drupal\geocoder_field\Plugin\Field\FieldFormatter;
 
-use Drupal\geocoder_field\Plugin\Field\GeocodeFormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\geocoder_field\Plugin\Field\GeocodeFormatterBase;
 
 /**
  * Plugin implementation of the Geocode formatter.
@@ -22,7 +22,7 @@ use Drupal\Core\Form\FormStateInterface;
 class GeocodeFormatter extends GeocodeFormatterBase {
 
   /**
-   * Geocoder Plugins not compatible with this Formatter Filed Types..
+   * Geocoder Plugins not compatible with this Formatter Filed Types.
    *
    * @var array
    */
@@ -44,8 +44,8 @@ class GeocodeFormatter extends GeocodeFormatterBase {
     // Formatter action.
     $compatible_providers = array_filter($element['providers'], function ($e) {
       $geocoder_providers = $this->geocoderProviders;
-      /** @var \Drupal\geocoder\Entity\GeocoderProvider $geocoder_provider */
       if (isset($geocoder_providers[$e]) && $geocoder_provider = $geocoder_providers[$e]) {
+        /** @var \Drupal\geocoder\Entity\GeocoderProvider $geocoder_provider */
         /** @var \Drupal\Component\Plugin\PluginBase $plugin */
         $plugin = $geocoder_provider->getPlugin();
         return !in_array($plugin->getPluginId(), $this->incompatiblePlugins);
